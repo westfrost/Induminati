@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bånd & Medbringer Database</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --accent: #e8c547;
+    --accent2: #4ecdc4;
+    --text: #e8eaf0;
+    --muted: #6b7080;
+    --border: #2e3347;
+    --danger: #ff6b6b;
+    --success: #51cf66;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* === HEADER === */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .logo span { color: var(--text); font-weight: 300; }
+  nav { display: flex; gap: 8px; }
+  .nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(232,197,71,0.07);
+  }
+
+  /* === PAGES === */
+  .page { display: none; padding: 32px; max-width: 960px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* === SEARCH PAGE === */
+  .search-hero {
+    text-align: center;
+    padding: 48px 0 36px;
+  }
+  .search-hero h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .search-hero p { color: var(--muted); font-size: 0.95rem; }
+
+  .search-bar-wrap {
+    display: flex;
+    gap: 10px;
+    max-width: 560px;
+    margin: 28px auto 0;
+  }
+  .search-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    padding: 12px 16px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+  .search-type {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    padding: 12px 12px;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* === RESULTS === */
+  .results-section { margin-top: 36px; }
+  .results-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--border);
+    transition: background 0.15s;
+  }
+  .result-card:hover { border-color: var(--accent2); transform: translateX(2px); }
+  .result-card:hover::before { background: var(--accent2); }
+  .result-card.best-match::before { background: var(--accent); }
+  .result-card.best-match { border-color: rgba(232,197,71,0.3); }
+
+  .match-badge {
+    position: absolute;
+    top: 12px; right: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+  .match-badge.exact { background: rgba(81,207,102,0.15); color: var(--success); border: 1px solid rgba(81,207,102,0.3); }
+  .match-badge.close { background: rgba(232,197,71,0.12); color: var(--accent); border: 1px solid rgba(232,197,71,0.3); }
+  .match-badge.near { background: rgba(78,205,196,0.1); color: var(--accent2); border: 1px solid rgba(78,205,196,0.3); }
+
+  .card-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .card-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .card-field {
+    background: var(--surface2);
+    border-radius: 3px;
+    padding: 8px 10px;
+  }
+  .field-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .field-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 48px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+  }
+  .no-results span { display: block; font-size: 2rem; margin-bottom: 12px; }
+
+  /* === ALL ENTRIES TABLE === */
+  .table-wrap { overflow-x: auto; margin-top: 24px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.65rem;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  tr:hover td { background: var(--surface2); }
+  .action-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    transition: all 0.15s;
+    margin-right: 4px;
+  }
+  .action-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .action-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* === ADMIN / FORM === */
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .form-group label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .form-group input, .form-group textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 60px; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0f1117;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 12px 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary {
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--success);
+    color: #0f1117;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 12px 20px;
+    border-radius: 4px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.25s;
+    pointer-events: none;
+    z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .export-section {
+    margin-top: 32px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .export-section p { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; line-height: 1.6; }
+  .export-section code {
+    display: block;
+    background: var(--surface2);
+    padding: 12px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent2);
+    margin: 8px 0;
+    word-break: break-all;
+  }
+
+  /* === GITHUB SYNC === */
+  .github-section {
+    margin-top: 32px;
+    border: 1px solid rgba(78,205,196,0.3);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .github-header {
+    background: rgba(78,205,196,0.08);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(78,205,196,0.2);
+  }
+  .github-header-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .github-status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+  .github-status-dot.connected { background: var(--success); box-shadow: 0 0 6px var(--success); }
+  .github-status-dot.error { background: var(--danger); }
+  .github-body { padding: 20px; display: none; }
+  .github-body.open { display: block; }
+  .github-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  @media(max-width:600px) { .github-fields { grid-template-columns: 1fr; } }
+  .github-field label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .github-field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    padding: 9px 11px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .github-field input:focus { border-color: var(--accent2); }
+  .github-field input[type=password] { letter-spacing: 2px; }
+  .sync-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+  .btn-github {
+    background: var(--accent2);
+    color: #0f1117;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 10px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-github:hover { opacity: 0.85; }
+  .btn-github:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-github-pull {
+    background: none;
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    padding: 9px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .btn-github-pull:hover { background: rgba(78,205,196,0.1); }
+  .btn-github-pull:disabled { opacity: 0.4; cursor: not-allowed; }
+  .sync-log {
+    margin-top: 14px;
+    background: var(--surface2);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-height: 36px;
+    line-height: 1.6;
+    display: none;
+  }
+  .sync-log.show { display: block; }
+  .sync-log.ok { color: var(--success); }
+  .sync-log.err { color: var(--danger); }
+  .spin {
+    display: inline-block;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .gh-note {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(232,197,71,0.06);
+    border: 1px solid rgba(232,197,71,0.2);
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .gh-note a { color: var(--accent); text-decoration: none; }
+  .gh-note a:hover { text-decoration: underline; }
+
+
+  .mode-tab {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 1px;
+    padding: 10px 22px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: -2px;
+  }
+  .mode-tab:hover { color: var(--text); }
+  .mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* BULK TABLE */
+  .bulk-table-wrap { overflow-x: auto; margin-bottom: 16px; }
+  .bulk-tbl { border-collapse: collapse; width: 100%; min-width: 900px; }
+  .bulk-tbl th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 6px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  .bulk-tbl td { padding: 3px 3px; border-bottom: 1px solid var(--border); }
+  .bulk-cell {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid transparent;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    padding: 7px 8px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.1s, background 0.1s;
+    min-width: 70px;
+  }
+  .bulk-cell:focus { border-color: var(--accent); background: var(--surface2); }
+  .bulk-cell.filled { background: rgba(232,197,71,0.05); }
+  .bulk-cell.error { border-color: var(--danger) !important; }
+  .row-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    padding: 0 8px;
+    text-align: center;
+  }
+  .row-del {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px 8px;
+    border-radius: 3px;
+    transition: color 0.15s;
+  }
+  .row-del:hover { color: var(--danger); }
+  .bulk-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .bulk-progress {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  .bulk-progress span { color: var(--accent); font-weight: 700; }
+
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 18px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .stat-num { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  .edit-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .edit-modal.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--accent);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">BÅND<span>DB</span></div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <div id="syncStatus" style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--muted);display:none;align-items:center;gap:6px"></div>
+    <nav>
+      <button class="nav-btn active" onclick="showPage('search')">SØG</button>
+      <button class="nav-btn" onclick="showPage('all')">ALLE POSTER</button>
+      <button class="nav-btn" onclick="showPage('admin')">TILFØJ / REDIGER</button>
+    </nav>
+  </div>
+</header>
+
+<!-- SEARCH PAGE -->
+<div class="page active" id="page-search">
+  <div class="search-hero">
+    <h1>BÅND DATABASE</h1>
+    <p>Søg på båndtype eller medbringerlængde – systemet finder det nærmeste match</p>
+  </div>
+
+  <div class="search-bar-wrap">
+    <select class="search-type" id="searchType" onchange="doSearch()">
+      <option value="baand">Båndtype</option>
+      <option value="laengde">Længde (mm)</option>
+      <option value="medbringer">Medbringertype</option>
+    </select>
+    <input class="search-input" id="searchInput" placeholder="Søg her..." oninput="doSearch()" autocomplete="off">
+  </div>
+
+  <div class="results-section" id="resultsSection" style="display:none">
+    <div class="results-label" id="resultsLabel"></div>
+    <div id="resultsContainer"></div>
+  </div>
+
+  <div id="allPreview" style="margin-top:48px">
+    <div class="results-label">ALLE POSTER (<span id="totalCount">0</span>)</div>
+    <div id="previewContainer"></div>
+  </div>
+</div>
+
+<!-- ALL ENTRIES PAGE -->
+<div class="page" id="page-all">
+  <div class="stats-bar" id="statsBar"></div>
+  <div class="section-title">ALLE POSTER</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Båndtype</th>
+          <th>Medbringertype</th>
+          <th>Længde</th>
+          <th>Antal</th>
+          <th>Kontakt</th>
+          <th>Current</th>
+          <th>Welding</th>
+          <th>Cool</th>
+          <th>Squeeze</th>
+          <th>Cyl.</th>
+          <th>Pres</th>
+          <th>Handling</th>
+        </tr>
+      </thead>
+      <tbody id="allTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div class="page" id="page-admin">
+
+  <!-- MODE TABS -->
+  <div style="display:flex;gap:0;margin-bottom:28px;border-bottom:2px solid var(--border)">
+    <button class="mode-tab active" id="tab-single" onclick="switchMode('single')">✏&nbsp; ÉN AD GANGEN</button>
+    <button class="mode-tab" id="tab-bulk" onclick="switchMode('bulk')">⚡&nbsp; HURTIG-TAST MANGE</button>
+  </div>
+
+  <!-- SINGLE ENTRY MODE -->
+  <div id="mode-single">
+  <div class="section-title" id="formTitle">TILFØJ NY POST</div>
+  <input type="hidden" id="editId" value="">
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Båndtype *</label>
+      <input type="text" id="f_baandtype" placeholder="f.eks. 2M24AG">
+    </div>
+    <div class="form-group">
+      <label>Medbringertype</label>
+      <input type="text" id="f_medbringertype" placeholder="f.eks. T60AG">
+    </div>
+    <div class="form-group">
+      <label>Medbringerlængde (mm)</label>
+      <input type="number" id="f_laengde" placeholder="345">
+    </div>
+    <div class="form-group">
+      <label>Antal værktøj</label>
+      <input type="number" id="f_antal" placeholder="1">
+    </div>
+    <div class="form-group">
+      <label>Kontakt</label>
+      <input type="text" id="f_kontakt" placeholder="Y1">
+    </div>
+    <div class="form-group">
+      <label>Current (A)</label>
+      <input type="text" id="f_current" placeholder="40A">
+    </div>
+    <div class="form-group">
+      <label>Welding (s)</label>
+      <input type="text" id="f_welding" placeholder="45,0s">
+    </div>
+    <div class="form-group">
+      <label>Cool (s)</label>
+      <input type="text" id="f_cool" placeholder="150,s">
+    </div>
+    <div class="form-group">
+      <label>Squeeze (s)</label>
+      <input type="text" id="f_squeeze" placeholder="6,0s">
+    </div>
+    <div class="form-group">
+      <label>Cylinder</label>
+      <input type="text" id="f_cylinder" placeholder="1">
+    </div>
+    <div class="form-group">
+      <label>Pres (%)</label>
+      <input type="text" id="f_pres" placeholder="30%">
+    </div>
+    <div class="form-group">
+      <label>Bemærkninger</label>
+      <input type="text" id="f_bemaerkning" placeholder="Valgfrit...">
+    </div>
+  </div>
+
+  <div>
+    <button class="btn-secondary" id="cancelEditBtn" style="display:none" onclick="cancelEdit()">ANNULLER</button>
+    <button class="btn-primary" onclick="saveEntry()">GEM POST</button>
+  </div>
+
+  <!-- LOCAL BACKUP -->
+  <div class="export-section" style="margin-top:32px">
+    <div class="section-title">LOKAL BACKUP</div>
+    <p>Kopiér databasen som JSON til backup, eller indsæt tidligere JSON for at gendanne.</p>
+    <button class="btn-secondary" onclick="exportDB()">KOPIÉR JSON</button>
+    <button class="btn-secondary" onclick="importDB()">IMPORTÉR JSON</button>
+  </div>
+
+  <!-- GITHUB SYNC -->
+  <div class="github-section" style="margin-top:24px">
+    <div class="github-header" onclick="toggleGithubPanel()">
+      <div class="github-header-title">
+        <div class="github-status-dot" id="ghDot"></div>
+        ⬆ GITHUB SYNC — PUSH / PULL DATABASE
+      </div>
+      <span style="color:var(--muted);font-size:0.75rem;font-family:'IBM Plex Mono',monospace" id="ghToggleLabel">ÅBEN ▾</span>
+    </div>
+    <div class="github-body" id="githubBody">
+      <!-- Hidden inputs to satisfy saveGhSettings reads -->
+      <input type="hidden" id="gh_user" value="westfrost">
+      <input type="hidden" id="gh_repo" value="baanddb">
+      <input type="hidden" id="gh_path" value="database.json">
+      <div class="github-fields">
+        <div class="github-field" style="grid-column:1/-1">
+          <label>GitHub Personal Access Token — kun nødvendigt for at skrive/pushe (gemmes i din browser)</label>
+          <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveGhSettings()">
+        </div>
+      </div>
+      <p style="color:var(--muted);font-size:0.78rem;margin-bottom:12px">
+        Database: <span style="color:var(--accent2);font-family:'IBM Plex Mono',monospace">westfrost/baanddb → database.json</span>
+        &nbsp;·&nbsp; Pull fra GitHub virker uden token hvis repo er public.
+      </p>
+
+      <div class="sync-actions">
+        <button class="btn-github" id="btnPush" onclick="githubPush()">
+          ⬆ PUSH TIL GITHUB
+        </button>
+        <button class="btn-github-pull" id="btnPull" onclick="githubPull()">
+          ⬇ PULL FRA GITHUB
+        </button>
+        <button class="btn-secondary" onclick="testGithubConnection()" style="font-size:0.75rem;padding:8px 14px">TEST FORBINDELSE</button>
+      </div>
+
+      <div class="sync-log" id="syncLog"></div>
+
+      <div class="gh-note">
+        <strong style="color:var(--accent)">Sådan opretter du et token:</strong><br>
+        1. Gå til <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
+        2. Sæt navn (f.eks. "baanddb"), vælg <strong>Contents: Read & Write</strong> under repository permissions<br>
+        3. Generer token og indsæt det ovenfor<br><br>
+        <strong style="color:var(--accent)">Workflow:</strong> Siden pusher <code style="background:var(--surface);padding:2px 5px;border-radius:2px;color:var(--accent2)">database.json</code> direkte til dit repo. GitHub Pages viser automatisk den nye data ved næste sideload.
+      </div>
+    </div>
+  </div>
+  </div><!-- /mode-single -->
+
+  <!-- BULK ENTRY MODE -->
+  <div id="mode-bulk" style="display:none">
+    <div class="section-title">HURTIG-TAST — MANGE POSTER PÅ ÉN GANG</div>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:18px;line-height:1.6">
+      Tab/Enter springer til næste felt. Når en række er udfyldt springer Enter automatisk til næste række. Tryk <strong style="color:var(--text)">Gem alle rækker</strong> når du er færdig.
+    </p>
+    <div class="bulk-actions">
+      <button class="btn-secondary" onclick="addBulkRows(5)" style="font-size:0.75rem;padding:8px 14px">+ 5 RÆKKER</button>
+      <button class="btn-secondary" onclick="addBulkRows(10)" style="font-size:0.75rem;padding:8px 14px">+ 10 RÆKKER</button>
+      <button class="btn-secondary" onclick="clearBulk()" style="font-size:0.75rem;padding:8px 14px">RENS TABEL</button>
+      <div class="bulk-progress">Udfyldt: <span id="bulkFilledCount">0</span> rækker</div>
+    </div>
+    <div class="bulk-table-wrap">
+      <table class="bulk-tbl" id="bulkTable">
+        <thead>
+          <tr>
+            <th style="width:28px">#</th>
+            <th>Båndtype *</th>
+            <th>Medbringertype</th>
+            <th>Længde mm</th>
+            <th>Antal</th>
+            <th>Kontakt</th>
+            <th>Current</th>
+            <th>Welding</th>
+            <th>Cool</th>
+            <th>Squeeze</th>
+            <th>Cylinder</th>
+            <th>Pres</th>
+            <th>Bemærkning</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="bulkTbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn-primary" onclick="saveBulk()">💾 GEM ALLE UDFYLDTE RÆKKER</button>
+      <span id="bulkSaveStatus" style="font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--muted)"></span>
+    </div>
+  </div><!-- /mode-bulk -->
+
+</div>
+
+<!-- EDIT MODAL -->
+<div class="edit-modal" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title">REDIGER POST</div>
+    <!-- reuses same form fields via JS -->
+    <div id="modalFormContainer"></div>
+    <div style="margin-top:16px">
+      <button class="btn-secondary" onclick="closeModal()">ANNULLER</button>
+      <button class="btn-primary" onclick="saveModal()">GEM ÆNDRINGER</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATABASE
+// ============================================================
+const DB_KEY = 'baanddb_v1';
+
+const SEED = [
+  {
+    id: 1,
+    baandtype: '2M24AG',
+    medbringertype: 'T60AG',
+    laengde: 345,
+    antal: 1,
+    kontakt: 'Y1',
+    current: '40A',
+    welding: '45,0s',
+    cool: '150,s',
+    squeeze: '6,0s',
+    cylinder: '1',
+    pres: '30%',
+    bemaerkning: ''
+  }
+];
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [...SEED];
+}
+
+function saveDB(db) {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+}
+
+let db = loadDB();
+let nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'all') renderAllTable();
+  if (name === 'search') renderPreview();
+  if (name === 'admin') { cancelEdit(); }
+}
+
+// ============================================================
+// SEARCH & MATCHING
+// ============================================================
+function normalize(s) { return String(s).toLowerCase().trim(); }
+
+function levenshtein(a, b) {
+  a = normalize(a); b = normalize(b);
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1}, (_,i) => Array.from({length:n+1}, (_,j) => j===0?i:0));
+  for(let j=1;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1]);
+  return dp[m][n];
+}
+
+function scoreEntry(entry, query, type) {
+  const q = normalize(query);
+  if (type === 'baand') {
+    const val = normalize(entry.baandtype);
+    if (val === q) return { score: 0, badge: 'exact', label: 'EKSAKT' };
+    if (val.includes(q) || q.includes(val)) return { score: 1, badge: 'close', label: 'DELVIS' };
+    return { score: levenshtein(val, q), badge: 'near', label: 'NÆRMEST' };
+  }
+  if (type === 'laengde') {
+    const num = parseFloat(q.replace(',','.'));
+    if (isNaN(num)) return null;
+    const diff = Math.abs(entry.laengde - num);
+    if (diff === 0) return { score: 0, badge: 'exact', label: 'EKSAKT' };
+    if (diff <= 5) return { score: diff, badge: 'close', label: `±${diff}mm` };
+    return { score: diff, badge: 'near', label: `±${diff}mm` };
+  }
+  if (type === 'medbringer') {
+    const val = normalize(entry.medbringertype);
+    if (val === q) return { score: 0, badge: 'exact', label: 'EKSAKT' };
+    if (val.includes(q) || q.includes(val)) return { score: 1, badge: 'close', label: 'DELVIS' };
+    return { score: levenshtein(val, q), badge: 'near', label: 'NÆRMEST' };
+  }
+  return null;
+}
+
+function doSearch() {
+  const query = document.getElementById('searchInput').value.trim();
+  const type = document.getElementById('searchType').value;
+  const section = document.getElementById('resultsSection');
+  const preview = document.getElementById('allPreview');
+
+  if (!query) {
+    section.style.display = 'none';
+    preview.style.display = 'block';
+    renderPreview();
+    return;
+  }
+  preview.style.display = 'none';
+  section.style.display = 'block';
+
+  const scored = db
+    .map(e => ({ entry: e, result: scoreEntry(e, query, type) }))
+    .filter(x => x.result !== null)
+    .sort((a,b) => a.result.score - b.result.score)
+    .slice(0, 8);
+
+  const label = document.getElementById('resultsLabel');
+  label.textContent = `RESULTATER (${scored.length} fundet)`;
+
+  const container = document.getElementById('resultsContainer');
+  if (scored.length === 0) {
+    container.innerHTML = '<div class="no-results"><span>🔍</span>Ingen resultater fundet</div>';
+    return;
+  }
+
+  const best = scored[0].result.score;
+  container.innerHTML = scored.map((item, i) => {
+    const e = item.entry;
+    const r = item.result;
+    const isBest = i === 0;
+    return `
+    <div class="result-card ${isBest?'best-match':''}">
+      <span class="match-badge ${r.badge}">${r.label}</span>
+      <div class="card-title">${e.baandtype}</div>
+      <div class="card-sub">${e.medbringertype} — ${e.laengde} mm</div>
+      <div class="card-grid">
+        ${fieldBlock('Kontakt', e.kontakt)}
+        ${fieldBlock('Current', e.current)}
+        ${fieldBlock('Welding', e.welding)}
+        ${fieldBlock('Cool', e.cool)}
+        ${fieldBlock('Squeeze', e.squeeze)}
+        ${fieldBlock('Cylinder', e.cylinder)}
+        ${fieldBlock('Pres', e.pres)}
+        ${fieldBlock('Antal', e.antal)}
+      </div>
+      ${e.bemaerkning ? `<div style="margin-top:10px;font-size:0.8rem;color:var(--muted)">📝 ${e.bemaerkning}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function fieldBlock(label, value) {
+  return `<div class="card-field">
+    <div class="field-label">${label}</div>
+    <div class="field-value">${value || '—'}</div>
+  </div>`;
+}
+
+function renderPreview() {
+  document.getElementById('totalCount').textContent = db.length;
+  const c = document.getElementById('previewContainer');
+  if (db.length === 0) {
+    c.innerHTML = '<div class="no-results"><span>📂</span>Ingen poster endnu. Gå til "Tilføj / Rediger".</div>';
+    return;
+  }
+  c.innerHTML = db.slice(0,5).map(e => `
+    <div class="result-card">
+      <div class="card-title">${e.baandtype}</div>
+      <div class="card-sub">${e.medbringertype} — ${e.laengde} mm</div>
+      <div class="card-grid">
+        ${fieldBlock('Current', e.current)}
+        ${fieldBlock('Welding', e.welding)}
+        ${fieldBlock('Cool', e.cool)}
+        ${fieldBlock('Pres', e.pres)}
+      </div>
+    </div>
+  `).join('') + (db.length > 5 ? `<div style="text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:0.75rem;margin-top:8px">+ ${db.length-5} flere poster — se "Alle Poster"</div>` : '');
+}
+
+// ============================================================
+// ALL TABLE
+// ============================================================
+function renderAllTable() {
+  const stats = document.getElementById('statsBar');
+  stats.innerHTML = `
+    <div class="stat"><div class="stat-num">${db.length}</div><div class="stat-label">Poster</div></div>
+    <div class="stat"><div class="stat-num">${new Set(db.map(e=>e.baandtype)).size}</div><div class="stat-label">Unikke båndtyper</div></div>
+    <div class="stat"><div class="stat-num">${new Set(db.map(e=>e.medbringertype)).size}</div><div class="stat-label">Medbringertyper</div></div>
+  `;
+
+  const tbody = document.getElementById('allTableBody');
+  if (db.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:32px">Ingen poster</td></tr>';
+    return;
+  }
+  tbody.innerHTML = db.map(e => `
+    <tr>
+      <td style="color:var(--accent);font-weight:600">${e.baandtype}</td>
+      <td>${e.medbringertype}</td>
+      <td>${e.laengde} mm</td>
+      <td>${e.antal}</td>
+      <td>${e.kontakt}</td>
+      <td>${e.current}</td>
+      <td>${e.welding}</td>
+      <td>${e.cool}</td>
+      <td>${e.squeeze}</td>
+      <td>${e.cylinder}</td>
+      <td>${e.pres}</td>
+      <td>
+        <button class="action-btn" onclick="editEntry(${e.id})">Rediger</button>
+        <button class="action-btn del" onclick="deleteEntry(${e.id})">Slet</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// ADD / EDIT
+// ============================================================
+function getFormValues() {
+  return {
+    baandtype: document.getElementById('f_baandtype').value.trim(),
+    medbringertype: document.getElementById('f_medbringertype').value.trim(),
+    laengde: parseFloat(document.getElementById('f_laengde').value) || 0,
+    antal: parseInt(document.getElementById('f_antal').value) || 1,
+    kontakt: document.getElementById('f_kontakt').value.trim(),
+    current: document.getElementById('f_current').value.trim(),
+    welding: document.getElementById('f_welding').value.trim(),
+    cool: document.getElementById('f_cool').value.trim(),
+    squeeze: document.getElementById('f_squeeze').value.trim(),
+    cylinder: document.getElementById('f_cylinder').value.trim(),
+    pres: document.getElementById('f_pres').value.trim(),
+    bemaerkning: document.getElementById('f_bemaerkning').value.trim(),
+  };
+}
+
+function clearForm() {
+  ['baandtype','medbringertype','laengde','antal','kontakt','current','welding','cool','squeeze','cylinder','pres','bemaerkning']
+    .forEach(f => document.getElementById('f_' + f).value = '');
+}
+
+function saveEntry() {
+  const vals = getFormValues();
+  if (!vals.baandtype) { toast('Båndtype er påkrævet', true); return; }
+  const editId = document.getElementById('editId').value;
+  if (editId) {
+    const idx = db.findIndex(e => e.id == editId);
+    if (idx > -1) db[idx] = { ...db[idx], ...vals };
+  } else {
+    db.push({ id: nextId++, ...vals });
+  }
+  saveDB(db);
+  clearForm();
+  document.getElementById('editId').value = '';
+  document.getElementById('formTitle').textContent = 'TILFØJ NY POST';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  toast('Post gemt!');
+  renderPreview();
+}
+
+function editEntry(id) {
+  const e = db.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('f_baandtype').value = e.baandtype;
+  document.getElementById('f_medbringertype').value = e.medbringertype;
+  document.getElementById('f_laengde').value = e.laengde;
+  document.getElementById('f_antal').value = e.antal;
+  document.getElementById('f_kontakt').value = e.kontakt;
+  document.getElementById('f_current').value = e.current;
+  document.getElementById('f_welding').value = e.welding;
+  document.getElementById('f_cool').value = e.cool;
+  document.getElementById('f_squeeze').value = e.squeeze;
+  document.getElementById('f_cylinder').value = e.cylinder;
+  document.getElementById('f_pres').value = e.pres;
+  document.getElementById('f_bemaerkning').value = e.bemaerkning;
+  document.getElementById('editId').value = id;
+  document.getElementById('formTitle').textContent = 'REDIGER POST: ' + e.baandtype;
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  // navigate to admin
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-admin').classList.add('active');
+  document.querySelector('.nav-btn:nth-child(3)').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function cancelEdit() {
+  clearForm();
+  document.getElementById('editId').value = '';
+  document.getElementById('formTitle').textContent = 'TILFØJ NY POST';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+function deleteEntry(id) {
+  const e = db.find(x => x.id === id);
+  if (!e) return;
+  if (!confirm(`Slet "${e.baandtype}"?`)) return;
+  db = db.filter(x => x.id !== id);
+  saveDB(db);
+  renderAllTable();
+  toast('Post slettet');
+}
+
+// ============================================================
+// EXPORT / IMPORT (LOCAL)
+// ============================================================
+function exportDB() {
+  const json = JSON.stringify(db, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    toast('JSON kopieret til udklipsholder!');
+  }).catch(() => {
+    prompt('Kopiér JSON manuelt:', json);
+  });
+}
+
+function importDB() {
+  const json = prompt('Indsæt JSON her:');
+  if (!json) return;
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) throw new Error();
+    db = parsed;
+    nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+    saveDB(db);
+    toast(`${db.length} poster importeret!`);
+    renderPreview();
+  } catch(e) {
+    toast('Ugyldig JSON – prøv igen', true);
+  }
+}
+
+// ============================================================
+// GITHUB SYNC
+// ============================================================
+const GH_SETTINGS_KEY = 'baanddb_gh_settings';
+
+function saveGhSettings() {
+  const s = {
+    token: document.getElementById('gh_token').value,
+    user:  'westfrost',
+    repo:  'baanddb',
+    path:  'database.json',
+  };
+  localStorage.setItem(GH_SETTINGS_KEY, JSON.stringify(s));
+  updateGhDot(s);
+}
+
+function loadGhSettings() {
+  try {
+    const raw = localStorage.getItem(GH_SETTINGS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch(e) { return {}; }
+}
+
+function applyGhSettings() {
+  const s = loadGhSettings();
+  if (s.token) document.getElementById('gh_token').value = s.token;
+  // user/repo/path are hardcoded — no need to restore
+  updateGhDot({ user: 'westfrost', repo: 'baanddb', token: s.token });
+}
+
+function updateGhDot(s) {
+  const dot = document.getElementById('ghDot');
+  // user+repo always known — green if token present, yellow if not
+  if (s && s.token) {
+    dot.className = 'github-status-dot connected';
+  } else {
+    dot.className = 'github-status-dot connected';  // still green, pull works without token
+  }
+}
+
+function toggleGithubPanel() {
+  const body = document.getElementById('githubBody');
+  const label = document.getElementById('ghToggleLabel');
+  const open = body.classList.toggle('open');
+  label.textContent = open ? 'LUK ▴' : 'ÅBEN ▾';
+}
+
+function ghSettings() {
+  const s = loadGhSettings();
+  s.user = 'westfrost';
+  s.repo = 'baanddb';
+  s.path = s.path || 'database.json';
+  return s;
+}
+
+function syncLog(msg, type) {
+  const el = document.getElementById('syncLog');
+  el.textContent = msg;
+  el.className = 'sync-log show' + (type ? ' ' + type : '');
+}
+
+function setBtnsDisabled(disabled) {
+  document.getElementById('btnPush').disabled = disabled;
+  document.getElementById('btnPull').disabled = disabled;
+}
+
+async function getFileSha(s) {
+  const url = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${s.path}`;
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${s.token}`,
+      'Accept': 'application/vnd.github+json',
+    }
+  });
+  if (res.status === 404) return null; // file doesn't exist yet
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.sha;
+}
+
+async function githubPush() {
+  const s = ghSettings();
+  if (!s.token || !s.user || !s.repo) {
+    syncLog('⚠ Udfyld token, brugernavn og repository først.', 'err');
+    document.getElementById('githubBody').classList.add('open');
+    document.getElementById('ghToggleLabel').textContent = 'LUK ▴';
+    return;
+  }
+  setBtnsDisabled(true);
+  syncLog('⟳ Henter fil-SHA fra GitHub...', '');
+  try {
+    const sha = await getFileSha(s);
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2))));
+    const body = {
+      message: `Opdateret database – ${db.length} poster (${new Date().toLocaleString('da-DK')})`,
+      content,
+      ...(sha ? { sha } : {})
+    };
+    syncLog('⟳ Pusher til GitHub...', '');
+    const url = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${s.path}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${s.token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+    syncLog(`✓ Push lykkedes! ${db.length} poster gemt i ${s.user}/${s.repo}/${s.path}`, 'ok');
+    toast('Database pushet til GitHub!');
+  } catch(err) {
+    syncLog(`✗ Fejl: ${err.message}`, 'err');
+    toast('Push fejlede – se log', true);
+  }
+  setBtnsDisabled(false);
+}
+
+async function githubPull() {
+  const s = ghSettings();
+  if (!s.token || !s.user || !s.repo) {
+    syncLog('⚠ Udfyld token, brugernavn og repository først.', 'err');
+    document.getElementById('githubBody').classList.add('open');
+    document.getElementById('ghToggleLabel').textContent = 'LUK ▴';
+    return;
+  }
+  if (!confirm('Erstat lokal database med data fra GitHub?')) return;
+  setBtnsDisabled(true);
+  syncLog('⟳ Henter database fra GitHub...', '');
+  try {
+    const url = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${s.path}`;
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${s.token}`,
+        'Accept': 'application/vnd.github+json',
+      }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+    const parsed = JSON.parse(decoded);
+    if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
+    db = parsed;
+    nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+    saveDB(db);
+    syncLog(`✓ Pull lykkedes! ${db.length} poster hentet fra GitHub.`, 'ok');
+    toast(`${db.length} poster hentet fra GitHub!`);
+    renderPreview();
+    renderAllTable();
+  } catch(err) {
+    syncLog(`✗ Fejl: ${err.message}`, 'err');
+    toast('Pull fejlede – se log', true);
+  }
+  setBtnsDisabled(false);
+}
+
+async function testGithubConnection() {
+  const s = ghSettings();
+  if (!s.token || !s.user || !s.repo) {
+    syncLog('⚠ Udfyld alle felter og prøv igen.', 'err');
+    return;
+  }
+  syncLog('⟳ Tester forbindelse...', '');
+  try {
+    const res = await fetch(`https://api.github.com/repos/${s.user}/${s.repo}`, {
+      headers: { 'Authorization': `Bearer ${s.token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    syncLog(`✓ Forbundet til ${data.full_name} (${data.visibility})`, 'ok');
+    document.getElementById('ghDot').className = 'github-status-dot connected';
+  } catch(err) {
+    syncLog(`✗ Fejl: ${err.message}`, 'err');
+    document.getElementById('ghDot').className = 'github-status-dot error';
+  }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? 'var(--danger)' : 'var(--success)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// MODE SWITCHING
+// ============================================================
+function switchMode(mode) {
+  document.getElementById('mode-single').style.display = mode === 'single' ? 'block' : 'none';
+  document.getElementById('mode-bulk').style.display   = mode === 'bulk'   ? 'block' : 'none';
+  document.getElementById('tab-single').classList.toggle('active', mode === 'single');
+  document.getElementById('tab-bulk').classList.toggle('active', mode === 'bulk');
+  if (mode === 'bulk') initBulkIfEmpty();
+}
+
+// ============================================================
+// BULK ENTRY
+// ============================================================
+const BULK_COLS = [
+  { key: 'baandtype',     type: 'text',   req: true  },
+  { key: 'medbringertype',type: 'text',   req: false },
+  { key: 'laengde',       type: 'number', req: false },
+  { key: 'antal',         type: 'number', req: false },
+  { key: 'kontakt',       type: 'text',   req: false },
+  { key: 'current',       type: 'text',   req: false },
+  { key: 'welding',       type: 'text',   req: false },
+  { key: 'cool',          type: 'text',   req: false },
+  { key: 'squeeze',       type: 'text',   req: false },
+  { key: 'cylinder',      type: 'text',   req: false },
+  { key: 'pres',          type: 'text',   req: false },
+  { key: 'bemaerkning',   type: 'text',   req: false },
+];
+
+let bulkRows = 0;
+
+function initBulkIfEmpty() {
+  if (bulkRows === 0) addBulkRows(10);
+}
+
+function addBulkRows(n) {
+  const tbody = document.getElementById('bulkTbody');
+  for (let i = 0; i < n; i++) {
+    bulkRows++;
+    const tr = document.createElement('tr');
+    tr.dataset.row = bulkRows;
+    let cells = `<td class="row-num">${bulkRows}</td>`;
+    BULK_COLS.forEach((col, ci) => {
+      cells += `<td><input
+        class="bulk-cell"
+        type="${col.type}"
+        data-row="${bulkRows}"
+        data-col="${ci}"
+        data-key="${col.key}"
+        placeholder="${col.req ? '★' : ''}"
+        oninput="bulkCellChanged(this)"
+        onkeydown="bulkKeyDown(event, this)"
+      ></td>`;
+    });
+    cells += `<td><button class="row-del" onclick="deleteBulkRow(this)" title="Slet række">✕</button></td>`;
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  }
+  updateBulkCount();
+}
+
+function deleteBulkRow(btn) {
+  btn.closest('tr').remove();
+  updateBulkCount();
+}
+
+function clearBulk() {
+  if (!confirm('Rens hele tabellen?')) return;
+  document.getElementById('bulkTbody').innerHTML = '';
+  bulkRows = 0;
+  addBulkRows(10);
+}
+
+function bulkCellChanged(input) {
+  input.classList.toggle('filled', input.value.trim() !== '');
+  input.classList.remove('error');
+  updateBulkCount();
+}
+
+function updateBulkCount() {
+  const rows = document.querySelectorAll('#bulkTbody tr');
+  let filled = 0;
+  rows.forEach(tr => {
+    const first = tr.querySelector('input[data-col="0"]');
+    if (first && first.value.trim()) filled++;
+  });
+  document.getElementById('bulkFilledCount').textContent = filled;
+}
+
+function bulkKeyDown(e, input) {
+  const row = parseInt(input.dataset.row);
+  const col = parseInt(input.dataset.col);
+  const lastCol = BULK_COLS.length - 1;
+
+  // Tab or Enter: move right, or to next row first col
+  if (e.key === 'Tab' || e.key === 'Enter') {
+    e.preventDefault();
+    if (col < lastCol) {
+      // move to next column in same row
+      focusBulkCell(row, col + 1);
+    } else {
+      // move to first col of next row — add row if needed
+      const nextRow = getNextBulkRow(row);
+      if (nextRow) {
+        focusBulkCell(parseInt(nextRow.dataset.row), 0);
+      } else {
+        addBulkRows(5);
+        const newRows = document.querySelectorAll('#bulkTbody tr');
+        const next = newRows[getRowIndex(row) + 1];
+        if (next) focusBulkCell(parseInt(next.dataset.row), 0);
+      }
+    }
+    return;
+  }
+  // Arrow down
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const nextRow = getNextBulkRow(row);
+    if (nextRow) focusBulkCell(parseInt(nextRow.dataset.row), col);
+  }
+  // Arrow up
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const prevRow = getPrevBulkRow(row);
+    if (prevRow) focusBulkCell(parseInt(prevRow.dataset.row), col);
+  }
+}
+
+function focusBulkCell(rowId, col) {
+  const el = document.querySelector(`#bulkTbody input[data-row="${rowId}"][data-col="${col}"]`);
+  if (el) { el.focus(); el.select(); }
+}
+
+function getNextBulkRow(rowId) {
+  const rows = [...document.querySelectorAll('#bulkTbody tr')];
+  const idx = rows.findIndex(r => parseInt(r.dataset.row) === rowId);
+  return rows[idx + 1] || null;
+}
+
+function getPrevBulkRow(rowId) {
+  const rows = [...document.querySelectorAll('#bulkTbody tr')];
+  const idx = rows.findIndex(r => parseInt(r.dataset.row) === rowId);
+  return idx > 0 ? rows[idx - 1] : null;
+}
+
+function getRowIndex(rowId) {
+  const rows = [...document.querySelectorAll('#bulkTbody tr')];
+  return rows.findIndex(r => parseInt(r.dataset.row) === rowId);
+}
+
+function saveBulk() {
+  const rows = document.querySelectorAll('#bulkTbody tr');
+  let saved = 0, skipped = 0, errors = 0;
+
+  rows.forEach(tr => {
+    const inputs = tr.querySelectorAll('input[data-key]');
+    const vals = {};
+    inputs.forEach(inp => { vals[inp.dataset.key] = inp.value.trim(); });
+
+    // skip completely empty rows
+    const anyFilled = Object.values(vals).some(v => v !== '');
+    if (!anyFilled) { skipped++; return; }
+
+    // validate required
+    if (!vals.baandtype) {
+      inputs[0].classList.add('error');
+      inputs[0].focus();
+      errors++;
+      return;
+    }
+
+    db.push({
+      id: nextId++,
+      baandtype: vals.baandtype,
+      medbringertype: vals.medbringertype || '',
+      laengde: parseFloat(vals.laengde) || 0,
+      antal: parseInt(vals.antal) || 1,
+      kontakt: vals.kontakt || '',
+      current: vals.current || '',
+      welding: vals.welding || '',
+      cool: vals.cool || '',
+      squeeze: vals.squeeze || '',
+      cylinder: vals.cylinder || '',
+      pres: vals.pres || '',
+      bemaerkning: vals.bemaerkning || '',
+    });
+    saved++;
+
+    // clear saved row visually
+    inputs.forEach(inp => { inp.value = ''; inp.classList.remove('filled', 'error'); });
+  });
+
+  saveDB(db);
+  renderPreview();
+  updateBulkCount();
+
+  const statusEl = document.getElementById('bulkSaveStatus');
+  if (errors > 0) {
+    statusEl.style.color = 'var(--danger)';
+    statusEl.textContent = `${errors} rækker mangler båndtype (markeret rødt)`;
+    toast(`${saved} gemt, ${errors} fejl`, true);
+  } else {
+    statusEl.style.color = 'var(--success)';
+    statusEl.textContent = `✓ ${saved} poster gemt!`;
+    toast(`${saved} poster gemt i databasen!`);
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  }
+}
+
+// ============================================================
+// AUTO-LOAD FROM GITHUB ON STARTUP
+// ============================================================
+function rawGithubUrl(s) {
+  // Use raw.githubusercontent.com — no token needed for public repos
+  return `https://raw.githubusercontent.com/${s.user}/${s.repo}/main/${s.path}`;
+}
+
+function setSyncStatus(msg, color) {
+  const el = document.getElementById('syncStatus');
+  el.style.display = 'flex';
+  el.style.color = color || 'var(--muted)';
+  el.innerHTML = msg;
+}
+
+function clearSyncStatus(delay) {
+  setTimeout(() => {
+    const el = document.getElementById('syncStatus');
+    el.style.display = 'none';
+  }, delay || 3000);
+}
+
+async function autoLoadFromGithub() {
+  const s = ghSettings();
+  if (!s.user || !s.repo) return; // not configured yet
+
+  setSyncStatus('<span class="spin">⟳</span>&nbsp;Henter database...', 'var(--muted)');
+
+  try {
+    // Try public raw URL first (no token needed)
+    const url = rawGithubUrl(s);
+    const res = await fetch(url + '?t=' + Date.now()); // cache-bust
+
+    if (res.ok) {
+      const parsed = await res.json();
+      if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
+      db = parsed;
+      nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+      saveDB(db);
+      renderPreview();
+      setSyncStatus(`✓ ${db.length} poster hentet fra GitHub`, 'var(--success)');
+      clearSyncStatus(3500);
+      return;
+    }
+
+    // If 404 or private: try with token if available
+    if (s.token) {
+      const apiUrl = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${s.path}`;
+      const apiRes = await fetch(apiUrl, {
+        headers: { 'Authorization': `Bearer ${s.token}`, 'Accept': 'application/vnd.github+json' }
+      });
+      if (!apiRes.ok) throw new Error(`HTTP ${apiRes.status}`);
+      const data = await apiRes.json();
+      const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+      const parsed = JSON.parse(decoded);
+      if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
+      db = parsed;
+      nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+      saveDB(db);
+      renderPreview();
+      setSyncStatus(`✓ ${db.length} poster hentet fra GitHub`, 'var(--success)');
+      clearSyncStatus(3500);
+      return;
+    }
+
+    // Couldn't load — use local cache silently
+    setSyncStatus('⚠ Bruger lokal cache', 'var(--muted)');
+    clearSyncStatus(3000);
+
+  } catch(err) {
+    // Network error or parse error — fall back to localStorage silently
+    setSyncStatus('⚠ Bruger lokal cache', 'var(--muted)');
+    clearSyncStatus(3000);
+  }
+}
+
+// Override githubPull to also use raw URL for public repos
+async function githubPull() {
+  const s = ghSettings();
+  if (!s.user || !s.repo) {
+    syncLog('⚠ Udfyld brugernavn og repository først.', 'err');
+    document.getElementById('githubBody').classList.add('open');
+    document.getElementById('ghToggleLabel').textContent = 'LUK ▴';
+    return;
+  }
+  if (!confirm('Erstat lokal database med data fra GitHub?')) return;
+  setBtnsDisabled(true);
+  syncLog('⟳ Henter database fra GitHub...', '');
+
+  try {
+    // Try public raw URL first
+    const rawUrl = rawGithubUrl(s);
+    const rawRes = await fetch(rawUrl + '?t=' + Date.now());
+
+    if (rawRes.ok) {
+      const parsed = await rawRes.json();
+      if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
+      db = parsed;
+      nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+      saveDB(db);
+      syncLog(`✓ Pull lykkedes! ${db.length} poster hentet (offentlig URL, ingen token).`, 'ok');
+      toast(`${db.length} poster hentet fra GitHub!`);
+      renderPreview();
+      setBtnsDisabled(false);
+      return;
+    }
+
+    // Fall back to API with token
+    if (!s.token) throw new Error('Repo ser ud til at være privat – tilføj et token.');
+    const url = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${s.path}`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${s.token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+    const parsed = JSON.parse(decoded);
+    if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
+    db = parsed;
+    nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+    saveDB(db);
+    syncLog(`✓ Pull lykkedes! ${db.length} poster hentet fra GitHub.`, 'ok');
+    toast(`${db.length} poster hentet fra GitHub!`);
+    renderPreview();
+    renderAllTable();
+  } catch(err) {
+    syncLog(`✗ Fejl: ${err.message}`, 'err');
+    toast('Pull fejlede – se log', true);
+  }
+  setBtnsDisabled(false);
+}
+
+// INIT
+renderPreview();
+applyGhSettings();
+autoLoadFromGithub();
+</script>
+</body>
+</html>

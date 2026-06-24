@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DXF → NCP Konverter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0e0f11;
+    --surface: #161719;
+    --surface2: #1e2023;
+    --border: #2a2d32;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --success: #00e5a0;
+    --warn: #ffcc00;
+    --text: #e8eaed;
+    --muted: #6b7280;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .logo span { color: var(--muted); }
+
+  header h1 {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  .main {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .drop-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--bg);
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(0, 212, 255, 0.04);
+  }
+
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+
+  .drop-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .drop-text {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .drop-text strong { color: var(--text); font-weight: 500; }
+
+  .file-loaded {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(0, 229, 160, 0.08);
+    border: 1px solid rgba(0, 229, 160, 0.25);
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--success);
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  input[type=text], input[type=number], select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 11px;
+    outline: none;
+    transition: border-color 0.15s;
+    margin-bottom: 12px;
+    -moz-appearance: textfield;
+  }
+
+  input[type=text]:focus, input[type=number]:focus, select:focus {
+    border-color: var(--accent);
+  }
+
+  select option { background: #1e2023; }
+
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #33ddff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 107, 53, 0.1);
+  }
+
+  .btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-success {
+    background: var(--success);
+    color: #000;
+  }
+
+  .btn-success:hover { background: #33eeb3; transform: translateY(-1px); }
+
+  .log {
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.7;
+    padding: 14px;
+    background: var(--bg);
+    border-radius: 6px;
+    max-height: 160px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+  }
+
+  .log .ok { color: var(--success); }
+  .log .warn { color: var(--warn); }
+  .log .err { color: #ff4f4f; }
+  .log .info { color: var(--muted); }
+  .log .accent { color: var(--accent); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Preview pane */
+  .preview-area {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .preview-toolbar {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .preview-toolbar span {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .tab-group {
+    display: flex;
+    gap: 2px;
+    background: var(--bg);
+    border-radius: 5px;
+    padding: 3px;
+  }
+
+  .tab {
+    padding: 5px 12px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+
+  .tab.active { background: var(--surface2); color: var(--text); }
+
+  .preview-canvas-wrap {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: #080809;
+  }
+
+  canvas#preview {
+    display: block;
+    cursor: crosshair;
+  }
+
+  .canvas-overlay {
+    position: absolute;
+    bottom: 16px; left: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: rgba(14,15,17,0.85);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    pointer-events: none;
+    line-height: 1.6;
+  }
+
+  .ncp-preview {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.65;
+    padding: 20px 24px;
+    overflow-y: auto;
+    background: #080809;
+    white-space: pre;
+    color: #c9d1d9;
+  }
+
+  .ncp-preview .cmd-move { color: #79c0ff; }
+  .ncp-preview .cmd-arc { color: #ffa657; }
+  .ncp-preview .cmd-fast { color: #56d364; }
+  .ncp-preview .cmd-comment { color: var(--muted); }
+  .ncp-preview .cmd-control { color: #d2a8ff; }
+  .ncp-preview .cmd-header { color: var(--warn); }
+
+  .zoom-controls {
+    position: absolute;
+    top: 12px; right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .zoom-btn {
+    width: 28px; height: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .entity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-line { background: rgba(121,192,255,0.12); color: #79c0ff; }
+  .badge-arc { background: rgba(255,166,87,0.12); color: #ffa657; }
+  .badge-circle { background: rgba(210,168,255,0.12); color: #d2a8ff; }
+  .badge-poly { background: rgba(86,211,100,0.12); color: #56d364; }
+  .badge-spline { background: rgba(255,204,0,0.12); color: var(--warn); }
+
+  .entity-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .hidden { display: none !important; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">IMF<span>_</span>PBL</div>
+  <div style="width:1px;height:20px;background:var(--border)"></div>
+  <h1>DXF / SVG → NCP Vandskærer Konverter</h1>
+</header>
+
+<div class="main">
+  <!-- LEFT PANEL -->
+  <div class="panel">
+
+    <!-- FILE UPLOAD -->
+    <div class="section">
+      <div class="section-title">01 — DXF / SVG Fil</div>
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".dxf,.svg">
+        <span class="drop-icon">⬡</span>
+        <div class="drop-text">
+          <strong>Slip DXF eller SVG fil her</strong><br>
+          eller klik for at vælge
+        </div>
+      </div>
+      <div id="fileLoaded" class="file-loaded hidden" style="margin-top:10px">
+        <span>✓</span>
+        <span id="fileName">—</span>
+      </div>
+    </div>
+
+    <!-- Fixed machine config + output name (not shown) -->
+    <input type="hidden" id="vel"        value="50000">
+    <input type="hidden" id="fastvel"    value="166000">
+    <input type="hidden" id="pressure"   value="3800">
+    <input type="hidden" id="startWait"  value="1000">
+    <input type="hidden" id="material"   value="POM/Standard/5.000">
+    <input type="hidden" id="outputName" value="">
+
+    <!-- GEOMETRY SETTINGS -->
+    <div class="section">
+      <div class="section-title">02 — Indstillinger</div>
+
+      <label>Bue-approksimering (grader pr. segment)</label>
+      <select id="arcMode">
+        <option value="native">Native CWABS/CCWABS (anbefalet)</option>
+        <option value="5">Segmenter — 5° pr. segment</option>
+        <option value="2">Segmenter — 2° pr. segment</option>
+        <option value="1">Segmenter — 1° pr. segment</option>
+      </select>
+
+      <label>Enhed i DXF-fil</label>
+      <select id="dxfUnit">
+        <option value="mm">Millimeter (mm)</option>
+        <option value="m">Meter (m)</option>
+        <option value="inch">Tommer (inch)</option>
+        <option value="um">Mikrometer (µm) — allerede i NCP-enhed</option>
+      </select>
+
+      <label>Skæringsrækkefølge</label>
+      <select id="cutOrder">
+        <option value="dxf">DXF-rækkefølge (som tegnet)</option>
+        <option value="optimize">Optimer (korteste rejsevej)</option>
+      </select>
+
+      <label>Indkøring / udkøring (mm)</label>
+      <input type="number" id="leadIn" value="3" min="0" max="50" step="0.5"
+             style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:4px;-moz-appearance:textfield;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">
+        Vandskæreren starter 3 mm <em>udenfor</em> konturen og kører ind. Huller starter 3 mm inde i tomrummet og kører ud.
+      </div>
+    </div>
+
+    <!-- MANUAL GEOMETRY -->
+    <div class="section">
+      <div class="section-title">03 — Manuelt emne</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Generer skærefil direkte uden DXF/SVG</div>
+
+      <div class="tab-group" style="margin-bottom:12px">
+        <button class="tab active" id="shapeTabRect"   onclick="switchShapeTab('rect')">Firkant</button>
+        <button class="tab"        id="shapeTabCircle" onclick="switchShapeTab('circle')">Cirkel</button>
+        <button class="tab"        id="shapeTabFlange" onclick="switchShapeTab('flange')">Flange</button>
+      </div>
+
+      <!-- RECT -->
+      <div id="shapeRect">
+        <div class="row">
+          <div>
+            <label>Bredde X (mm)</label>
+            <input type="number" id="rectW" value="100" min="1" step="0.1"
+                   style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
+          </div>
+          <div>
+            <label>Højde Y (mm)</label>
+            <input type="number" id="rectH" value="100" min="1" step="0.1"
+                   style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
+          </div>
+        </div>
+        <label>Hjørneradius (mm, 0 = spids)</label>
+        <input type="number" id="rectR" value="0" min="0" step="0.5"
+               style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
+      </div>
+
+      <!-- CIRCLE -->
+      <div id="shapeCircle" style="display:none">
+        <label>Ø udvendig (mm)</label>
+        <input type="number" id="circD" value="100" min="1" step="0.1"
+               style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
+      </div>
+
+      <!-- FLANGE -->
+      <div id="shapeFlange" style="display:none">
+        <label>Ø udvendig (mm)</label>
+        <input type="number" id="flangeOD" value="150" min="1" step="0.1"
+               style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
+        <label>Ø indvendig / hul (mm)</label>
+        <input type="number" id="flangeID" value="80" min="1" step="0.1"
+               style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
+      </div>
+
+      <label>Filnavn</label>
+      <input type="text" id="shapeOutputName" value="" placeholder="Auto"
+             style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;">
+
+      <button class="btn btn-primary" id="btnShapeGen" onclick="generateShapeNCP()">
+        ⚡ Generer fra mål
+      </button>
+    </div>
+
+    <!-- ENTITY INFO -->
+    <div class="section" id="entitySection" style="display:none">
+      <div class="section-title">Fundet geometri</div>
+      <div class="stats" id="statsGrid"></div>
+      <div class="entity-list" id="entityBadges"></div>
+    </div>
+
+    <!-- LOG -->
+    <div class="section">
+      <div class="section-title">Log</div>
+      <div class="log" id="log"><span class="info">Klar — upload en DXF- eller SVG-fil.</span></div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="section" style="border-bottom:none">
+      <button class="btn btn-primary" id="btnConvert" disabled>
+        ⚡ Generer NCP-fil
+      </button>
+      <div style="height:8px"></div>
+      <button class="btn btn-success hidden" id="btnDownload">
+        ↓ Download NCP
+      </button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: PREVIEW -->
+  <div class="preview-area">
+    <div class="preview-toolbar">
+      <span>Forhåndsvisning</span>
+      <div class="tab-group">
+        <button class="tab active" id="tabGeom" onclick="switchTab('geom')">Geometri</button>
+        <button class="tab" id="tabNcp" onclick="switchTab('ncp')">NCP kode</button>
+      </div>
+      <span id="previewInfo" style="margin-left:auto"></span>
+    </div>
+
+    <div id="viewGeom" class="preview-canvas-wrap">
+      <canvas id="preview"></canvas>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoom(1.3)">+</button>
+        <button class="zoom-btn" onclick="zoom(1/1.3)">−</button>
+        <button class="zoom-btn" onclick="fitView()" title="Tilpas">⊡</button>
+      </div>
+      <div class="canvas-overlay" id="coordOverlay">Ingen data endnu</div>
+    </div>
+    <div id="viewNcp" class="ncp-preview hidden" id="ncpPreview"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let parsedEntities = [];
+let ncpOutput = '';
+let currentBaseName = 'output';
+let canvasTransform = { scale: 1, tx: 0, ty: 0 };
+let isDragging = false, dragStart = {};
+let currentTab = 'geom';
+
+
+// ─────────────────────────────────────────────
+// LOGGING
+// ─────────────────────────────────────────────
+function log(msg, type = 'info') {
+  const el = document.getElementById('log');
+  const line = document.createElement('div');
+  line.innerHTML = `<span class="${type}">${msg}</span>`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log').innerHTML = '';
+}
+
+// ─────────────────────────────────────────────
+// FILE HANDLING
+// ─────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  clearLog();
+  document.getElementById('btnDownload').classList.add('hidden');
+  ncpOutput = '';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const baseName = file.name.replace(/\.(dxf|svg)$/i, '');
+    currentBaseName = baseName;
+    const outField = document.getElementById('outputName');
+    if (outField) outField.value = baseName;
+
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileLoaded').classList.remove('hidden');
+
+    log(`Indlæser: ${file.name}`, 'accent');
+    try {
+      const isSvg = file.name.toLowerCase().endsWith('.svg');
+      parsedEntities = isSvg ? parseSVG(e.target.result) : parseDXF(e.target.result);
+      updateEntitySection();
+      renderPreview();
+      document.getElementById('btnConvert').disabled = false;
+      log(`✓ ${parsedEntities.length} entiteter parset`, 'ok');
+    } catch(err) {
+      log(`✗ Parse fejl: ${err.message}`, 'err');
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+// ─────────────────────────────────────────────
+// SVG PARSER
+// ─────────────────────────────────────────────
+function parseSVG(text) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(text, 'image/svg+xml');
+  const svg = doc.querySelector('svg');
+  if (!svg) throw new Error('Ingen SVG-rod fundet');
+
+  const entities = [];
+  const scale = getScaleFactor();
+
+  // SVG viewBox / width+height → find px-to-mm factor
+  // We'll apply user unit scale. SVG user units are typically px (1px = 0.264583mm)
+  // But if the SVG has explicit mm units in width/height, we use that.
+  let svgScale = 1; // multiplier on top of user's dxfUnit selection
+  const widthAttr  = svg.getAttribute('width')  || '';
+  const heightAttr = svg.getAttribute('height') || '';
+  const viewBox    = svg.getAttribute('viewBox');
+
+  // Try to detect if SVG is already in mm
+  if (widthAttr.includes('mm') && viewBox) {
+    const wMm = parseFloat(widthAttr);
+    const vb  = viewBox.trim().split(/[\s,]+/);
+    const vbW = parseFloat(vb[2]);
+    if (wMm > 0 && vbW > 0) {
+      // 1 SVG user unit = wMm/vbW mm → in µm: * (wMm/vbW * 1000)
+      svgScale = (wMm / vbW) * 1000;
+      log(`SVG enhed: ${(wMm/vbW).toFixed(4)} mm/unit (fra viewBox+width)`, 'info');
+    }
+  } else if (!widthAttr.includes('mm') && viewBox) {
+    // Assume px units — but let user's dxfUnit setting decide mm/inch etc.
+    // Default: treat SVG user units as mm (most CAD exports do this)
+    svgScale = scale; // as chosen in selector
+    log(`SVG enhed: behandles som valgt enhed (${document.getElementById('dxfUnit').value})`, 'info');
+  } else {
+    svgScale = scale;
+  }
+
+  function toUm(v) { return Math.round(v * svgScale); }
+
+  // Walk all shape elements, respecting nested transforms
+  function getTransformMatrix(el) {
+    const t = el.getAttribute('transform') || '';
+    return parseTransform(t);
+  }
+
+  function applyMatrix(m, x, y) {
+    return {
+      x: m[0]*x + m[2]*y + m[4],
+      y: m[1]*x + m[3]*y + m[5]
+    };
+  }
+
+  // Collect transforms walking up the tree
+  function getCumulativeMatrix(el) {
+    let m = [1,0,0,1,0,0];
+    const chain = [];
+    let cur = el;
+    while (cur && cur !== doc.documentElement) {
+      if (cur.getAttribute && cur.getAttribute('transform')) {
+        chain.unshift(parseTransform(cur.getAttribute('transform')));
+      }
+      cur = cur.parentElement;
+    }
+    chain.forEach(tm => { m = multiplyMatrix(m, tm); });
+    return m;
+  }
+
+  function parseTransform(t) {
+    let m = [1,0,0,1,0,0];
+    if (!t) return m;
+
+    const matMatch = t.match(/matrix\(([^)]+)\)/);
+    if (matMatch) {
+      const v = matMatch[1].trim().split(/[\s,]+/).map(Number);
+      if (v.length === 6) return v;
+    }
+    const transMatch = t.match(/translate\(([^)]+)\)/);
+    if (transMatch) {
+      const v = transMatch[1].trim().split(/[\s,]+/).map(Number);
+      m[4] = v[0] || 0; m[5] = v[1] || 0;
+    }
+    const scaleMatch = t.match(/scale\(([^)]+)\)/);
+    if (scaleMatch) {
+      const v = scaleMatch[1].trim().split(/[\s,]+/).map(Number);
+      const sx = v[0] || 1, sy = v[1] !== undefined ? v[1] : sx;
+      m = multiplyMatrix([sx,0,0,sy,0,0], m);
+    }
+    const rotMatch = t.match(/rotate\(([^)]+)\)/);
+    if (rotMatch) {
+      const v = rotMatch[1].trim().split(/[\s,]+/).map(Number);
+      const angle = (v[0] || 0) * Math.PI / 180;
+      const cx = v[1] || 0, cy = v[2] || 0;
+      const cos = Math.cos(angle), sin = Math.sin(angle);
+      const rm = [cos, sin, -sin, cos, cx - cos*cx + sin*cy, cy - sin*cx - cos*cy];
+      m = multiplyMatrix(rm, m);
+    }
+    return m;
+  }
+
+  function multiplyMatrix(a, b) {
+    return [
+      a[0]*b[0] + a[2]*b[1],
+      a[1]*b[0] + a[3]*b[1],
+      a[0]*b[2] + a[2]*b[3],
+      a[1]*b[2] + a[3]*b[3],
+      a[0]*b[4] + a[2]*b[5] + a[4],
+      a[1]*b[4] + a[3]*b[5] + a[5]
+    ];
+  }
+
+  const shapeSelector = 'line, rect, circle, ellipse, polyline, polygon, path';
+  const elements = doc.querySelectorAll(shapeSelector);
+
+  elements.forEach(el => {
+    const layer = el.getAttribute('inkscape:label') || el.getAttribute('id') || el.closest('[id]')?.id || '0';
+    const m = getCumulativeMatrix(el);
+    const tx = (x, y) => { const p = applyMatrix(m, x, y); return { x: toUm(p.x), y: toUm(p.y) }; };
+
+    const tag = el.tagName.toLowerCase();
+
+    if (tag === 'line') {
+      const x1 = parseFloat(el.getAttribute('x1')||0);
+      const y1 = parseFloat(el.getAttribute('y1')||0);
+      const x2 = parseFloat(el.getAttribute('x2')||0);
+      const y2 = parseFloat(el.getAttribute('y2')||0);
+      const p1 = tx(x1, y1), p2 = tx(x2, y2);
+      if (dist(p1.x, p1.y, p2.x, p2.y) > 0.5)
+        entities.push({ type: 'LINE', x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, layer });
+    }
+
+    else if (tag === 'rect') {
+      const x  = parseFloat(el.getAttribute('x')||0);
+      const y  = parseFloat(el.getAttribute('y')||0);
+      const w  = parseFloat(el.getAttribute('width')||0);
+      const h  = parseFloat(el.getAttribute('height')||0);
+      const rx = parseFloat(el.getAttribute('rx')||0);
+      const ry = parseFloat(el.getAttribute('ry')||el.getAttribute('rx')||0);
+      if (w <= 0 || h <= 0) return;
+
+      if (rx === 0 && ry === 0) {
+        // Simple rect as 4 lines
+        const corners = [[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]];
+        for (let i = 0; i < 4; i++) {
+          const p1 = tx(corners[i][0], corners[i][1]);
+          const p2 = tx(corners[i+1][0], corners[i+1][1]);
+          entities.push({ type: 'LINE', x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, layer });
+        }
+      } else {
+        // Rounded rect as polyline with arc bulges — approximate with segments
+        const pts = roundedRectPoints(x, y, w, h, rx, ry, m, svgScale);
+        entities.push({ type: 'POLYLINE', pts, bulges: {}, closed: true, layer });
+      }
+    }
+
+    else if (tag === 'circle') {
+      const cx = parseFloat(el.getAttribute('cx')||0);
+      const cy = parseFloat(el.getAttribute('cy')||0);
+      const r  = parseFloat(el.getAttribute('r')||0);
+      if (r <= 0) return;
+      const c = tx(cx, cy);
+      entities.push({ type: 'CIRCLE', cx: c.x, cy: c.y, r: toUm(r * Math.sqrt(Math.abs(m[0]*m[3] - m[1]*m[2]))), layer });
+    }
+
+    else if (tag === 'ellipse') {
+      const cx = parseFloat(el.getAttribute('cx')||0);
+      const cy = parseFloat(el.getAttribute('cy')||0);
+      const rx2 = parseFloat(el.getAttribute('rx')||0);
+      const ry2 = parseFloat(el.getAttribute('ry')||0);
+      if (rx2 <= 0 || ry2 <= 0) return;
+      log(`⚠ ELLIPSE approksimeres med 72 segmenter`, 'warn');
+      const pts = [];
+      for (let a = 0; a <= 360; a += 5) {
+        const rad = a * Math.PI / 180;
+        const p = tx(cx + rx2 * Math.cos(rad), cy + ry2 * Math.sin(rad));
+        pts.push([p.x, p.y]);
+      }
+      entities.push({ type: 'POLYLINE', pts, bulges: {}, closed: true, layer });
+    }
+
+    else if (tag === 'polyline' || tag === 'polygon') {
+      const raw = (el.getAttribute('points')||'').trim().split(/[\s,]+/).map(Number);
+      const pts = [];
+      for (let i = 0; i < raw.length - 1; i += 2) {
+        const p = tx(raw[i], raw[i+1]);
+        pts.push([p.x, p.y]);
+      }
+      if (pts.length >= 2)
+        entities.push({ type: 'POLYLINE', pts, bulges: {}, closed: tag === 'polygon', layer });
+    }
+
+    else if (tag === 'path') {
+      const pathEnts = parseSVGPath(el.getAttribute('d') || '', m, toUm, svgScale, layer);
+      entities.push(...pathEnts);
+    }
+  });
+
+  log(`SVG: ${elements.length} elementer → ${entities.length} entiteter`, 'ok');
+  return normalizeEntities(entities);
+}
+
+function roundedRectPoints(x, y, w, h, rx, ry, m, svgScale) {
+  const pts = [];
+  const steps = 8;
+  function addArc(cx, cy, fromAngle, toAngle) {
+    for (let s = 0; s <= steps; s++) {
+      const a = (fromAngle + (toAngle - fromAngle) * s / steps) * Math.PI / 180;
+      const px = cx + rx * Math.cos(a);
+      const py = cy + ry * Math.sin(a);
+      const tp = applyMatrixSimple(m, px, py);
+      pts.push([Math.round(tp.x * svgScale), Math.round(tp.y * svgScale)]);
+    }
+  }
+  function applyMatrixSimple(m, px, py) {
+    return { x: m[0]*px + m[2]*py + m[4], y: m[1]*px + m[3]*py + m[5] };
+  }
+  addArc(x+rx,     y+ry,     180, 270);
+  addArc(x+w-rx,   y+ry,     270, 360);
+  addArc(x+w-rx,   y+h-ry,     0,  90);
+  addArc(x+rx,     y+h-ry,    90, 180);
+  return pts;
+}
+
+function parseSVGPath(d, m, toUm, svgScale, layer) {
+  const entities = [];
+  if (!d) return entities;
+
+  function applyM(x, y) {
+    const px = m[0]*x + m[2]*y + m[4];
+    const py = m[1]*x + m[3]*y + m[5];
+    return [toUm(px), toUm(py)];
+  }
+
+  // Tokenize path
+  const tokens = [];
+  const re = /([MmLlHhVvCcSsQqTtAaZz])|([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)/g;
+  let match;
+  while ((match = re.exec(d)) !== null) {
+    tokens.push(match[1] || parseFloat(match[2]));
+  }
+
+  let i = 0;
+  let cx = 0, cy = 0;        // current point
+  let startX = 0, startY = 0; // subpath start
+  let lastCmd = '';
+  let lastCtrlX = cx, lastCtrlY = cy;
+  let currentPts = [];        // accumulate polyline points
+
+  function num() { return typeof tokens[i] === 'number' ? tokens[i++] : 0; }
+
+  function flushPoly() {
+    if (currentPts.length >= 2) {
+      entities.push({ type: 'POLYLINE', pts: [...currentPts], bulges: {}, closed: false, layer });
+    }
+    currentPts = [];
+  }
+
+  function addPt(x, y) {
+    const p = applyM(x, y);
+    if (currentPts.length === 0 || currentPts[currentPts.length-1][0] !== p[0] || currentPts[currentPts.length-1][1] !== p[1]) {
+      currentPts.push(p);
+    }
+  }
+
+  while (i < tokens.length) {
+    const cmd = tokens[i];
+    if (typeof cmd !== 'string') { i++; continue; }
+    i++;
+    lastCmd = cmd;
+
+    if (cmd === 'M' || cmd === 'm') {
+      flushPoly();
+      const abs = cmd === 'M';
+      let first = true;
+      while (i < tokens.length && typeof tokens[i] === 'number') {
+        const dx = num(), dy = num();
+        cx = abs ? dx : cx + dx;
+        cy = abs ? dy : cy + dy;
+        if (first) { startX = cx; startY = cy; first = false; }
+        addPt(cx, cy);
+      }
+    }
+    else if (cmd === 'L' || cmd === 'l') {
+      const abs = cmd === 'L';
+      while (i < tokens.length && typeof tokens[i] === 'number') {
+        const dx = num(), dy = num();
+        cx = abs ? dx : cx + dx;
+        cy = abs ? dy : cy + dy;
+        addPt(cx, cy);
+      }
+    }
+    else if (cmd === 'H' || cmd === 'h') {
+      const abs = cmd === 'H';
+      while (i < tokens.length && typeof tokens[i] === 'number') {
+        cx = abs ? num() : cx + num();
+        addPt(cx, cy);
+      }
+    }
+    else if (cmd === 'V' || cmd === 'v') {
+      const abs = cmd === 'V';
+      while (i < tokens.length && typeof tokens[i] === 'number') {
+        cy = abs ? num() : cy + num();
+        addPt(cx, cy);
+      }
+    }
+    else if (cmd === 'C' || cmd === 'c') {
+      // Cubic bezier — subdivide into segments
+      const abs = cmd === 'C';
+      while (i < tokens.length && typeof tokens[i] === 'number') {
+        const x1 = abs ? num() : cx + num(), y1 = abs ? num() : cy + num();
+        const x2 = abs ? num() : cx + num(), y2 = abs ? num() : cy + num();
+        const ex = abs ? num() : cx + num(), ey = abs ? num() : cy + num();
+        lastCtrlX = x2; lastCtrlY = y2;
+        subdivideCubic(cx, cy, x1, y1, x2, y2, ex, ey, addPt);
+        cx = ex; cy = ey;
+      }
+    }
+    else if (cmd === 'S' || cmd === 's') {
+      const abs = cmd === 'S';
+      while (i < tokens.length && typeof tokens[i] === 'number') {
+        const x1 = 2*cx - lastCtrlX, y1 = 2*cy - lastCtrlY;
+        const x2 = abs ? num() : cx + num(), y2 = abs ? num() : cy + num();
+        const ex = abs ? num() : cx + num(), ey = abs ? num() : cy + num();
+        lastCtrlX = x2; lastCtrlY = y2;
+        subdivideCubic(cx, cy, x1, y1, x2, y2, ex, ey, addPt);
+        cx = ex; cy = ey;
+      }
+    }
+    else if (cmd === 'Q' || cmd === 'q') {
+      const abs = cmd === 'Q';
+      while (i < tokens.length && typeof tokens[i] === 'number') {
+        const x1 = abs ? num() : cx + num(), y1 = abs ? num() : cy + num();
+        const ex = abs ? num() : cx + num(), ey = abs ? num() : cy + num();
+        lastCtrlX = x1; lastCtrlY = y1;
+        subdivideQuadratic(cx, cy, x1, y1, ex, ey, addPt);
+        cx = ex; cy = ey;
+      }
+    }
+    else if (cmd === 'T' || cmd === 't') {
+      const abs = cmd === 'T';
+      while (i < tokens.length && typeof tokens[i] === 'number') {
+        const x1 = 2*cx - lastCtrlX, y1 = 2*cy - lastCtrlY;
+        const ex = abs ? num() : cx + num(), ey = abs ? num() : cy + num();
+        lastCtrlX = x1; lastCtrlY = y1;
+        subdivideQuadratic(cx, cy, x1, y1, ex, ey, addPt);
+        cx = ex; cy = ey;
+      }
+    }
+    else if (cmd === 'A' || cmd === 'a') {
+      const abs = cmd === 'A';
+      while (i < tokens.length && typeof tokens[i] === 'number') {
+        const rx = num(), ry = num();
+        const xRot = num();
+        const largeArc = num();
+        const sweep = num();
+        const ex = abs ? num() : cx + num();
+        const ey = abs ? num() : cy + num();
+        // Convert SVG arc to points
+        svgArcToPoints(cx, cy, rx, ry, xRot, largeArc, sweep, ex, ey, addPt);
+        cx = ex; cy = ey;
+      }
+    }
+    else if (cmd === 'Z' || cmd === 'z') {
+      // Close path
+      addPt(startX, startY);
+      if (currentPts.length >= 2) {
+        entities.push({ type: 'POLYLINE', pts: [...currentPts], bulges: {}, closed: true, layer });
+        currentPts = [];
+      }
+      cx = startX; cy = startY;
+    }
+  }
+
+  flushPoly();
+  return entities;
+}
+
+function subdivideCubic(x0, y0, x1, y1, x2, y2, x3, y3, addPt, depth) {
+  depth = depth || 0;
+  if (depth > 6) { addPt(x3, y3); return; }
+  const flatness = Math.max(
+    Math.abs(x1 - x0) + Math.abs(y1 - y0),
+    Math.abs(x2 - x3) + Math.abs(y2 - y3)
+  );
+  if (flatness < 0.5) { addPt(x3, y3); return; }
+  const mx01 = (x0+x1)/2, my01 = (y0+y1)/2;
+  const mx12 = (x1+x2)/2, my12 = (y1+y2)/2;
+  const mx23 = (x2+x3)/2, my23 = (y2+y3)/2;
+  const mx012 = (mx01+mx12)/2, my012 = (my01+my12)/2;
+  const mx123 = (mx12+mx23)/2, my123 = (my12+my23)/2;
+  const mx = (mx012+mx123)/2, my = (my012+my123)/2;
+  subdivideCubic(x0,y0, mx01,my01, mx012,my012, mx,my, addPt, depth+1);
+  subdivideCubic(mx,my, mx123,my123, mx23,my23, x3,y3, addPt, depth+1);
+}
+
+function subdivideQuadratic(x0, y0, x1, y1, x2, y2, addPt, depth) {
+  depth = depth || 0;
+  if (depth > 6) { addPt(x2, y2); return; }
+  const flatness = Math.abs(x1 - (x0+x2)/2) + Math.abs(y1 - (y0+y2)/2);
+  if (flatness < 0.5) { addPt(x2, y2); return; }
+  const mx01 = (x0+x1)/2, my01 = (y0+y1)/2;
+  const mx12 = (x1+x2)/2, my12 = (y1+y2)/2;
+  const mx = (mx01+mx12)/2, my = (my01+my12)/2;
+  subdivideQuadratic(x0,y0, mx01,my01, mx,my, addPt, depth+1);
+  subdivideQuadratic(mx,my, mx12,my12, x2,y2, addPt, depth+1);
+}
+
+function svgArcToPoints(x1, y1, rx, ry, phi, largeArc, sweep, x2, y2, addPt) {
+  if (rx === 0 || ry === 0) { addPt(x2, y2); return; }
+  const cosPhi = Math.cos(phi * Math.PI/180);
+  const sinPhi = Math.sin(phi * Math.PI/180);
+  const dx = (x1 - x2) / 2, dy = (y1 - y2) / 2;
+  const x1p =  cosPhi*dx + sinPhi*dy;
+  const y1p = -sinPhi*dx + cosPhi*dy;
+  let rxSq = rx*rx, rySq = ry*ry;
+  const x1pSq = x1p*x1p, y1pSq = y1p*y1p;
+  let sq = (rxSq*rySq - rxSq*y1pSq - rySq*x1pSq) / (rxSq*y1pSq + rySq*x1pSq);
+  sq = sq < 0 ? 0 : Math.sqrt(sq);
+  const sign = largeArc === sweep ? -1 : 1;
+  const cxp =  sign * sq * rx * y1p / ry;
+  const cyp = -sign * sq * ry * x1p / rx;
+  const cx = cosPhi*cxp - sinPhi*cyp + (x1+x2)/2;
+  const cy = sinPhi*cxp + cosPhi*cyp + (y1+y2)/2;
+  const ux = (x1p - cxp) / rx, uy = (y1p - cyp) / ry;
+  const vx = (-x1p - cxp) / rx, vy = (-y1p - cyp) / ry;
+  let startAngle = Math.atan2(uy, ux);
+  let dAngle = Math.atan2(vy, vx) - startAngle;
+  if (sweep === 0 && dAngle > 0) dAngle -= 2*Math.PI;
+  if (sweep === 1 && dAngle < 0) dAngle += 2*Math.PI;
+  const steps = Math.max(8, Math.ceil(Math.abs(dAngle) * Math.max(rx,ry) / 2));
+  for (let s = 1; s <= steps; s++) {
+    const a = startAngle + dAngle * s / steps;
+    const x = cosPhi*rx*Math.cos(a) - sinPhi*ry*Math.sin(a) + cx;
+    const y = sinPhi*rx*Math.cos(a) + cosPhi*ry*Math.sin(a) + cy;
+    addPt(x, y);
+  }
+}
+
+// ─────────────────────────────────────────────
+// DXF PARSER
+// ─────────────────────────────────────────────
+function parseDXF(text) {
+  const lines = text.split(/\r?\n/);
+  const entities = [];
+  let i = 0;
+
+  // Find ENTITIES section
+  while (i < lines.length && lines[i].trim() !== 'ENTITIES') i++;
+  i++;
+
+  const scaleFactor = getScaleFactor();
+
+  function toUm(v) { return Math.round(v * scaleFactor); }
+
+  while (i < lines.length) {
+    const code = lines[i]?.trim();
+    const val = lines[i+1]?.trim();
+    i += 2;
+    if (code === undefined) break;
+
+    if (code === '0') {
+      if (val === 'ENDSEC' || val === 'EOF') break;
+
+      if (val === 'LINE') {
+        const props = readEntityProps(lines, i);
+        i = props.nextI;
+        const x1 = toUm(parseF(props['10']));
+        const y1 = toUm(parseF(props['20']));
+        const x2 = toUm(parseF(props['11']));
+        const y2 = toUm(parseF(props['21']));
+        if (dist(x1,y1,x2,y2) > 0.5) {
+          entities.push({ type: 'LINE', x1, y1, x2, y2, layer: props['8'] || '0' });
+        }
+      }
+
+      else if (val === 'ARC') {
+        const props = readEntityProps(lines, i);
+        i = props.nextI;
+        const cx = toUm(parseF(props['10']));
+        const cy = toUm(parseF(props['20']));
+        const r  = toUm(parseF(props['40']));
+        const a1 = parseF(props['50']); // start angle deg
+        const a2 = parseF(props['51']); // end angle deg
+        entities.push({ type: 'ARC', cx, cy, r, a1, a2, layer: props['8'] || '0' });
+      }
+
+      else if (val === 'CIRCLE') {
+        const props = readEntityProps(lines, i);
+        i = props.nextI;
+        const cx = toUm(parseF(props['10']));
+        const cy = toUm(parseF(props['20']));
+        const r  = toUm(parseF(props['40']));
+        entities.push({ type: 'CIRCLE', cx, cy, r, layer: props['8'] || '0' });
+      }
+
+      else if (val === 'LWPOLYLINE' || val === 'POLYLINE') {
+        const props = readEntityProps(lines, i);
+        i = props.nextI;
+        const pts = props._polypts || [];
+        const closed = (parseInt(props['70'] || '0') & 1) === 1;
+        const bulges = props._bulges || {};
+        if (pts.length >= 2) {
+          entities.push({ type: 'POLYLINE', pts: pts.map(p => [toUm(p[0]), toUm(p[1])]), bulges, closed, layer: props['8'] || '0' });
+        }
+      }
+
+      else if (val === 'SPLINE') {
+        const props = readEntityProps(lines, i);
+        i = props.nextI;
+        const pts = props._ctrlpts || [];
+        if (pts.length >= 2) {
+          log(`⚠ SPLINE fundet (${pts.length} kontrolpunkter) — approksimeres som polyline`, 'warn');
+          entities.push({ type: 'SPLINE', pts: pts.map(p => [toUm(p[0]), toUm(p[1])]), layer: props['8'] || '0' });
+        }
+      }
+    }
+  }
+
+  // Normalize: shift all coordinates so min(X,Y) = 0,0
+  return normalizeEntities(entities);
+}
+
+function normalizeEntities(entities) {
+  if (!entities.length) return entities;
+
+  // Find global min X and min Y across all geometry
+  let minX = Infinity, minY = Infinity;
+
+  entities.forEach(e => {
+    if (e.type === 'LINE') {
+      minX = Math.min(minX, e.x1, e.x2);
+      minY = Math.min(minY, e.y1, e.y2);
+    } else if (e.type === 'ARC') {
+      minX = Math.min(minX, e.cx - e.r);
+      minY = Math.min(minY, e.cy - e.r);
+    } else if (e.type === 'CIRCLE') {
+      minX = Math.min(minX, e.cx - e.r);
+      minY = Math.min(minY, e.cy - e.r);
+    } else if (e.pts) {
+      e.pts.forEach(([px, py]) => {
+        minX = Math.min(minX, px);
+        minY = Math.min(minY, py);
+      });
+    }
+  });
+
+  // Only shift if needed
+  if (minX === 0 && minY === 0) return entities;
+
+  const ox = minX < 0 ? -minX : (minX > 0 ? -minX : 0);
+  const oy = minY < 0 ? -minY : (minY > 0 ? -minY : 0);
+
+  if (ox !== 0 || oy !== 0) {
+    log(`Offset: X${ox > 0 ? '+' : ''}${(ox/1000).toFixed(3)} mm, Y${oy > 0 ? '+' : ''}${(oy/1000).toFixed(3)} mm → nulpunkt sat til 0,0`, 'warn');
+  }
+
+  return entities.map(e => {
+    if (e.type === 'LINE') {
+      return { ...e, x1: e.x1 + ox, y1: e.y1 + oy, x2: e.x2 + ox, y2: e.y2 + oy };
+    } else if (e.type === 'ARC') {
+      return { ...e, cx: e.cx + ox, cy: e.cy + oy };
+    } else if (e.type === 'CIRCLE') {
+      return { ...e, cx: e.cx + ox, cy: e.cy + oy };
+    } else if (e.pts) {
+      return { ...e, pts: e.pts.map(([px, py]) => [px + ox, py + oy]) };
+    }
+    return e;
+  });
+}
+
+function readEntityProps(lines, startI) {
+  const props = { nextI: startI };
+  let i = startI;
+  let ptX = null, ptY = null;
+  const polypts = [];
+  const bulges = {};
+  const ctrlpts = [];
+  let ctrlX = null, ctrlY = null;
+  let ptCount = 0;
+
+  while (i < lines.length) {
+    const code = lines[i]?.trim();
+    const val  = lines[i+1]?.trim();
+    if (code === undefined || val === undefined) break;
+    i += 2;
+
+    if (code === '0') { i -= 2; break; }
+
+    if (code === '10') {
+      if (ptX !== null && ptY !== null) { polypts.push([ptX, ptY]); ptCount++; }
+      ptX = parseF(val);
+    } else if (code === '20') {
+      ptY = parseF(val);
+    }
+    // Spline control pts use 10/20 too, but also have knots etc
+    // For SPLINE we also collect 10/20
+    if (code === '42') { bulges[ptCount] = parseF(val); }
+
+    props[code] = val;
+  }
+
+  if (ptX !== null && ptY !== null) polypts.push([ptX, ptY]);
+
+  props._polypts = polypts;
+  props._bulges = bulges;
+  props._ctrlpts = ctrlpts.length > 0 ? ctrlpts : polypts;
+  props.nextI = i;
+  return props;
+}
+
+function getScaleFactor() {
+  const unit = document.getElementById('dxfUnit').value;
+  switch(unit) {
+    case 'mm': return 1000;
+    case 'm':  return 1000000;
+    case 'inch': return 25400;
+    case 'um': return 1;
+    default: return 1000;
+  }
+}
+
+function parseF(v) { return parseFloat(v) || 0; }
+function dist(x1,y1,x2,y2) { return Math.sqrt((x2-x1)**2+(y2-y1)**2); }
+
+// ─────────────────────────────────────────────
+// ENTITY INFO PANEL
+// ─────────────────────────────────────────────
+function updateEntitySection() {
+  const counts = {};
+  parsedEntities.forEach(e => counts[e.type] = (counts[e.type]||0) + 1);
+
+  const grid = document.getElementById('statsGrid');
+  const total = parsedEntities.length;
+  const bbox = getBBox();
+  const wMm = ((bbox.maxX - bbox.minX) / 1000).toFixed(1);
+  const hMm = ((bbox.maxY - bbox.minY) / 1000).toFixed(1);
+
+  grid.innerHTML = `
+    <div class="stat"><div class="stat-val">${total}</div><div class="stat-label">Entiteter</div></div>
+    <div class="stat"><div class="stat-val">${wMm}×${hMm}</div><div class="stat-label">Størrelse (mm)</div></div>
+  `;
+
+  const badges = document.getElementById('entityBadges');
+  const typeMap = { LINE: 'line', ARC: 'arc', CIRCLE: 'circle', POLYLINE: 'poly', SPLINE: 'spline' };
+  badges.innerHTML = Object.entries(counts).map(([t,n]) =>
+    `<span class="entity-badge badge-${typeMap[t]||'line'}">${t} ×${n}</span>`
+  ).join('');
+
+  document.getElementById('entitySection').style.display = 'block';
+}
+
+// ─────────────────────────────────────────────
+// NCP GENERATION
+// ─────────────────────────────────────────────
+document.getElementById('btnConvert').addEventListener('click', generateNCP);
+
+function generateNCP() {
+  if (!parsedEntities.length) return;
+  clearLog();
+  log('Genererer NCP...', 'accent');
+
+  const vel      = document.getElementById('vel').value;
+  const fastvel  = document.getElementById('fastvel').value;
+  const pressure = document.getElementById('pressure').value;
+  const material = document.getElementById('material').value;
+  const startWait= document.getElementById('startWait').value;
+  const arcMode  = document.getElementById('arcMode').value;
+  const rawName  = document.getElementById('outputName')?.value || currentBaseName || 'output';
+  const fname    = rawName.endsWith('.ncp') ? rawName : rawName + '.ncp';
+  const cutOrder = document.getElementById('cutOrder').value;
+
+  let entities = [...parsedEntities];
+  if (cutOrder === 'optimize') {
+    entities = optimizeCutOrder(entities);
+    log(`Optimeret rækkefølge: korteste rejsevej`, 'ok');
+  }
+
+  // Group into cut segments (each SETPORT ON → OFF block)
+  const segments = buildSegments(entities);
+  log(`${segments.length} skæresegment(er) fundet`, 'ok');
+
+  let lines = [];
+
+  // Header
+  lines.push('IMF_PBL_v1.0');
+  lines.push(`;FILE: ${fname}`);
+  lines.push(`;MATR: ${material}`);
+  lines.push(`;DRAWING: ${fname.replace('.ncp','')}.dig`);
+  lines.push(`;DATE: ${todayDanish()}`);
+  lines.push(`;PRESSURE: ${pressure} BAR`);
+  lines.push(`FASTVEL ${fastvel}`);
+  lines.push(`VEL ${vel}`);
+  lines.push(';Valgte dyser : TOOL:1');
+
+  let totalMoves = 0;
+  let totalArcs = 0;
+
+  const leadInMm = parseFloat(document.getElementById('leadIn')?.value || 3);
+  const leadInUm = Math.round(leadInMm * 1000);
+
+  segments.forEach((seg, si) => {
+    const label = 10 + si;
+    lines.push(`;N${label} `);
+
+    // Compute lead-in: move perpendicular to first segment direction, outside contour
+    const leadin = computeLeadIn(seg, leadInUm);
+
+    // Fast move to lead-in start (outside contour)
+    lines.push(`FASTABS X${leadin.x} Y${leadin.y}`);
+    lines.push('WAIT 10');
+    lines.push('SETPORT A4=00000001');
+    lines.push('WAIT 10');
+    lines.push(`WAIT ${startWait}`);
+
+    // Cut moves (including the first move to contour start = the leadin move)
+    seg.forEach(cmd => {
+      if (cmd.type === 'MOVEABS') {
+        lines.push(`MOVEABS X${cmd.x} Y${cmd.y}`);
+        totalMoves++;
+      } else if (cmd.type === 'CCWABS') {
+        lines.push(`CCWABS I${cmd.i} J${cmd.j} X${cmd.x} Y${cmd.y}`);
+        totalArcs++;
+      } else if (cmd.type === 'CWABS') {
+        lines.push(`CWABS I${cmd.i} J${cmd.j} X${cmd.x} Y${cmd.y}`);
+        totalArcs++;
+      }
+    });
+
+    lines.push('WAIT 10');
+    lines.push('SETPORT A4=00000000');
+    lines.push('WAIT 10');
+    lines.push('WAIT 200');
+  });
+
+  lines.push('PROGEND');
+
+  ncpOutput = lines.join('\r\n') + '\r\n';
+
+  log(`✓ ${totalMoves} MOVEABS, ${totalArcs} buer`, 'ok');
+  log(`✓ Fil: ${fname}`, 'ok');
+
+  document.getElementById('btnDownload').classList.remove('hidden');
+  document.getElementById('btnDownload').onclick = () => downloadNCP(fname);
+
+  // Show NCP preview
+  renderNcpPreview(ncpOutput);
+  switchTab('ncp');
+}
+
+function buildSegments(entities) {
+  // Each entity = one segment (FASTABS to start, cut, then off)
+  // But consecutive connected entities can be merged
+  const segments = [];
+  let current = [];
+
+  const cmdsFromEntity = (ent) => {
+    const cmds = [];
+    const mode = document.getElementById('arcMode').value;
+
+    if (ent.type === 'LINE') {
+      cmds.push({ type: 'MOVEABS', x: ent.x1, y: ent.y1 });
+      cmds.push({ type: 'MOVEABS', x: ent.x2, y: ent.y2 });
+    }
+    else if (ent.type === 'ARC') {
+      const { cx, cy, r, a1, a2 } = ent;
+      // Determine direction: DXF arcs go CCW
+      const sx = Math.round(cx + r * Math.cos(a1 * Math.PI / 180));
+      const sy = Math.round(cy + r * Math.sin(a1 * Math.PI / 180));
+      const ex = Math.round(cx + r * Math.cos(a2 * Math.PI / 180));
+      const ey = Math.round(cy + r * Math.sin(a2 * Math.PI / 180));
+      cmds.push({ type: 'MOVEABS', x: sx, y: sy });
+      if (mode === 'native') {
+        cmds.push({ type: 'CCWABS', i: cx, j: cy, x: ex, y: ey });
+      } else {
+        const seg = parseInt(mode);
+        let ang = a1;
+        let endAng = a2;
+        if (endAng <= ang) endAng += 360;
+        while (ang < endAng - seg/2) {
+          ang = Math.min(ang + seg, endAng);
+          const px = Math.round(cx + r * Math.cos(ang * Math.PI / 180));
+          const py = Math.round(cy + r * Math.sin(ang * Math.PI / 180));
+          cmds.push({ type: 'MOVEABS', x: px, y: py });
+        }
+      }
+    }
+    else if (ent.type === 'CIRCLE') {
+      const { cx, cy, r } = ent;
+      const sx = Math.round(cx + r);
+      const sy = cy;
+      cmds.push({ type: 'MOVEABS', x: sx, y: sy });
+      if (mode === 'native') {
+        // Full circle: two half-arcs (CCWABS can't do 360°)
+        const mx = Math.round(cx - r);
+        const my = cy;
+        cmds.push({ type: 'CCWABS', i: cx, j: cy, x: mx, y: my });
+        cmds.push({ type: 'CCWABS', i: cx, j: cy, x: sx, y: sy });
+      } else {
+        const seg = parseInt(mode);
+        for (let a = seg; a <= 360; a += seg) {
+          const rad = a * Math.PI / 180;
+          cmds.push({ type: 'MOVEABS', x: Math.round(cx + r*Math.cos(rad)), y: Math.round(cy + r*Math.sin(rad)) });
+        }
+      }
+    }
+    else if (ent.type === 'POLYLINE' || ent.type === 'SPLINE') {
+      const pts = ent.pts;
+      const bulges = ent.bulges || {};
+      for (let pi = 0; pi < pts.length; pi++) {
+        const [px, py] = pts[pi];
+        const bulge = bulges[pi];
+        if (pi === 0) {
+          cmds.push({ type: 'MOVEABS', x: px, y: py });
+        } else {
+          const [px0, py0] = pts[pi-1];
+          if (bulge && bulge !== 0 && mode === 'native') {
+            // Convert bulge to arc
+            const arc = bulgeToArc(px0, py0, px, py, bulge);
+            if (arc) {
+              const cmd = bulge > 0 ? 'CCWABS' : 'CWABS';
+              cmds.push({ type: cmd, i: arc.cx, j: arc.cy, x: px, y: py });
+            } else {
+              cmds.push({ type: 'MOVEABS', x: px, y: py });
+            }
+          } else {
+            cmds.push({ type: 'MOVEABS', x: px, y: py });
+          }
+        }
+      }
+      if (ent.closed && pts.length > 0) {
+        cmds.push({ type: 'MOVEABS', x: pts[0][0], y: pts[0][1] });
+      }
+    }
+    return cmds;
+  };
+
+  // Try to chain connected entities
+  // Simple approach: group into segments with proximity tolerance
+  const TOLERANCE = 100; // µm = 0.1mm
+
+  const used = new Set();
+  const allCmds = entities.map(e => ({ ent: e, cmds: cmdsFromEntity(e) }));
+
+  // Chain segments
+  while (used.size < allCmds.size || used.size < entities.length) {
+    // Find first unused
+    let startIdx = -1;
+    for (let i = 0; i < allCmds.length; i++) {
+      if (!used.has(i)) { startIdx = i; break; }
+    }
+    if (startIdx === -1) break;
+
+    used.add(startIdx);
+    let seg = [...allCmds[startIdx].cmds];
+    let lastPt = lastPoint(seg);
+
+    // Try to chain
+    let found = true;
+    while (found) {
+      found = false;
+      for (let i = 0; i < allCmds.length; i++) {
+        if (used.has(i)) continue;
+        const firstPt = firstPoint(allCmds[i].cmds);
+        const lastPtEnt = lastPoint(allCmds[i].cmds);
+        if (ptDist(lastPt, firstPt) < TOLERANCE) {
+          used.add(i);
+          seg = seg.concat(allCmds[i].cmds.slice(1));
+          lastPt = lastPoint(seg);
+          found = true;
+          break;
+        } else if (ptDist(lastPt, lastPtEnt) < TOLERANCE) {
+          // Reverse
+          const rev = [...allCmds[i].cmds].reverse().map(reverseCmd);
+          used.add(i);
+          seg = seg.concat(rev.slice(1));
+          lastPt = lastPoint(seg);
+          found = true;
+          break;
+        }
+      }
+    }
+
+    segments.push(seg);
+  }
+
+  return segments;
+}
+
+function reverseCmd(cmd) {
+  if (cmd.type === 'MOVEABS') return cmd;
+  if (cmd.type === 'CCWABS') return { ...cmd, type: 'CWABS' };
+  if (cmd.type === 'CWABS')  return { ...cmd, type: 'CCWABS' };
+  return cmd;
+}
+
+function firstPoint(cmds) {
+  const f = cmds[0];
+  return f ? { x: f.x || 0, y: f.y || 0 } : { x: 0, y: 0 };
+}
+
+function lastPoint(cmds) {
+  const l = cmds[cmds.length - 1];
+  return l ? { x: l.x || 0, y: l.y || 0 } : { x: 0, y: 0 };
+}
+
+function ptDist(a, b) {
+  return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2);
+}
+
+function segmentStart(seg) {
+  return firstPoint(seg);
+}
+
+function optimizeCutOrder(entities) {
+  if (entities.length <= 1) return entities;
+  const result = [entities[0]];
+  const rem = entities.slice(1);
+  while (rem.length) {
+    const last = result[result.length - 1];
+    const lastEnd = entityEnd(last);
+    let best = 0, bestD = Infinity;
+    rem.forEach((e, i) => {
+      const d = ptDist(lastEnd, entityStart(e));
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    result.push(rem.splice(best, 1)[0]);
+  }
+  return result;
+}
+
+function entityStart(e) {
+  if (e.type === 'LINE') return { x: e.x1, y: e.y1 };
+  if (e.type === 'ARC') {
+    return { x: Math.round(e.cx + e.r * Math.cos(e.a1 * Math.PI/180)),
+             y: Math.round(e.cy + e.r * Math.sin(e.a1 * Math.PI/180)) };
+  }
+  if (e.type === 'CIRCLE') return { x: Math.round(e.cx + e.r), y: e.cy };
+  if (e.pts && e.pts.length) return { x: e.pts[0][0], y: e.pts[0][1] };
+  return { x: 0, y: 0 };
+}
+
+function entityEnd(e) {
+  if (e.type === 'LINE') return { x: e.x2, y: e.y2 };
+  if (e.type === 'ARC') {
+    return { x: Math.round(e.cx + e.r * Math.cos(e.a2 * Math.PI/180)),
+             y: Math.round(e.cy + e.r * Math.sin(e.a2 * Math.PI/180)) };
+  }
+  if (e.type === 'CIRCLE') return { x: Math.round(e.cx + e.r), y: e.cy };
+  if (e.pts && e.pts.length) return { x: e.pts[e.pts.length-1][0], y: e.pts[e.pts.length-1][1] };
+  return { x: 0, y: 0 };
+}
+
+function bulgeToArc(x1, y1, x2, y2, bulge) {
+  try {
+    const d = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+    const r = d * (bulge**2 + 1) / (4 * Math.abs(bulge));
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    const s = Math.atan(bulge) * 2;
+    const cx = x1 + r * Math.cos(a + Math.PI/2 - s/2) * Math.cos(s/2 - Math.PI/2) ;
+    const cy = y1 + r * Math.sin(a + Math.PI/2 - s/2) * Math.cos(s/2 - Math.PI/2);
+    // Simplified: midpoint method
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+    const sagitta = bulge * d / 2;
+    const nx = -(y2 - y1) / d;
+    const ny = (x2 - x1) / d;
+    return { cx: Math.round(mx + nx * (r - sagitta)), cy: Math.round(my + ny * (r - sagitta)) };
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
+// LEAD-IN / LEAD-OUT
+// ─────────────────────────────────────────────
+function computeLeadIn(seg, leadUm) {
+  // Find first actual movement direction
+  const p0 = firstPoint(seg);
+  let p1 = p0;
+  for (let i = 1; i < seg.length; i++) {
+    const c = seg[i];
+    const px = c.x !== undefined ? c.x : 0;
+    const py = c.y !== undefined ? c.y : 0;
+    if (px !== p0.x || py !== p0.y) { p1 = { x: px, y: py }; break; }
+  }
+  // Direction vector from p0 toward p1
+  const dx = p1.x - p0.x, dy = p1.y - p0.y;
+  const len = Math.sqrt(dx*dx + dy*dy) || 1;
+  const nx = dx / len, ny = dy / len;
+  // Lead-in point: go BACKWARDS from p0 along that direction
+  return { x: Math.round(p0.x - nx * leadUm), y: Math.round(p0.y - ny * leadUm) };
+}
+
+// ─────────────────────────────────────────────
+// MANUAL SHAPE GENERATOR
+// ─────────────────────────────────────────────
+let currentShapeTab = 'rect';
+
+function switchShapeTab(tab) {
+  currentShapeTab = tab;
+  ['rect','circle','flange'].forEach(t => {
+    document.getElementById('shape'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('shapeTab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t === tab);
+  });
+}
+
+function generateShapeNCP() {
+  const leadInMm = parseFloat(document.getElementById('leadIn')?.value || 3);
+  const leadInUm = Math.round(leadInMm * 1000);
+  const vel      = document.getElementById('vel').value;
+  const fastvel  = document.getElementById('fastvel').value;
+  const pressure = document.getElementById('pressure').value;
+  const material = document.getElementById('material').value;
+  const startWait= document.getElementById('startWait').value;
+
+  let shapeEntities = [];
+  let autoName = 'emne';
+
+  if (currentShapeTab === 'rect') {
+    const W = Math.round(parseFloat(document.getElementById('rectW').value) * 1000);
+    const H = Math.round(parseFloat(document.getElementById('rectH').value) * 1000);
+    const R = Math.round(parseFloat(document.getElementById('rectR').value || 0) * 1000);
+    autoName = (W/1000)+'x'+(H/1000);
+    if (R === 0) {
+      shapeEntities.push({ type: 'POLYLINE', pts: [[0,0],[W,0],[W,H],[0,H],[0,0]], bulges:{}, closed:true, layer:'0' });
+    } else {
+      // Rounded rect as polyline with arc commands
+      const pts = [];
+      const steps = 16;
+      function addArcPts(cx, cy, fromDeg, toDeg) {
+        for (let s = 0; s <= steps; s++) {
+          const a = (fromDeg + (toDeg-fromDeg)*s/steps) * Math.PI/180;
+          pts.push([Math.round(cx + R*Math.cos(a)), Math.round(cy + R*Math.sin(a))]);
+        }
+      }
+      addArcPts(R, R, 180, 270);
+      addArcPts(W-R, R, 270, 360);
+      addArcPts(W-R, H-R, 0, 90);
+      addArcPts(R, H-R, 90, 180);
+      pts.push(pts[0]);
+      shapeEntities.push({ type: 'POLYLINE', pts, bulges:{}, closed:true, layer:'0' });
+    }
+  }
+  else if (currentShapeTab === 'circle') {
+    const D = parseFloat(document.getElementById('circD').value);
+    const r = Math.round(D * 500);
+    const cx = r, cy = r;
+    autoName = 'ø'+D;
+    shapeEntities.push({ type: 'CIRCLE', cx, cy, r, layer:'0' });
+  }
+  else if (currentShapeTab === 'flange') {
+    const OD = parseFloat(document.getElementById('flangeOD').value);
+    const ID = parseFloat(document.getElementById('flangeID').value);
+    const ro = Math.round(OD * 500);
+    const ri = Math.round(ID * 500);
+    const cx = ro, cy = ro;
+    autoName = 'flange_od'+OD+'_id'+ID;
+    // Inner hole first, then outer
+    shapeEntities.push({ type: 'CIRCLE', cx, cy, r: ri, layer:'0' });
+    shapeEntities.push({ type: 'CIRCLE', cx, cy, r: ro, layer:'0' });
+  }
+
+  const rawName = document.getElementById('shapeOutputName')?.value || autoName;
+  const fname = rawName.endsWith('.ncp') ? rawName : rawName + '.ncp';
+
+  // Build segments from shape entities
+  parsedEntities = shapeEntities;
+  updateEntitySection();
+  renderPreview();
+
+  const segments = buildSegments(shapeEntities);
+  const lines = [];
+  lines.push('IMF_PBL_v1.0');
+  lines.push(`;FILE: ${fname}`);
+  lines.push(`;MATR: ${material}`);
+  lines.push(`;DRAWING: ${fname.replace('.ncp','')}.dig`);
+  lines.push(`;DATE: ${todayDanish()}`);
+  lines.push(`;PRESSURE: ${pressure} BAR`);
+  lines.push(`FASTVEL ${fastvel}`);
+  lines.push(`VEL ${vel}`);
+  lines.push(';Valgte dyser : TOOL:1');
+
+  segments.forEach((seg, si) => {
+    lines.push(`;N${10+si} `);
+    const leadin = computeLeadIn(seg, leadInUm);
+    lines.push(`FASTABS X${leadin.x} Y${leadin.y}`);
+    lines.push('WAIT 10');
+    lines.push('SETPORT A4=00000001');
+    lines.push('WAIT 10');
+    lines.push(`WAIT ${startWait}`);
+    seg.forEach(cmd => {
+      if (cmd.type === 'MOVEABS') lines.push(`MOVEABS X${cmd.x} Y${cmd.y}`);
+      else if (cmd.type === 'CCWABS') lines.push(`CCWABS I${cmd.i} J${cmd.j} X${cmd.x} Y${cmd.y}`);
+      else if (cmd.type === 'CWABS')  lines.push(`CWABS I${cmd.i} J${cmd.j} X${cmd.x} Y${cmd.y}`);
+    });
+    lines.push('WAIT 10');
+    lines.push('SETPORT A4=00000000');
+    lines.push('WAIT 10');
+    lines.push('WAIT 200');
+  });
+  lines.push('PROGEND');
+
+  ncpOutput = lines.join('\r\n') + '\r\n';
+  currentBaseName = rawName;
+  renderNcpPreview(ncpOutput);
+  document.getElementById('btnDownload').classList.remove('hidden');
+  document.getElementById('btnDownload').onclick = () => downloadNCP(fname);
+  switchTab('ncp');
+  log(`✓ Shape genereret: ${fname}`, 'ok');
+}
+
+// ─────────────────────────────────────────────
+// CANVAS PREVIEW
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('preview');
+const ctx = canvas.getContext('2d');
+
+function getBBox() {
+  if (!parsedEntities.length) return { minX:0, minY:0, maxX:100, maxY:100 };
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  parsedEntities.forEach(e => {
+    if (e.type === 'LINE') {
+      minX = Math.min(minX, e.x1, e.x2); maxX = Math.max(maxX, e.x1, e.x2);
+      minY = Math.min(minY, e.y1, e.y2); maxY = Math.max(maxY, e.y1, e.y2);
+    } else if (e.type === 'ARC' || e.type === 'CIRCLE') {
+      minX = Math.min(minX, e.cx - e.r); maxX = Math.max(maxX, e.cx + e.r);
+      minY = Math.min(minY, e.cy - e.r); maxY = Math.max(maxY, e.cy + e.r);
+    } else if (e.pts) {
+      e.pts.forEach(([px,py]) => {
+        minX = Math.min(minX, px); maxX = Math.max(maxX, px);
+        minY = Math.min(minY, py); maxY = Math.max(maxY, py);
+      });
+    }
+  });
+  return { minX, minY, maxX, maxY };
+}
+
+function fitView() {
+  const wrap = canvas.parentElement;
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  const bbox = getBBox();
+  const pad = 40;
+  const scaleX = (canvas.width - pad*2) / Math.max(bbox.maxX - bbox.minX, 1);
+  const scaleY = (canvas.height - pad*2) / Math.max(bbox.maxY - bbox.minY, 1);
+  const scale = Math.min(scaleX, scaleY);
+  canvasTransform = {
+    scale,
+    tx: pad - bbox.minX * scale + ((canvas.width - pad*2) - (bbox.maxX - bbox.minX) * scale) / 2,
+    ty: pad - bbox.minY * scale + ((canvas.height - pad*2) - (bbox.maxY - bbox.minY) * scale) / 2
+  };
+  renderCanvas();
+}
+
+function zoom(factor) {
+  canvasTransform.scale *= factor;
+  renderCanvas();
+}
+
+function renderPreview() {
+  if (currentTab === 'geom') fitView();
+}
+
+function renderCanvas() {
+  const w = canvas.width, h = canvas.height;
+  const { scale, tx, ty } = canvasTransform;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid
+  ctx.strokeStyle = '#1a1d21';
+  ctx.lineWidth = 1;
+  const gridStep = Math.round(10000 * scale) > 8 ? 10000 : 50000; // 10mm or 50mm
+  const bbox = getBBox();
+  // grid from 0
+  const gStartX = Math.floor(-tx / scale / gridStep) * gridStep;
+  const gStartY = Math.floor(-ty / scale / gridStep) * gridStep;
+  for (let gx = gStartX; gx < (w - tx) / scale; gx += gridStep) {
+    const sx = gx * scale + tx;
+    if (sx < 0 || sx > w) continue;
+    ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, h); ctx.stroke();
+  }
+  for (let gy = gStartY; gy < (h - ty) / scale; gy += gridStep) {
+    const sy = gy * scale + ty;
+    if (sy < 0 || sy > h) continue;
+    ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(w, sy); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#2a2d32';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(tx, 0); ctx.lineTo(tx, h); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(w, ty); ctx.stroke();
+
+  const toSX = x => x * scale + tx;
+  const toSY = y => y * scale + ty;
+
+  const colors = {
+    LINE: '#79c0ff',
+    ARC: '#ffa657',
+    CIRCLE: '#d2a8ff',
+    POLYLINE: '#56d364',
+    SPLINE: '#ffcc00'
+  };
+
+  parsedEntities.forEach(e => {
+    ctx.strokeStyle = colors[e.type] || '#79c0ff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+
+    if (e.type === 'LINE') {
+      ctx.moveTo(toSX(e.x1), toSY(e.y1));
+      ctx.lineTo(toSX(e.x2), toSY(e.y2));
+    }
+    else if (e.type === 'ARC') {
+      const r = e.r * scale;
+      ctx.arc(toSX(e.cx), toSY(e.cy), r, -e.a2 * Math.PI/180, -e.a1 * Math.PI/180);
+    }
+    else if (e.type === 'CIRCLE') {
+      ctx.arc(toSX(e.cx), toSY(e.cy), e.r * scale, 0, Math.PI*2);
+    }
+    else if (e.type === 'POLYLINE' || e.type === 'SPLINE') {
+      e.pts.forEach(([px,py], i) => {
+        if (i === 0) ctx.moveTo(toSX(px), toSY(py));
+        else ctx.lineTo(toSX(px), toSY(py));
+      });
+      if (e.closed) ctx.closePath();
+    }
+
+    ctx.stroke();
+  });
+
+  // Start points
+  parsedEntities.forEach(e => {
+    const s = entityStart(e);
+    ctx.fillStyle = '#00e5a0';
+    ctx.beginPath();
+    ctx.arc(toSX(s.x), toSY(s.y), 3, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // Info
+  const bbox2 = getBBox();
+  const wMm = ((bbox2.maxX - bbox2.minX) / 1000).toFixed(1);
+  const hMm = ((bbox2.maxY - bbox2.minY) / 1000).toFixed(1);
+  document.getElementById('coordOverlay').textContent =
+    `Størrelse: ${wMm} × ${hMm} mm  |  Zoom: ${(scale*1000).toFixed(0)}  |  Entiteter: ${parsedEntities.length}`;
+}
+
+// Pan
+canvas.addEventListener('mousedown', e => { isDragging = true; dragStart = { x: e.clientX - canvasTransform.tx, y: e.clientY - canvasTransform.ty }; });
+canvas.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  canvasTransform.tx = e.clientX - dragStart.x;
+  canvasTransform.ty = e.clientY - dragStart.y;
+  renderCanvas();
+});
+canvas.addEventListener('mouseup', () => isDragging = false);
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.12 : 1/1.12;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  canvasTransform.tx = mx - (mx - canvasTransform.tx) * factor;
+  canvasTransform.ty = my - (my - canvasTransform.ty) * factor;
+  canvasTransform.scale *= factor;
+  renderCanvas();
+}, { passive: false });
+
+// ─────────────────────────────────────────────
+// NCP SYNTAX HIGHLIGHT
+// ─────────────────────────────────────────────
+function renderNcpPreview(ncp) {
+  const el = document.getElementById('viewNcp');
+  const lines = ncp.split('\r\n');
+  el.innerHTML = lines.map(line => {
+    if (line.startsWith(';')) return `<span class="cmd-comment">${esc(line)}</span>`;
+    if (line.startsWith('IMF_') || line.startsWith('FASTVEL') || line.startsWith('VEL ') || line.startsWith('PROGEND')) return `<span class="cmd-header">${esc(line)}</span>`;
+    if (line.startsWith('FASTABS')) return `<span class="cmd-fast">${esc(line)}</span>`;
+    if (line.startsWith('MOVEABS')) return `<span class="cmd-move">${esc(line)}</span>`;
+    if (line.startsWith('CWABS') || line.startsWith('CCWABS')) return `<span class="cmd-arc">${esc(line)}</span>`;
+    if (line.startsWith('SETPORT') || line.startsWith('WAIT')) return `<span class="cmd-control">${esc(line)}</span>`;
+    return `<span>${esc(line)}</span>`;
+  }).join('\n');
+  document.getElementById('previewInfo').textContent = `${lines.length} linjer`;
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+// ─────────────────────────────────────────────
+// TAB SWITCH
+// ─────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabGeom').classList.toggle('active', tab === 'geom');
+  document.getElementById('tabNcp').classList.toggle('active', tab === 'ncp');
+  document.getElementById('viewGeom').classList.toggle('hidden', tab !== 'geom');
+  document.getElementById('viewNcp').classList.toggle('hidden', tab !== 'ncp');
+  if (tab === 'geom') { fitView(); }
+}
+
+// ─────────────────────────────────────────────
+// DOWNLOAD
+// ─────────────────────────────────────────────
+function downloadNCP(fname) {
+  // Encode as ISO-8859-1
+  const bytes = [];
+  for (let i = 0; i < ncpOutput.length; i++) {
+    const code = ncpOutput.charCodeAt(i);
+    bytes.push(code & 0xff);
+  }
+  const blob = new Blob([new Uint8Array(bytes)], { type: 'application/octet-stream' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fname;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  log(`✓ Download: ${fname}`, 'ok');
+}
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+function todayDanish() {
+  const d = new Date();
+  return [String(d.getDate()).padStart(2,'0'), String(d.getMonth()+1).padStart(2,'0'), d.getFullYear()].join('-');
+}
+
+// Init canvas size
+window.addEventListener('resize', () => { if (parsedEntities.length) fitView(); });
+const wrap = canvas.parentElement;
+canvas.width = wrap.clientWidth || 800;
+canvas.height = wrap.clientHeight || 600;
+</script>
+</body>
+</html>
