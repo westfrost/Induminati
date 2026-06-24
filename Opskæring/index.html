@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opskæringskalkulator — Transportbånd</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --steel:#1C2B3A; --rust:#C94F1E; --smoke:#F0EDE8; --light:#FAFAF8;
+    --border:#D6D0C8; --text:#1C2B3A; --muted:#6B7A8A;
+    --green:#2E7D32; --green-bg:#E8F5E9;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh}
+  header{background:var(--steel);padding:18px 28px;display:flex;align-items:center;gap:14px}
+  header .logo{width:34px;height:34px;background:var(--rust);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  header .logo svg{width:20px;height:20px}
+  header h1{font-size:16px;font-weight:600;color:#fff}
+  header span{font-size:12px;color:#8A9BB0;font-family:'DM Mono',monospace;margin-left:4px}
+  main{max-width:820px;margin:0 auto;padding:28px 18px 60px;display:flex;flex-direction:column;gap:22px}
+  .card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:22px}
+  .card h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:100px}
+  .field label{font-size:11px;font-weight:500;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+  .field input{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;padding:9px 11px;border:1.5px solid var(--border);border-radius:5px;background:var(--smoke);color:var(--text);outline:none;transition:border-color .15s,background .15s;width:100%}
+  .field input:focus{border-color:var(--rust);background:#fff}
+  .sep{font-size:18px;color:var(--muted);padding-bottom:8px;align-self:flex-end}
+  .col-labels{display:flex;gap:8px;margin-bottom:6px}
+  .col-labels span{font-size:10px;font-weight:600;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;flex:1}
+  .col-labels span.col-qty{max-width:68px}
+  .col-labels span.col-del{width:34px;flex:none}
+  .band-list{display:flex;flex-direction:column;gap:7px}
+  .band-row{display:flex;gap:8px;align-items:center;animation:fadeIn .15s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+  .band-row .field{flex:1}
+  .band-row .field.f-qty{max-width:68px}
+  .band-row .field label{display:none}
+  .btn-del{width:34px;height:38px;flex-shrink:0;border:1.5px solid var(--border);border-radius:5px;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s,background .15s}
+  .btn-del:hover{border-color:var(--rust);color:var(--rust);background:#FDF3EF}
+  .btn-add{margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:1.5px dashed var(--border);border-radius:5px;padding:9px 14px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s}
+  .btn-add:hover{border-color:var(--rust);color:var(--rust)}
+  .btn-calc{background:var(--rust);color:#fff;border:none;border-radius:6px;padding:13px 28px;font-size:15px;font-weight:600;cursor:pointer;align-self:flex-start;transition:background .15s,transform .1s}
+  .btn-calc:hover{background:#b04419}
+  .btn-calc:active{transform:scale(.98)}
+  .error-box{background:#FDF3EF;border:1.5px solid var(--rust);border-radius:6px;padding:12px 16px;font-size:14px;color:var(--rust);font-weight:500;display:none}
+  #result{display:none;flex-direction:column;gap:22px}
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+  .sum-card{background:var(--smoke);border:1px solid var(--border);border-radius:6px;padding:13px 15px}
+  .sum-card.green{background:var(--green-bg);border-color:#A5D6A7}
+  .sum-card .sc-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px}
+  .sum-card.green .sc-lbl{color:var(--green)}
+  .sum-card .sc-val{font-family:'DM Mono',monospace;font-size:17px;font-weight:500}
+  .sum-card.green .sc-val{color:var(--green)}
+  .sum-card .sc-sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .steps{display:flex;flex-direction:column;gap:9px}
+  .step{display:flex;gap:13px;align-items:flex-start;background:var(--smoke);border:1px solid var(--border);border-radius:6px;padding:13px 15px}
+  .step-num{background:var(--steel);color:#fff;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;border-radius:4px;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .step-body{flex:1}
+  .step-title{font-size:14px;font-weight:600;margin-bottom:3px}
+  .step-detail{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);line-height:1.6}
+  .step-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .tag{background:#fff;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:12px}
+  .tag.rest{background:#FFF8ED;border-color:#E0C8A0;color:#7A5A18}
+  .canvas-wrap{background:var(--smoke);border:1px solid var(--border);border-radius:6px;padding:14px;overflow-x:auto}
+  canvas{display:block}
+
+  /* Print button */
+  .btn-print{background:var(--steel);color:#fff;border:none;border-radius:6px;padding:13px 28px;font-size:15px;font-weight:600;cursor:pointer;display:none;align-items:center;gap:8px;transition:background .15s}
+  .btn-print:hover{background:#2e4a63}
+  #result.ready .btn-print{display:inline-flex}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 20 20" fill="none">
+      <rect x="1" y="7" width="18" height="6" rx="3" fill="white" opacity="0.9"/>
+      <circle cx="4" cy="10" r="2.5" fill="white"/>
+      <circle cx="16" cy="10" r="2.5" fill="white"/>
+      <rect x="3" y="9" width="14" height="2" fill="#C94F1E"/>
+    </svg>
+  </div>
+  <h1>Opskæringskalkulator <span>Transportbånd</span></h1>
+</header>
+<main>
+  <div class="card">
+    <h2>Moderrulle</h2>
+    <div class="input-row">
+      <div class="field"><label>Bredde</label><input type="number" id="mr-b" min="1" placeholder="Bredde mm"></div>
+      <div class="sep">×</div>
+      <div class="field"><label>Længde</label><input type="number" id="mr-l" min="1" placeholder="Længde mm"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Buffer — tillæg per bånd</h2>
+    <div class="input-row">
+      <div class="field" style="max-width:180px"><label>Buffer</label><input type="number" id="buffer" min="0" placeholder="Buffer mm"></div>
+      <div class="field" style="max-width:220px"><label>Maks antal strimler (valgfrit)</label><input type="number" id="max-strimler" min="1" placeholder="Ingen begrænsning"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Bånd der skal skæres</h2>
+    <div class="col-labels">
+      <span class="col-qty">Antal</span>
+      <span>Bredde mm</span>
+      <span>Længde mm</span>
+      <span class="col-del"></span>
+    </div>
+    <div class="band-list" id="band-list"></div>
+    <button class="btn-add" id="btn-add">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Tilføj linje
+    </button>
+  </div>
+  <div class="error-box" id="error-box"></div>
+  <div class="btn-row">
+    <button class="btn-calc" id="btn-calc">Beregn opskæring</button>
+  </div>
+  <div id="result">
+    <div class="card"><h2>Oversigt</h2><div class="summary-grid" id="summary-grid"></div></div>
+    <div class="card"><h2>Opskæringsplan</h2><div class="steps" id="steps"></div></div>
+    <div class="card"><h2>Visuel oversigt</h2><div class="canvas-wrap"><canvas id="vis"></canvas></div></div>
+    <button class="btn-print" id="btn-print">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M3 11H1V6h13v5h-2M3 9h9v5H3z" stroke="white" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      Udskriv arbejdsseddel
+    </button>
+  </div>
+</main>
+<script>
+// ── Band rows ─────────────────────────────────────────────────────────────────
+const bandList = document.getElementById('band-list');
+
+function addRow() {
+  const row = document.createElement('div');
+  row.className = 'band-row';
+  row.innerHTML = `
+    <div class="field f-qty"><label>Antal</label><input type="number" class="r-qty" min="1" placeholder="Antal"></div>
+    <div class="field"><label>Bredde</label><input type="number" class="r-b" min="1" placeholder="Bredde mm"></div>
+    <div class="field"><label>Længde</label><input type="number" class="r-l" min="1" placeholder="Længde mm"></div>
+    <button class="btn-del" title="Fjern">×</button>
+  `;
+  row.querySelector('.btn-del').addEventListener('click', () => {
+    if (bandList.children.length > 1) row.remove();
+  });
+  // Tab on last input → add new row
+  row.querySelector('.r-l').addEventListener('keydown', e => {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      addRow();
+    }
+  });
+  bandList.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+document.getElementById('btn-add').addEventListener('click', addRow);
+document.getElementById('btn-print').addEventListener('click', () => { if (_printData) openPrintWindow(_printData); });
+addRow();
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmt = n => Number(n).toLocaleString('da-DK');
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+}
+function clearError() { document.getElementById('error-box').style.display = 'none'; }
+
+function readBands() {
+  const out = [];
+  bandList.querySelectorAll('.band-row').forEach(r => {
+    const qty = parseInt(r.querySelector('.r-qty').value);
+    const b   = parseFloat(r.querySelector('.r-b').value);
+    const l   = parseFloat(r.querySelector('.r-l').value);
+    if (!isNaN(qty) && qty >= 1 && !isNaN(b) && b > 0 && !isNaN(l) && l > 0)
+      for (let i = 0; i < qty; i++) out.push({ b, origL: l });
+  });
+  return out;
+}
+
+// ── Algorithm: minimise cutLen ────────────────────────────────────────────────
+//
+// Objective: distribute bands of same width across K strimler so that
+// the LONGEST strimmel is as SHORT as possible (= minimise cutLen).
+// We try K = 1, 2, 3, ... and for each K binary-search the minimum
+// achievable max-bin-length. We pick the K that gives the globally
+// shortest cutLen (more strimler = shorter cutLen, but uses more width).
+// We stop when adding more strimler no longer improves cutLen.
+
+// Can we fit `sorted` (desc) into K bins each with capacity `cap`?
+function canFit(sorted, K, cap) {
+  if (sorted[0] > cap) return false;
+  const bins = new Array(K).fill(0);
+  for (const x of sorted) {
+    // Find bin with most load that still fits x (best-fit descending)
+    let best = -1;
+    for (let i = 0; i < K; i++) {
+      if (bins[i] + x <= cap) {
+        if (best === -1 || bins[i] > bins[best]) best = i;
+      }
+    }
+    if (best === -1) return false;
+    bins[best] += x;
+  }
+  return true;
+}
+
+// Minimum achievable max-bin-length for exactly K bins
+function minMaxForK(sorted, K, mrL) {
+  const total = sorted.reduce((a, b) => a + b, 0);
+  let lo = sorted[0];           // can't be less than the biggest item
+  let hi = Math.min(total, mrL);
+  if (!canFit(sorted, K, hi)) return Infinity;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (canFit(sorted, K, mid)) hi = mid;
+    else lo = mid + 1;
+  }
+  return lo;
+}
+
+// Reconstruct bin assignment for a given K and cap
+function assignBins(sorted, K, cap) {
+  const bins = new Array(K).fill(0);
+  const binItems = Array.from({ length: K }, () => []);
+  for (const x of sorted) {
+    let best = -1;
+    for (let i = 0; i < K; i++) {
+      if (bins[i] + x <= cap) {
+        if (best === -1 || bins[i] > bins[best]) best = i;
+      }
+    }
+    bins[best] += x;
+    binItems[best].push(x);
+  }
+  return binItems.filter(b => b.length > 0);
+}
+
+// Solve for one width-group: find K and assignment that minimises cutLen
+function solveGroup(lengths, mrL, mrB, width, maxKOverride) {
+  const n = lengths.length;
+  const sorted = [...lengths].sort((a, b) => b - a);
+  const maxKByWidth = Math.floor(mrB / width);
+  const maxK = maxKOverride ? Math.min(maxKOverride, maxKByWidth, n) : Math.min(maxKByWidth, n);
+
+  let bestCutLen = Infinity;
+  let bestK = 1;
+
+  for (let K = 1; K <= maxK; K++) {
+    const cutLen = minMaxForK(sorted, K, mrL);
+    if (cutLen < bestCutLen) {
+      bestCutLen = cutLen;
+      bestK = K;
+    }
+    // Once cutLen equals the largest single item, adding more K won't help
+    if (bestCutLen <= sorted[0]) break;
+  }
+
+  const binItems = assignBins(sorted, bestK, bestCutLen);
+  return { cutLen: bestCutLen, bins: binItems };
+}
+
+// ── Calculate ─────────────────────────────────────────────────────────────────
+document.getElementById('btn-calc').addEventListener('click', calculate);
+
+function calculate() {
+  clearError();
+
+  const mrB    = parseFloat(document.getElementById('mr-b').value);
+  const mrL    = parseFloat(document.getElementById('mr-l').value);
+  const buffer = parseFloat(document.getElementById('buffer').value) || 0;
+  const maxStrimlerInput = parseInt(document.getElementById('max-strimler').value);
+  const maxStrimlerTotal = isNaN(maxStrimlerInput) || maxStrimlerInput < 1 ? null : maxStrimlerInput;
+  if (isNaN(mrB) || mrB <= 0 || isNaN(mrL) || mrL <= 0) {
+    showError('Angiv gyldige mål for moderrullen (bredde og længde).'); return;
+  }
+
+  const rawBands = readBands();
+  if (rawBands.length === 0) {
+    showError('Udfyld mindst ét bånd med antal, bredde og længde.'); return;
+  }
+
+  // Apply buffer
+  const bands = rawBands.map(b => ({ b: b.b, origL: b.origL, l: b.origL + buffer }));
+
+  // Validate individual bands
+  for (const band of bands) {
+    if (band.l > mrL) {
+      showError(`Bånd ${fmt(band.b)} × ${fmt(band.origL)} mm + buffer ${fmt(buffer)} mm = ${fmt(band.l)} mm — overskrider moderrullens længde på ${fmt(mrL)} mm.`);
+      return;
+    }
+    if (band.b > mrB) {
+      showError(`Bånd bredde ${fmt(band.b)} mm overskrider moderrullens bredde på ${fmt(mrB)} mm.`);
+      return;
+    }
+  }
+
+  // Group by width
+  const groups = {};
+  bands.forEach(b => {
+    if (!groups[b.b]) groups[b.b] = [];
+    groups[b.b].push(b);
+  });
+
+  // Solve each group
+  const allStrimler = [];
+  let totalWidth = 0;
+
+  for (const [widthStr, items] of Object.entries(groups)) {
+    const width = parseFloat(widthStr);
+    const lengths = items.map(x => x.l);
+    const { bins } = solveGroup(lengths, mrL, mrB - totalWidth, width, maxStrimlerTotal);
+
+    // Map bin lengths back to original band objects
+    // Build a pool sorted descending to match how bins were built
+    let pool = [...items].sort((a, b) => b.l - a.l);
+
+    for (const bin of bins) {
+      const pieces = [];
+      for (const len of bin) {
+        const idx = pool.findIndex(x => x.l === len);
+        if (idx !== -1) { pieces.push(pool[idx]); pool.splice(idx, 1); }
+      }
+      const totalLen = pieces.reduce((s, p) => s + p.l, 0);
+      allStrimler.push({ width, totalLen, pieces });
+      totalWidth += width;
+    }
+
+    if (totalWidth > mrB) {
+      showError(`Samlet bredde (${fmt(totalWidth)} mm) overskrider moderrullens bredde (${fmt(mrB)} mm).`);
+      return;
+    }
+  }
+
+  // cutLen = longest strimmel across all groups
+  const cutLen = Math.max(...allStrimler.map(s => s.totalLen));
+
+  const restRulle = { b: mrB, l: mrL - cutLen };
+  const sideRest  = { b: mrB - totalWidth, l: cutLen };
+
+  renderResult({ mrB, mrL, buffer, strimler: allStrimler, cutLen, totalWidth, restRulle, sideRest });
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderResult(d) {
+  const res = document.getElementById('result');
+  res.style.display = 'flex';
+
+  // Summary
+  const sg = document.getElementById('summary-grid');
+  sg.innerHTML = '';
+  [
+    { lbl: 'Antal strimler', val: String(d.strimler.length), sub: 'på langs af rullen' },
+    { lbl: 'Opskæret stykke', val: `${fmt(d.totalWidth)} × ${fmt(d.cutLen)} mm`, sub: 'bredde × længde' },
+    { lbl: 'Siderest i opskæret stykke', val: d.sideRest.b > 0 ? `${fmt(d.sideRest.b)} × ${fmt(d.sideRest.l)} mm` : '—', sub: d.sideRest.b > 0 ? 'bredde × længde' : '' },
+    { lbl: 'Tilbage som moderrulle', val: `${fmt(d.restRulle.b)} × ${fmt(d.restRulle.l)} mm`, sub: 'bredde × længde', green: true },
+  ].forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'sum-card' + (item.green ? ' green' : '');
+    el.innerHTML = `<div class="sc-lbl">${item.lbl}</div><div class="sc-val">${item.val}</div>${item.sub ? `<div class="sc-sub">${item.sub}</div>` : ''}`;
+    sg.appendChild(el);
+  });
+
+  // Steps
+  const st = document.getElementById('steps');
+  st.innerHTML = '';
+  let n = 1;
+  let usedWidth = 0;
+  d.strimler.forEach((s, i) => {
+    const tags = s.pieces.map(p =>
+      `${fmt(s.width)} × ${fmt(p.origL)} mm  (+${fmt(d.buffer)} → ${fmt(p.l)} mm)`
+    );
+    if (s.totalLen < d.cutLen)
+      tags.push(`REST: ${fmt(s.width)} × ${fmt(d.cutLen - s.totalLen)} mm`);
+
+    addStep(st, n++,
+      `Strimmel ${i + 1} — ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`,
+      `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.  ${s.pieces.length} bånd i denne strimmel.`,
+      tags
+    );
+    usedWidth += s.width;
+  });
+
+  if (d.sideRest.b > 0)
+    addStep(st, n++,
+      `Siderest — ${fmt(d.sideRest.b)} × ${fmt(d.sideRest.l)} mm`,
+      `Position ${fmt(usedWidth)} – ${fmt(d.mrB)} mm er ubrugt i det afskårne stykke.`,
+      []
+    );
+
+  drawCanvas(d);
+  _printData = d;
+  document.getElementById('result').classList.add('ready');
+  res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function addStep(container, num, title, detail, tags) {
+  const div = document.createElement('div');
+  div.className = 'step';
+  const tagHTML = tags.map(t =>
+    `<span class="tag${t.startsWith('REST:') ? ' rest' : ''}">${t}</span>`
+  ).join('');
+  div.innerHTML = `
+    <div class="step-num">${num}</div>
+    <div class="step-body">
+      <div class="step-title">${title}</div>
+      <div class="step-detail">${detail.replace(/\n/g, '<br>')}</div>
+      ${tagHTML ? `<div class="step-tags">${tagHTML}</div>` : ''}
+    </div>
+  `;
+  container.appendChild(div);
+}
+
+// ── Print window ──────────────────────────────────────────────────────────────
+function buildPrintCanvas(d) {
+  const W = 1200;
+  const scaleW = W / d.mrB;
+  const H = Math.max(80, Math.round(W * 0.12));
+  const scaleL = H / d.cutLen;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  const COLORS = ['#C94F1E','#1565C0','#2E7D32','#6A1B9A','#00695C','#E65100','#0277BD','#558B2F'];
+  ctx.fillStyle = '#E8E4DE';
+  ctx.fillRect(0, 0, W, H);
+  let xOff = 0;
+  d.strimler.forEach((s, i) => {
+    const sw = s.width * scaleW;
+    const sh = s.totalLen * scaleL;
+    const col = COLORS[i % COLORS.length];
+    ctx.fillStyle = hexA(col, 0.18); ctx.fillRect(xOff, 0, sw, H);
+    ctx.fillStyle = hexA(col, 0.7);  ctx.fillRect(xOff, 0, sw, sh);
+    ctx.strokeStyle = hexA(col, 0.9); ctx.lineWidth = 1.5;
+    ctx.strokeRect(xOff + 0.5, 0.5, sw - 1, sh - 1);
+    if (sw > 30 && sh > 14) {
+      const fs = clamp(9, sw / 8, 14);
+      ctx.save();
+      ctx.font = `700 ${fs}px Arial,sans-serif`;
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(`${fmt(s.width)} mm`, xOff + sw/2, sh/2 - fs*0.6);
+      ctx.font = `${clamp(8,fs*0.85,12)}px Arial,monospace`;
+      ctx.fillText(`${fmt(s.totalLen)} mm`, xOff + sw/2, sh/2 + fs*0.7);
+      ctx.restore();
+    }
+    xOff += sw;
+  });
+  if (d.sideRest.b > 0) {
+    const rw = d.sideRest.b * scaleW;
+    ctx.fillStyle = 'rgba(150,140,130,0.2)';
+    ctx.fillRect(xOff, 0, rw, H);
+    if (rw > 40) {
+      ctx.save(); ctx.font = '12px Arial,sans-serif'; ctx.fillStyle = '#aaa';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('Siderest', xOff + rw/2, H/2); ctx.restore();
+    }
+  }
+  ctx.strokeStyle = '#999'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(0.5, 0.5, W-1, H-1);
+  return c.toDataURL('image/png');
+}
+
+function openPrintWindow(d) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('da-DK', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const timeStr = now.toLocaleTimeString('da-DK', {hour:'2-digit',minute:'2-digit'});
+  const imgSrc  = buildPrintCanvas(d);
+
+  let tableRows = '';
+  let usedWidth = 0;
+  let rowNum = 1;
+  d.strimler.forEach((s, si) => {
+    s.pieces.forEach(p => {
+      tableRows += `<tr>
+        <td>${fmt(rowNum++)}</td><td>Strimmel ${si+1}</td>
+        <td>${fmt(usedWidth)} – ${fmt(usedWidth+s.width)}</td>
+        <td>${fmt(s.width)} mm</td>
+        <td>${fmt(p.origL)} mm</td>
+        <td>+ ${fmt(d.buffer)} mm</td>
+        <td><strong>${fmt(p.l)} mm</strong></td></tr>`;
+    });
+    if (s.totalLen < d.cutLen) {
+      tableRows += `<tr class="rest-row"><td>—</td><td>Strimmel ${si+1}</td>
+        <td>${fmt(usedWidth)} – ${fmt(usedWidth+s.width)}</td>
+        <td colspan="3">Længderest</td>
+        <td><strong>${fmt(d.cutLen - s.totalLen)} mm</strong></td></tr>`;
+    }
+    usedWidth += s.width;
+  });
+  if (d.sideRest.b > 0) {
+    tableRows += `<tr class="rest-row"><td>—</td><td colspan="2">Siderest</td>
+      <td>${fmt(d.sideRest.b)} mm</td><td colspan="2">—</td>
+      <td><strong>${fmt(d.sideRest.l)} mm</strong></td></tr>`;
+  }
+
+  const html = `<!DOCTYPE html><html lang="da"><head>
+<meta charset="UTF-8"><title>Arbejdsseddel</title>
+<style>
+@page{size:A4 portrait;margin:13mm 13mm 13mm 13mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:11px;color:#1C2B3A;background:#fff}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #1C2B3A;padding-bottom:8px;margin-bottom:11px}
+.hdr-title{font-size:16px;font-weight:700}
+.hdr-sub{font-size:9px;color:#666;margin-top:3px}
+.hdr-meta{text-align:right;font-size:9px;color:#666;font-family:monospace}
+.section{margin-bottom:11px;page-break-inside:avoid}
+.stitle{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;border-bottom:1px solid #ddd;padding-bottom:3px;margin-bottom:6px}
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.info-cell{background:#F0EDE8;border-radius:3px;padding:6px 8px}
+.info-cell.green{background:#E8F5E9}
+.lbl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:2px}
+.info-cell.green .lbl{color:#2E7D32}
+.val{font-size:13px;font-weight:700;font-family:monospace}
+.info-cell.green .val{color:#2E7D32}
+table{width:100%;border-collapse:collapse}
+th{background:#1C2B3A;color:#fff;font-size:7px;text-transform:uppercase;letter-spacing:.05em;padding:5px 6px;text-align:left;font-weight:700}
+td{padding:4px 6px;border-bottom:1px solid #E8E4DE;font-family:monospace;font-size:10px}
+tr:nth-child(even) td{background:#F8F6F3}
+tr.rest-row td{background:#FFF8ED!important;color:#7A5A18}
+.graf{width:100%;height:auto;display:block;border:1px solid #ccc;border-radius:2px}
+.footer{margin-top:8px;font-size:7px;color:#bbb;text-align:right;border-top:1px solid #eee;padding-top:4px}
+</style></head><body>
+<div class="hdr">
+  <div>
+    <div class="hdr-title">Opskæringsplan — Transportbånd</div>
+    <div class="hdr-sub">Moderrulle: ${fmt(d.mrB)} × ${fmt(d.mrL)} mm &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm &nbsp;|&nbsp; Snit: ${fmt(d.totalWidth)} × ${fmt(d.cutLen)} mm</div>
+  </div>
+  <div class="hdr-meta">Dato: ${dateStr}<br>Kl. ${timeStr}</div>
+</div>
+<div class="section">
+  <div class="stitle">Oversigt</div>
+  <div class="info-grid">
+    <div class="info-cell"><div class="lbl">Antal strimler</div><div class="val">${d.strimler.length}</div></div>
+    <div class="info-cell"><div class="lbl">Opskæret stykke</div><div class="val">${fmt(d.totalWidth)} × ${fmt(d.cutLen)} mm</div></div>
+    <div class="info-cell"><div class="lbl">Siderest</div><div class="val">${d.sideRest.b > 0 ? fmt(d.sideRest.b)+' × '+fmt(d.sideRest.l)+' mm' : '—'}</div></div>
+    <div class="info-cell green"><div class="lbl">Moderrulle tilbage</div><div class="val">${fmt(d.restRulle.b)} × ${fmt(d.restRulle.l)} mm</div></div>
+  </div>
+</div>
+<div class="section">
+  <div class="stitle">Strimler og bånd</div>
+  <table><thead><tr><th>#</th><th>Strimmel</th><th>Position mm</th><th>Bredde</th><th>Orig. længde</th><th>+ Buffer</th><th>= Total</th></tr></thead>
+  <tbody>${tableRows}</tbody></table>
+</div>
+<div class="section">
+  <div class="stitle">Visuel oversigt — afskåret stykke</div>
+  <img class="graf" src="${imgSrc}">
+</div>
+<div class="footer">Udskrevet ${dateStr} kl. ${timeStr} — Opskæringskalkulator Transportbånd</div>
+</body></html>`;
+
+  const w = window.open('', '_blank', 'width=900,height=750');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 500);
+}
+
+// ── Canvas (screen) ───────────────────────────────────────────────────────────
+function drawCanvas(d) {
+  const canvas = document.getElementById('vis');
+  const W = Math.min(760, canvas.parentElement.clientWidth - 28);
+  const scaleW = W / d.mrB;
+  const aspect = Math.min(d.cutLen / d.mrB, 0.35);
+  const H = Math.max(60, Math.round(W * aspect));
+  const scaleL = H / d.cutLen;
+
+  canvas.width  = W;
+  canvas.height = H;
+
+  const ctx = canvas.getContext('2d');
+  const COLORS = ['#C94F1E','#1565C0','#2E7D32','#6A1B9A','#00695C','#E65100','#0277BD','#558B2F'];
+
+  // Background = cut piece
+  ctx.fillStyle = '#DDD8D0';
+  ctx.fillRect(0, 0, W, H);
+
+  let xOff = 0;
+  d.strimler.forEach((s, i) => {
+    const sw  = s.width * scaleW;
+    const sh  = s.totalLen * scaleL;
+    const col = COLORS[i % COLORS.length];
+
+    // Tint for full cut zone height (length-rest)
+    ctx.fillStyle = hexA(col, 0.15);
+    ctx.fillRect(xOff, 0, sw, H);
+
+    // Solid for actual band usage
+    ctx.fillStyle = hexA(col, 0.65);
+    ctx.fillRect(xOff, 0, sw, sh);
+
+    // Border
+    ctx.strokeStyle = hexA(col, 0.85);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(xOff + 0.5, 0.5, sw - 1, sh - 1);
+
+    // Label
+    if (sw >= 22 && sh >= 18) {
+      ctx.save();
+      const fs = clamp(8, sw / 5, 12);
+      ctx.font = `600 ${fs}px Inter,sans-serif`;
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${fmt(s.width)}`, xOff + sw / 2, sh / 2 - fs * 0.7);
+      ctx.font = `${clamp(7, sw / 6, 10)}px DM Mono,monospace`;
+      ctx.fillText(`${fmt(s.totalLen)}`, xOff + sw / 2, sh / 2 + fs * 0.7);
+      ctx.restore();
+    }
+    xOff += sw;
+  });
+
+  // Side rest
+  if (d.sideRest.b > 0) {
+    const rw = d.sideRest.b * scaleW;
+    ctx.fillStyle = 'rgba(150,140,130,0.2)';
+    ctx.fillRect(xOff, 0, rw, H);
+    if (rw >= 20 && H >= 16) {
+      ctx.save();
+      ctx.font = '10px Inter,sans-serif';
+      ctx.fillStyle = '#999';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Siderest', xOff + rw / 2, H / 2);
+      ctx.restore();
+    }
+  }
+
+  // Border
+  ctx.strokeStyle = '#AAA49C';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+  // Width label
+  if (H > 20) {
+    ctx.save();
+    ctx.font = '10px DM Mono,monospace';
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'center';
+    ctx.fillText(`← ${fmt(d.mrB)} mm →`, W / 2, H - 4);
+    ctx.restore();
+  }
+}
+
+function hexA(hex, a) {
+  return `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`;
+}
+function clamp(lo, v, hi) { return Math.max(lo, Math.min(hi, v)); }
+</script>
+</body>
+</html>
