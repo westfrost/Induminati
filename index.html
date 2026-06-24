@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="da">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Induminati</title>
+
+<style>
+
+:root{
+--dark:#123847;
+--blue:#2E728A;
+--orange:#FF7A00;
+--white:#ffffff;
+--card:#356F83;
+}
+
+*{
+box-sizing:border-box;
+}
+
+body{
+
+margin:0;
+
+font-family:
+"Segoe UI",
+Arial,
+sans-serif;
+
+background:
+linear-gradient(
+160deg,
+var(--dark),
+var(--blue)
+);
+
+color:white;
+
+min-height:100vh;
+
+}
+
+header{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:25px 40px;
+
+background:rgba(0,0,0,.15);
+
+backdrop-filter:blur(10px);
+
+}
+
+.logo{
+
+font-size:3rem;
+
+font-weight:900;
+
+letter-spacing:3px;
+
+}
+
+.logo span{
+
+color:var(--orange);
+
+}
+
+.clock{
+
+text-align:right;
+
+}
+
+.time{
+
+font-size:3rem;
+
+font-weight:300;
+
+}
+
+.date{
+
+font-size:.9rem;
+
+opacity:.8;
+
+}
+
+main{
+
+max-width:1200px;
+
+margin:auto;
+
+padding:60px 30px;
+
+}
+
+h2{
+
+font-size:2rem;
+
+margin-bottom:40px;
+
+font-weight:300;
+
+}
+
+.grid{
+
+display:grid;
+
+grid-template-columns:
+
+repeat(
+auto-fit,
+minmax(250px,1fr)
+);
+
+gap:30px;
+
+}
+
+.card{
+
+background:rgba(255,255,255,.08);
+
+backdrop-filter:blur(15px);
+
+border-radius:20px;
+
+padding:35px;
+
+text-decoration:none;
+
+color:white;
+
+transition:.25s;
+
+border:1px solid rgba(255,255,255,.1);
+
+}
+
+.card:hover{
+
+transform:translateY(-10px);
+
+background:rgba(255,255,255,.15);
+
+}
+
+.icon{
+
+font-size:3rem;
+
+margin-bottom:15px;
+
+}
+
+.card h3{
+
+font-size:1.7rem;
+
+margin:0 0 10px 0;
+
+}
+
+.card p{
+
+opacity:.8;
+
+line-height:1.5;
+
+}
+
+footer{
+
+text-align:center;
+
+padding:30px;
+
+opacity:.5;
+
+}
+
+@media(max-width:700px){
+
+header{
+
+flex-direction:column;
+
+gap:20px;
+
+}
+
+.logo{
+
+font-size:2rem;
+
+}
+
+.time{
+
+font-size:2rem;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+
+INDUMINATI<span>.</span>
+
+</div>
+
+<div class="clock">
+
+<div class="time" id="clock"></div>
+
+<div class="date" id="date"></div>
+
+</div>
+
+</header>
+
+<main>
+
+<h2>🛠️ Arbejdsværktøjer</h2>
+
+<div class="grid">
+
+<a class="card" href="Styreliste/">
+
+<div class="icon">📋</div>
+
+<h3>Styreliste</h3>
+
+<p>Beregning og styring af styrelister.</p>
+
+</a>
+
+<a class="card" href="Baanddb/">
+
+<div class="icon">📚</div>
+
+<h3>Bånddatabase</h3>
+
+<p>Opslag og administration af bånd.</p>
+
+</a>
+
+<a class="card" href="DXF/">
+
+<div class="icon">📐</div>
+
+<h3>DXF</h3>
+
+<p>Arbejde med DXF-filer.</p>
+
+</a>
+
+<a class="card" href="Opskæring/">
+
+<div class="icon">✂️</div>
+
+<h3>Opskæring</h3>
+
+<p>Beregning og optimering.</p>
+
+</a>
+
+</div>
+
+</main>
+
+<footer>
+
+Induminati © 2025
+
+</footer>
+
+<script>
+
+function updateClock(){
+
+const now = new Date();
+
+document.getElementById("clock").innerHTML =
+now.toLocaleTimeString(
+"da-DK",
+{
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+}
+);
+
+document.getElementById("date").innerHTML =
+now.toLocaleDateString(
+"da-DK",
+{
+weekday:"long",
+day:"numeric",
+month:"long",
+year:"numeric"
+}
+);
+
+}
+
+updateClock();
+
+setInterval(updateClock,1000);
+
+</script>
+
+</body>
+
+</html>
