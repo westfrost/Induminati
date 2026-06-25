@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,15 +10,16 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #F0F6F8;
-    --surface: #ffffff;
+    --bg:       #F0F6F8;
+    --surface:  #ffffff;
     --surface2: #E6F4F7;
-    --border: #C8DDE4;
-    --accent: #005F7F;
-    --text: #1A3A4A;
-    --text-dim: #5A7A88;
-    --red: #cc2222;
-    --green: #1a7a3a;
+    --border:   #C8DDE4;
+    --dark:     #005F7F;
+    --accent:   #00A0C0;
+    --text:     #1A3A4A;
+    --muted:    #5A7A88;
+    --red:      #cc2222;
+    --green:    #1a7a3a;
   }
 
   body {
@@ -29,15 +30,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px;
+    padding: 32px 20px 60px;
   }
 
+  /* ── Header ── */
   header {
     width: 100%;
-    max-width: 860px;
-    margin-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 20px;
+    max-width: 960px;
+    margin-bottom: 36px;
+    border-bottom: 2px solid var(--dark);
+    padding-bottom: 16px;
     display: flex;
     align-items: baseline;
     gap: 16px;
@@ -45,56 +47,70 @@
 
   header h1 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.8rem;
+    font-size: 2.6rem;
     letter-spacing: 2px;
-    color: var(--accent);
+    color: var(--dark);
     line-height: 1;
   }
 
-  header span {
-    font-size: 0.75rem;
-    color: var(--text-dim);
+  header .sub {
+    font-size: 0.72rem;
+    color: var(--muted);
     letter-spacing: 1px;
     text-transform: uppercase;
+    flex: 1;
   }
 
+  .btn-home {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--muted); text-decoration: none; font-size: 0.72rem;
+    font-weight: 600; padding: 5px 10px; border: 1px solid var(--border);
+    border-radius: 4px; letter-spacing: .5px; white-space: nowrap;
+    transition: color .15s, border-color .15s;
+  }
+  .btn-home:hover { color: var(--dark); border-color: var(--dark); }
+
+  /* ── Layout ── */
   .layout {
     width: 100%;
-    max-width: 860px;
+    max-width: 960px;
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 24px;
+    grid-template-columns: 270px 1fr;
+    gap: 22px;
     align-items: start;
   }
 
+  @media (max-width: 680px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── Panels ── */
   .panel {
     background: var(--surface);
     border: 1px solid var(--border);
-    padding: 24px;
+    padding: 22px;
   }
 
   .panel-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     letter-spacing: 2px;
-    color: var(--text-dim);
+    color: var(--muted);
     text-transform: uppercase;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
+    margin-bottom: 18px;
+    padding-bottom: 9px;
     border-bottom: 1px solid var(--border);
   }
 
-  .field {
-    margin-bottom: 18px;
-  }
+  .field { margin-bottom: 16px; }
 
   label {
     display: block;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     letter-spacing: 1px;
     text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 6px;
+    color: var(--muted);
+    margin-bottom: 5px;
   }
 
   input[type="number"] {
@@ -103,467 +119,575 @@
     border: 1px solid var(--border);
     color: var(--text);
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
-    padding: 10px 12px;
+    padding: 9px 11px;
     outline: none;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, background 0.15s;
     -moz-appearance: textfield;
   }
-
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus { border-color: var(--dark); background: #fff; }
 
-  input[type="number"]:focus {
-    border-color: #005F7F;
-    background: #f0f0f0;
-  }
-
-  .unit {
-    display: inline-block;
-    font-size: 0.65rem;
-    color: var(--accent);
-    margin-left: 4px;
+  .field-hint {
+    font-size: 0.62rem;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: .3px;
+    line-height: 1.4;
   }
 
   .btn {
     width: 100%;
-    background: #005F7F;
-    color: #ffffff;
+    background: var(--dark);
+    color: #fff;
     border: none;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     letter-spacing: 2px;
-    padding: 14px;
+    padding: 13px;
     cursor: pointer;
     transition: background 0.15s, transform 0.1s;
-    margin-top: 8px;
+    margin-top: 6px;
   }
-
-  .btn:hover { background: #00A0C0; }
+  .btn:hover { background: var(--accent); }
   .btn:active { transform: scale(0.98); }
 
-  .error-msg {
+  .btn-print {
+    width: 100%;
+    background: var(--surface);
+    color: var(--dark);
+    border: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: .5px;
+    padding: 8px 14px;
+    cursor: pointer;
+    margin-top: 10px;
+    display: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn-print:hover { background: var(--surface2); border-color: var(--dark); }
+
+  .error-msg {
+    font-size: 0.7rem;
     color: var(--red);
-    margin-top: 12px;
+    margin-top: 10px;
     min-height: 1em;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    line-height: 1.5;
   }
 
-  /* Output panel */
+  /* ── Output ── */
   .output-panel {
     background: var(--surface);
     border: 1px solid var(--border);
-    padding: 24px;
+    padding: 22px;
   }
 
   .diagram-wrap {
     width: 100%;
-    background: #fafafa;
+    background: #f7fafb;
     border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px 10px;
-    min-height: 200px;
-    margin-bottom: 20px;
+    padding: 18px 8px;
+    min-height: 220px;
+    margin-bottom: 22px;
     overflow-x: auto;
   }
 
   svg { display: block; }
 
-  .measurements-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8rem;
-  }
-
-  .measurements-table th {
-    text-align: left;
-    font-size: 0.65rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .measurements-table td {
-    padding: 9px 10px;
-    border-bottom: 1px solid #e8e8e8;
-    font-weight: 500;
-  }
-
-  .measurements-table tr:last-child td { border-bottom: none; }
-
-  .measurements-table td:last-child {
-    color: #1a1a1a;
-    font-weight: 700;
-    text-align: right;
-  }
-
   .placeholder {
-    color: var(--text-dim);
-    font-size: 0.8rem;
+    color: var(--muted);
+    font-size: 0.78rem;
     text-align: center;
     padding: 40px 20px;
     letter-spacing: 1px;
     text-transform: uppercase;
   }
 
+  /* ── Table ── */
+  .table-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .measurements-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    margin-bottom: 18px;
+  }
+
+  .measurements-table th {
+    text-align: left;
+    font-size: 0.62rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .measurements-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e8f0f3;
+    font-weight: 500;
+  }
+
+  .measurements-table td:last-child {
+    font-weight: 700;
+    text-align: right;
+    color: var(--dark);
+  }
+
+  .measurements-table tr.highlight td {
+    background: #E6F4F7;
+    color: var(--dark);
+  }
+
+  .measurements-table tr.highlight td:last-child {
+    color: var(--dark);
+  }
+
+  .measurements-table tr.warn td {
+    background: #fff3f3;
+    color: var(--red);
+  }
+
+  .measurements-table tr.warn td:last-child {
+    color: var(--red);
+  }
+
+  .measurements-table tr:last-child td { border-bottom: none; }
+
   .badge {
     display: inline-block;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     padding: 2px 7px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
+    border-radius: 2px;
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-left: 8px;
     vertical-align: middle;
   }
-
-  .btn-print {
-    background: #ffffff;
-    color: #1a1a1a;
-    border: 1px solid #cccccc;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    padding: 7px 14px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .btn-print:hover { background: #f0f0f0; border-color: #999; }
+  .badge.ok   { background: rgba(26,122,58,.12); border: 1px solid rgba(26,122,58,.3); color: var(--green); }
+  .badge.warn { background: rgba(204,34,34,.1);  border: 1px solid rgba(204,34,34,.3); color: var(--red); }
 
   @media print {
     body * { visibility: hidden; }
     #printArea, #printArea * { visibility: visible; }
-    #printArea {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
+    #printArea { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); }
   }
-
-  .btn-home {
-    display: inline-flex; align-items: center; gap: 6px;
-    color: #5A7A88; text-decoration: none; font-size: 12px; font-weight: 500;
-    padding: 5px 10px; border: 1px solid #C8DDE4; border-radius: 4px;
-    font-family: 'IBM Plex Mono', monospace; letter-spacing: .5px;
-    transition: color .15s, border-color .15s;
-  }
-  .btn-home:hover { color: #005F7F; border-color: #005F7F; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>Styreliste Beregner</h1>
-  <span>Transportbånd Layout Værktøj</span>
-  <a class="btn-home" href="../index.html" style="margin-left:auto">← Forside</a>
+  <span class="sub">Transportbånd layout</span>
+  <a class="btn-home" href="../index.html">← Forside</a>
 </header>
 
 <div class="layout">
 
-  <!-- Input panel -->
+  <!-- Input -->
   <div class="panel">
     <div class="panel-title">Parametre</div>
 
     <div class="field">
-      <label>Båndbredde <span class="unit">mm</span></label>
-      <input type="number" id="beltWidth" min="1" step="0.1" placeholder="0">
+      <label>Båndbredde <span style="color:var(--dark)">mm</span></label>
+      <input type="number" id="beltWidth" min="1" placeholder="fx 500">
     </div>
 
     <div class="field">
-      <label>Antal Styrelister</label>
-      <input type="number" id="numGuides" min="1" max="20" step="1" placeholder="0">
+      <label>Antal styrelister</label>
+      <input type="number" id="numGuides" min="1" max="20" placeholder="fx 2">
     </div>
 
     <div class="field">
-      <label>Styrelistebredde <span class="unit">mm</span></label>
-      <input type="number" id="guideWidth" min="0.1" step="0.1" placeholder="0">
+      <label>Styrelistebredde <span style="color:var(--dark)">mm</span></label>
+      <input type="number" id="guideWidth" min="1" placeholder="fx 20">
     </div>
 
     <div class="field">
-      <label>Center-til-Center <span class="unit">mm</span></label>
-      <input type="number" id="cc" min="0" step="0.1" placeholder="0">
+      <label id="ccLabel">C/C afstand <span style="color:var(--dark)">mm</span></label>
+      <input type="number" id="cc" min="0" placeholder="fx 100">
+      <div class="field-hint" id="ccHint">Center-til-center afstand mellem styrelisterne</div>
     </div>
 
     <button class="btn" onclick="calculate()">Beregn</button>
+    <button class="btn-print" id="printBtn" onclick="doPrint()">⎙ Udskriv diagram</button>
+
     <div class="error-msg" id="errorMsg"></div>
   </div>
 
-  <!-- Output panel -->
+  <!-- Output -->
   <div class="output-panel">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase">Diagram</span>
-      <button class="btn-print" onclick="printDiagram()" id="printBtn" style="display:none">🖨 Print diagram</button>
-    </div>
     <div id="printArea">
-    <div class="diagram-wrap" id="diagramWrap">
-      <div class="placeholder">Indtast parametre og tryk beregn</div>
+      <div class="diagram-wrap" id="diagramWrap">
+        <div class="placeholder">Indtast parametre og tryk beregn</div>
+      </div>
     </div>
-    </div>
-
     <div id="tableWrap"></div>
   </div>
 
 </div>
 
 <script>
-function calculate() {
-  const beltWidth = parseFloat(document.getElementById('beltWidth').value);
-  const numGuides = parseInt(document.getElementById('numGuides').value);
-  const guideWidth = parseFloat(document.getElementById('guideWidth').value);
-  const cc = parseFloat(document.getElementById('cc').value);
-  const errEl = document.getElementById('errorMsg');
-  errEl.textContent = '';
+// ── Update label based on numGuides ──────────────────────────────────────────
+document.getElementById('numGuides').addEventListener('input', updateCCLabel);
 
-  // Validation
-  if (isNaN(beltWidth) || beltWidth <= 0) { errEl.textContent = 'Ugyldig båndbredde.'; return; }
-  if (isNaN(numGuides) || numGuides < 1) { errEl.textContent = 'Ugyldigt antal styrelister.'; return; }
-  if (isNaN(guideWidth) || guideWidth <= 0) { errEl.textContent = 'Ugyldig styrelistebredde.'; return; }
-  if (isNaN(cc) || cc < 0) { errEl.textContent = 'Ugyldig C-C værdi.'; return; }
-
-  // Belt center
-  const beltCenter = beltWidth / 2;
-
-  // Calculate guide center positions
-  // Guides are symmetrically placed around belt center with cc spacing
-  let guideCenters = [];
-  if (numGuides === 1) {
-    guideCenters = [cc]; // cc = distance from belt edge to guide center
+function updateCCLabel() {
+  const n = parseInt(document.getElementById('numGuides').value) || 0;
+  const lbl  = document.getElementById('ccLabel');
+  const hint = document.getElementById('ccHint');
+  if (n <= 1) {
+    lbl.innerHTML  = 'Kant til båndkant <span style="color:var(--dark)">mm</span>';
+    hint.textContent = 'Afstand fra båndkant til styrelistekant — lad stå tomt for at centrere';
   } else {
-    // For multiple guides: they are spaced cc apart, centered on belt
-    const totalSpan = (numGuides - 1) * cc;
-    const firstGuideCenter = beltCenter - totalSpan / 2;
-    for (let i = 0; i < numGuides; i++) {
-      guideCenters.push(firstGuideCenter + i * cc);
-    }
+    lbl.innerHTML  = 'C/C afstand <span style="color:var(--dark)">mm</span>';
+    hint.textContent = 'Center-til-center afstand mellem styrelisterne';
   }
-
-  // Check fit
-  let valid = true;
-  for (const gc of guideCenters) {
-    if (gc - guideWidth / 2 < 0 || gc + guideWidth / 2 > beltWidth) {
-      valid = false;
-    }
-  }
-  if (!valid) {
-    errEl.textContent = 'Advarsel: en eller flere styrelister falder uden for båndbredden.';
-  }
-
-  renderDiagram(beltWidth, numGuides, guideWidth, cc, guideCenters, valid);
-  renderTable(beltWidth, numGuides, guideWidth, cc, guideCenters, valid);
-  document.getElementById('printBtn').style.display = 'inline-block';
 }
 
-function renderDiagram(beltWidth, numGuides, guideWidth, cc, guideCenters, valid) {
-  const wrap = document.getElementById('diagramWrap');
+// ── Main calculation ─────────────────────────────────────────────────────────
+function calculate() {
+  const beltWidth  = parseFloat(document.getElementById('beltWidth').value);
+  const numGuides  = parseInt(document.getElementById('numGuides').value);
+  const guideWidth = parseFloat(document.getElementById('guideWidth').value);
+  const ccVal      = parseFloat(document.getElementById('cc').value);
+  const errEl      = document.getElementById('errorMsg');
+  errEl.textContent = '';
 
-  // SVG dimensions
-  const svgW = 700;
-  const PAD_LEFT = 30;
-  const PAD_RIGHT = 30;
-  const drawW = svgW - PAD_LEFT - PAD_RIGHT;
-  const scale = drawW / beltWidth;
+  if (isNaN(beltWidth)  || beltWidth  <= 0) { errEl.textContent = 'Ugyldig båndbredde.';        return; }
+  if (isNaN(numGuides)  || numGuides  <  1) { errEl.textContent = 'Ugyldigt antal styrelister.'; return; }
+  if (isNaN(guideWidth) || guideWidth <= 0) { errEl.textContent = 'Ugyldig styrelistebredde.';   return; }
+  if (numGuides > 1 && (isNaN(ccVal) || ccVal <= 0)) { errEl.textContent = 'Ugyldig C/C afstand.'; return; }
 
-  const beltH = 60;
-  const beltY = 80;
-  const svgH = beltY + beltH + 100;
+  const beltCenter = beltWidth / 2;
+  let guideCenters = [];
 
-  const beltX = PAD_LEFT;
-  const beltRight = beltX + drawW;
-  const beltCenterX = beltX + drawW / 2;
-
-  // Colors - print friendly light theme
-  const C_BELT = '#d8d8d8';
-  const C_BELT_STRIPE = '#c8c8c8';
-  const C_GUIDE = '#444444';
-  const C_GUIDE_EDGE = '#222222';
-  const C_DIM_LINE = '#444444';
-  const C_DIM_TEXT = '#333333';
-  const C_DIM_ACCENT = '#1a1a1a';
-  const C_TEXT = '#1a1a1a';
-
-  const guideElements = [];
-  const dimElements = [];
-
-  // Build guide rects
-  for (const gc of guideCenters) {
-    const gx = beltX + gc * scale;
-    const gw = guideWidth * scale;
-    guideElements.push(`
-      <rect x="${gx - gw/2}" y="${beltY - 8}" width="${gw}" height="${beltH + 16}" 
-            fill="${valid ? C_GUIDE : '#cc2222'}" opacity="0.85" rx="1"/>
-      <rect x="${gx - gw/2}" y="${beltY - 8}" width="${gw}" height="3" 
-            fill="${valid ? '#111111' : '#991111'}" rx="1"/>
-    `);
-  }
-
-  // Dimension lines - bottom row
-  const dimY1 = beltY + beltH + 22;
-  const dimY2 = beltY + beltH + 48;
-  const tickH = 6;
-
-  function dimLine(x1, x2, y, label, color, yLabel) {
-    const mid = (x1 + x2) / 2;
-    const yLbl = yLabel || y - 8;
-    return `
-      <line x1="${x1}" y1="${y - tickH}" x2="${x1}" y2="${y + tickH}" stroke="${color}" stroke-width="1.2"/>
-      <line x1="${x2}" y1="${y - tickH}" x2="${x2}" y2="${y + tickH}" stroke="${color}" stroke-width="1.2"/>
-      <line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${color}" stroke-width="1.2" stroke-dasharray="none"/>
-      <polygon points="${x1},${y} ${x1+7},${y-3} ${x1+7},${y+3}" fill="${color}"/>
-      <polygon points="${x2},${y} ${x2-7},${y-3} ${x2-7},${y+3}" fill="${color}"/>
-      <text x="${mid}" y="${yLbl}" text-anchor="middle" font-family="IBM Plex Mono,monospace" 
-            font-size="11" font-weight="600" fill="${color}">${label}</text>
-    `;
-  }
-
-  // --- Dimension: belt edge to left guide edge
-  const leftGuideEdge = beltX + (guideCenters[0] - guideWidth / 2) * scale;
-  const leftGuideCenter = beltX + guideCenters[0] * scale;
-  const rightGuideCenter = beltX + guideCenters[numGuides - 1] * scale;
-  const rightGuideEdge = beltX + (guideCenters[numGuides - 1] + guideWidth / 2) * scale;
-
-  const edgeToLeftEdgeMM = guideCenters[0] - guideWidth / 2;
-  const rightEdgeToEndMM = beltWidth - guideCenters[numGuides - 1] - guideWidth / 2;
-
-  let dims = '';
-
-  // Row 1 dims (dimY1): edge → left guide edge, right guide edge → belt end
-  dims += dimLine(beltX, leftGuideEdge, dimY1, fmt(edgeToLeftEdgeMM), C_DIM_ACCENT, dimY1 - 9);
-  dims += dimLine(rightGuideEdge, beltRight, dimY1, fmt(rightEdgeToEndMM), C_DIM_ACCENT, dimY1 - 9);
-
-  // Guide width markers (inline on belt)
-  for (const gc of guideCenters) {
-    const gx = beltX + gc * scale;
-    const gw = guideWidth * scale;
-    dims += `
-      <line x1="${gx - gw/2}" y1="${beltY - 14}" x2="${gx - gw/2}" y2="${beltY - 20}" stroke="${C_DIM_LINE}" stroke-width="1"/>
-      <line x1="${gx + gw/2}" y1="${beltY - 14}" x2="${gx + gw/2}" y2="${beltY - 20}" stroke="${C_DIM_LINE}" stroke-width="1"/>
-      <line x1="${gx - gw/2}" y1="${beltY - 17}" x2="${gx + gw/2}" y2="${beltY - 17}" stroke="${C_DIM_LINE}" stroke-width="1"/>
-      <text x="${gx}" y="${beltY - 22}" text-anchor="middle" font-family="IBM Plex Mono,monospace" 
-            font-size="9.5" fill="${C_DIM_LINE}">⌀${fmt(guideWidth)}</text>
-    `;
-  }
-
-  // CC dimensions between guides (if multiple)
-  if (numGuides > 1) {
-    for (let i = 0; i < numGuides - 1; i++) {
-      const x1 = beltX + guideCenters[i] * scale;
-      const x2 = beltX + guideCenters[i + 1] * scale;
-      dims += dimLine(x1, x2, dimY2, `CC ${fmt(cc)}`, '#555555', dimY2 - 9);
+  if (numGuides === 1) {
+    // If cc field is empty, place guide in center
+    if (isNaN(ccVal) || document.getElementById('cc').value === '') {
+      const center = beltWidth / 2;
+      guideCenters = [center];
+    } else {
+      // ccVal = distance from belt edge to guide EDGE → convert to center
+      const center = ccVal + guideWidth / 2;
+      guideCenters = [center];
+    }
+  } else {
+    // ccVal = center-to-center between adjacent guides, symmetric around belt center
+    const totalSpan    = (numGuides - 1) * ccVal;
+    const firstCenter  = beltCenter - totalSpan / 2;
+    for (let i = 0; i < numGuides; i++) {
+      guideCenters.push(firstCenter + i * ccVal);
     }
   }
 
-  // Belt center line removed
-
-  // Belt total width dim (top)
-  const topDimY = beltY - 38;
-  const topDim = `
-    <line x1="${beltX}" y1="${topDimY - 6}" x2="${beltX}" y2="${topDimY + 6}" stroke="${C_DIM_LINE}" stroke-width="1.2"/>
-    <line x1="${beltRight}" y1="${topDimY - 6}" x2="${beltRight}" y2="${topDimY + 6}" stroke="${C_DIM_LINE}" stroke-width="1.2"/>
-    <line x1="${beltX}" y1="${topDimY}" x2="${beltRight}" y2="${topDimY}" stroke="${C_DIM_LINE}" stroke-width="1.2"/>
-    <polygon points="${beltX},${topDimY} ${beltX+7},${topDimY-3} ${beltX+7},${topDimY+3}" fill="${C_DIM_LINE}"/>
-    <polygon points="${beltRight},${topDimY} ${beltRight-7},${topDimY-3} ${beltRight-7},${topDimY+3}" fill="${C_DIM_LINE}"/>
-    <text x="${beltCenterX}" y="${topDimY - 8}" text-anchor="middle" font-family="IBM Plex Mono,monospace" 
-          font-size="11" font-weight="600" fill="${C_DIM_LINE}">BÅND ${fmt(beltWidth)} mm</text>
-  `;
-
-  // Belt striped pattern
-  let stripes = '';
-  for (let i = 0; i < 8; i++) {
-    const sx = beltX + (drawW / 8) * i;
-    stripes += `<line x1="${sx}" y1="${beltY}" x2="${sx}" y2="${beltY + beltH}" stroke="${C_BELT_STRIPE}" stroke-width="0.8"/>`;
+  // Validate
+  let valid = true;
+  for (const gc of guideCenters) {
+    if (gc - guideWidth / 2 < 0 || gc + guideWidth / 2 > beltWidth) valid = false;
+  }
+  // Check overlap between guides
+  let overlap = false;
+  for (let i = 0; i < guideCenters.length - 1; i++) {
+    const gap = guideCenters[i + 1] - guideCenters[i] - guideWidth;
+    if (gap < 0) overlap = true;
   }
 
-  const svg = `
-  <svg width="${svgW}" height="${svgH}" xmlns="http://www.w3.org/2000/svg">
+  if (!valid) errEl.textContent = 'Advarsel: en eller flere styrelister rager uden for båndet.';
+  if (overlap) errEl.textContent = 'Advarsel: styrelister overlapper hinanden.';
+
+  renderDiagram(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap);
+  renderTable(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap);
+  document.getElementById('printBtn').style.display = 'block';
+}
+
+// ── Diagram ──────────────────────────────────────────────────────────────────
+function renderDiagram(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap) {
+  const wrap   = document.getElementById('diagramWrap');
+  const SVG_W  = 720;
+  const PAD_L  = 36; const PAD_R = 36;
+  const drawW  = SVG_W - PAD_L - PAD_R;
+  const scale  = drawW / beltWidth;
+  const beltH  = 56;
+  const beltY  = 90;
+
+  // Rows of dimension lines below belt
+  const DIM_ROW1 = beltY + beltH + 28;  // edge margins + guide widths
+  const DIM_ROW2 = DIM_ROW1 + 28;        // kant-til-kant
+  const DIM_ROW3 = DIM_ROW2 + 28;        // C/C
+  const SVG_H    = DIM_ROW3 + 36;
+
+  const beltX    = PAD_L;
+  const beltR    = beltX + drawW;
+  const beltCx   = beltX + drawW / 2;
+
+  const C_DARK   = '#005F7F';
+  const C_ACC    = '#00A0C0';
+  const C_DIM    = '#1A3A4A';
+  const C_KTK    = '#C94F1E';   // kant-til-kant highlight colour
+  const C_CC     = '#005F7F';
+  const C_MUTED  = '#5A7A88';
+  const C_GUIDE  = valid && !overlap ? '#005F7F' : '#cc2222';
+  const C_GUIDE_TOP = valid && !overlap ? '#003D52' : '#991111';
+
+  // ── Belt ──
+  const beltParts = `
     <defs>
-      <pattern id="beltPattern" width="24" height="${beltH}" patternUnits="userSpaceOnUse">
-        <rect width="24" height="${beltH}" fill="${C_BELT}"/>
-        <line x1="0" y1="0" x2="24" y2="${beltH}" stroke="#c0c0c0" stroke-width="1"/>
+      <pattern id="bp" width="20" height="${beltH}" patternUnits="userSpaceOnUse">
+        <rect width="20" height="${beltH}" fill="#d8e8ec"/>
+        <line x1="0" y1="0" x2="20" y2="${beltH}" stroke="#c8dce2" stroke-width="1"/>
       </pattern>
     </defs>
-    <!-- Belt body -->
-    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="${beltH}" fill="url(#beltPattern)" rx="3"/>
-    <!-- Belt top edge highlight -->
-    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="4" fill="#bbbbbb" rx="2"/>
-    <!-- Belt border -->
-    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="${beltH}" fill="none" stroke="#999" stroke-width="1.5" rx="3"/>
+    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="${beltH}" fill="url(#bp)" rx="3"/>
+    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="4" fill="#b8ccd4" rx="2"/>
+    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="${beltH}" fill="none" stroke="#9ab8c4" stroke-width="1.5" rx="3"/>
+  `;
 
-    ${guideElements.join('')}
+  // ── Guide rects ──
+  let guides = '';
+  for (const gc of guideCenters) {
+    const gx = beltX + gc * scale;
+    const gw = guideWidth * scale;
+    guides += `
+      <rect x="${gx - gw/2}" y="${beltY - 10}" width="${gw}" height="${beltH + 20}"
+            fill="${C_GUIDE}" opacity="0.82" rx="1"/>
+      <rect x="${gx - gw/2}" y="${beltY - 10}" width="${gw}" height="3"
+            fill="${C_GUIDE_TOP}" rx="1"/>
+    `;
+  }
+
+  // ── Helper functions ──
+  const tx  = x => beltX + x * scale;
+
+  function arrowLine(x1, x2, y, label, color, labelY) {
+    if (Math.abs(x2 - x1) < 2) return '';
+    const mx  = (x1 + x2) / 2;
+    const ly  = labelY !== undefined ? labelY : y - 9;
+    const aw  = 5;
+    return `
+      <line x1="${x1}" y1="${y-5}" x2="${x1}" y2="${y+5}" stroke="${color}" stroke-width="1.2"/>
+      <line x1="${x2}" y1="${y-5}" x2="${x2}" y2="${y+5}" stroke="${color}" stroke-width="1.2"/>
+      <line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${color}" stroke-width="1.2"/>
+      <polygon points="${x1},${y} ${x1+aw},${y-2.5} ${x1+aw},${y+2.5}" fill="${color}"/>
+      <polygon points="${x2},${y} ${x2-aw},${y-2.5} ${x2-aw},${y+2.5}" fill="${color}"/>
+      <text x="${mx}" y="${ly}" text-anchor="middle"
+            font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600"
+            fill="${color}">${label}</text>
+    `;
+  }
+
+  // ── Top dim: total belt width ──
+  const topY   = beltY - 36;
+  const topDim = `
+    <line x1="${beltX}" y1="${topY-5}" x2="${beltX}" y2="${topY+5}" stroke="${C_MUTED}" stroke-width="1.2"/>
+    <line x1="${beltR}" y1="${topY-5}" x2="${beltR}" y2="${topY+5}" stroke="${C_MUTED}" stroke-width="1.2"/>
+    <line x1="${beltX}" y1="${topY}" x2="${beltR}" y2="${topY}" stroke="${C_MUTED}" stroke-width="1.2"/>
+    <polygon points="${beltX},${topY} ${beltX+5},${topY-2.5} ${beltX+5},${topY+2.5}" fill="${C_MUTED}"/>
+    <polygon points="${beltR},${topY} ${beltR-5},${topY-2.5} ${beltR-5},${topY+2.5}" fill="${C_MUTED}"/>
+    <text x="${beltCx}" y="${topY - 9}" text-anchor="middle"
+          font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600"
+          fill="${C_MUTED}">BÅND ${fmt(beltWidth)} mm</text>
+  `;
+
+  // ── Guide width annotations (small ticks above each guide) ──
+  let guideWidthAnnot = '';
+  for (const gc of guideCenters) {
+    const gx = tx(gc);
+    const gw = guideWidth * scale;
+    guideWidthAnnot += `
+      <line x1="${gx-gw/2}" y1="${beltY-16}" x2="${gx-gw/2}" y2="${beltY-22}" stroke="${C_DIM}" stroke-width="1"/>
+      <line x1="${gx+gw/2}" y1="${beltY-16}" x2="${gx+gw/2}" y2="${beltY-22}" stroke="${C_DIM}" stroke-width="1"/>
+      <line x1="${gx-gw/2}" y1="${beltY-19}" x2="${gx+gw/2}" y2="${beltY-19}" stroke="${C_DIM}" stroke-width="1"/>
+      <text x="${gx}" y="${beltY-24}" text-anchor="middle"
+            font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_DIM}">⌀${fmt(guideWidth)}</text>
+    `;
+  }
+
+  // ── Row 1: edge → first guide left edge, last guide right edge → belt end ──
+  const firstLeftEdge  = tx(guideCenters[0] - guideWidth / 2);
+  const lastRightEdge  = tx(guideCenters[guideCenters.length - 1] + guideWidth / 2);
+  const edgeToFirst    = guideCenters[0] - guideWidth / 2;
+  const lastToEdge     = beltWidth - guideCenters[guideCenters.length - 1] - guideWidth / 2;
+
+  let row1 = '';
+  row1 += arrowLine(beltX, firstLeftEdge, DIM_ROW1, fmt(edgeToFirst) + ' mm', C_DIM);
+  row1 += arrowLine(lastRightEdge, beltR, DIM_ROW1, fmt(lastToEdge) + ' mm', C_DIM);
+
+  // ── Row 2: kant-til-kant between each pair of adjacent guides ──
+  let row2 = '';
+  let ktkLabel = '';
+  if (numGuides > 1) {
+    // Label left of diagram
+    ktkLabel = `
+      <text x="${beltX - 4}" y="${DIM_ROW2 + 4}" text-anchor="end"
+            font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_KTK}"
+            font-weight="600">K/K</text>
+    `;
+    for (let i = 0; i < guideCenters.length - 1; i++) {
+      const x1  = tx(guideCenters[i] + guideWidth / 2);
+      const x2  = tx(guideCenters[i + 1] - guideWidth / 2);
+      const ktk = guideCenters[i + 1] - guideCenters[i] - guideWidth;
+      row2 += arrowLine(x1, x2, DIM_ROW2, fmt(ktk) + ' mm', C_KTK);
+    }
+  } else {
+    // For single guide: show distance from each edge to belt edge (already in row1)
+    // Show guide center position instead
+    const cx = tx(guideCenters[0]);
+    ktkLabel = '';
+    row2 = `
+      <line x1="${cx}" y1="${beltY - 10}" x2="${cx}" y2="${DIM_ROW2}" stroke="${C_ACC}" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="${cx}" y="${DIM_ROW2 + 4}" text-anchor="middle"
+            font-family="IBM Plex Mono,monospace" font-size="10" font-weight="600"
+            fill="${C_ACC}">Center: ${fmt(guideCenters[0])} mm</text>
+    `;
+  }
+
+  // ── Row 3: C/C between each pair of adjacent guides ──
+  let row3 = '';
+  let ccLabel = '';
+  if (numGuides > 1) {
+    ccLabel = `
+      <text x="${beltX - 4}" y="${DIM_ROW3 + 4}" text-anchor="end"
+            font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_CC}"
+            font-weight="600">C/C</text>
+    `;
+    for (let i = 0; i < guideCenters.length - 1; i++) {
+      const x1 = tx(guideCenters[i]);
+      const x2 = tx(guideCenters[i + 1]);
+      // Draw center lines up through guides
+      row3 += `
+        <line x1="${x1}" y1="${beltY}" x2="${x1}" y2="${DIM_ROW3}" stroke="${C_CC}" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+        <line x1="${x2}" y1="${beltY}" x2="${x2}" y2="${DIM_ROW3}" stroke="${C_CC}" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+      `;
+      row3 += arrowLine(x1, x2, DIM_ROW3, fmt(ccVal) + ' mm', C_CC);
+    }
+  }
+
+  // ── Center line of belt (subtle) ──
+  const centerLine = `
+    <line x1="${beltCx}" y1="${beltY}" x2="${beltCx}" y2="${beltY + beltH}"
+          stroke="#9ab8c4" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>
+  `;
+
+  // ── Legend ──
+  const legendY = SVG_H - 14;
+  const legend = numGuides > 1 ? `
+    <circle cx="${beltX + 8}" cy="${legendY}" r="4" fill="${C_KTK}"/>
+    <text x="${beltX + 16}" y="${legendY + 4}" font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_KTK}">Kant til kant</text>
+    <circle cx="${beltX + 110}" cy="${legendY}" r="4" fill="${C_CC}"/>
+    <text x="${beltX + 118}" y="${legendY + 4}" font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_CC}">Center / Center</text>
+  ` : '';
+
+  const svg = `<svg width="${SVG_W}" height="${SVG_H}" xmlns="http://www.w3.org/2000/svg">
+    ${beltParts}
+    ${centerLine}
+    ${guides}
     ${topDim}
-    ${dims}
+    ${guideWidthAnnot}
+    ${row1}
+    ${ktkLabel}${row2}
+    ${ccLabel}${row3}
+    ${legend}
   </svg>`;
 
   wrap.innerHTML = svg;
 }
 
-function renderTable(beltWidth, numGuides, guideWidth, cc, guideCenters, valid) {
+// ── Table ────────────────────────────────────────────────────────────────────
+function renderTable(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap) {
   const tableWrap = document.getElementById('tableWrap');
-
-  const statusBadge = valid
-    ? `<span class="badge ok">OK</span>`
-    : `<span class="badge warn">Uden for bånd</span>`;
+  const status = (!valid || overlap)
+    ? `<span class="badge warn">Advarsel</span>`
+    : `<span class="badge ok">OK</span>`;
 
   let rows = '';
 
-  // Båndkant til første styreliste venstre kant
-  const edgeToFirstEdge = guideCenters[0] - guideWidth / 2;
-  rows += `<tr><td>Båndkant → Styreliste 1 venstre kant</td><td>${fmt(edgeToFirstEdge)} mm</td></tr>`;
+  // Belt edge → first guide left edge
+  const edgeToFirst = guideCenters[0] - guideWidth / 2;
+  rows += `<tr><td>Båndkant → Styreliste 1 (venstre kant)</td><td>${fmt(edgeToFirst)} mm</td></tr>`;
 
-  // Center position for each guide
-  for (let i = 0; i < numGuides; i++) {
-    if (numGuides > 1) {
-      rows += `<tr><td>Styreliste ${i+1} centerposition</td><td>${fmt(guideCenters[i])} mm</td></tr>`;
-    } else {
-      rows += `<tr><td>Styreliste centerposition</td><td>${fmt(guideCenters[i])} mm</td></tr>`;
-    }
-  }
-
-  // CC between guides
   if (numGuides > 1) {
-    rows += `<tr><td>C-C afstand</td><td>${fmt(cc)} mm</td></tr>`;
+    // For each pair: kant-til-kant + C/C
+    for (let i = 0; i < guideCenters.length - 1; i++) {
+      const ktk = guideCenters[i + 1] - guideCenters[i] - guideWidth;
+      const cc  = guideCenters[i + 1] - guideCenters[i];
+      const pairLabel = numGuides === 2
+        ? ''
+        : ` (${i+1}→${i+2})`;
+
+      rows += `<tr class="highlight"><td>Kant til kant${pairLabel}</td><td>${fmt(ktk)} mm</td></tr>`;
+      rows += `<tr><td>C/C${pairLabel}</td><td>${fmt(cc)} mm</td></tr>`;
+    }
+  } else {
+    // Single guide
+    rows += `<tr><td>Styreliste centerposition</td><td>${fmt(guideCenters[0])} mm</td></tr>`;
   }
+
+  // Last guide right edge → belt end
+  const lastToEdge = beltWidth - guideCenters[guideCenters.length - 1] - guideWidth / 2;
+  rows += `<tr><td>Styreliste ${numGuides} (højre kant) → Båndkant</td><td>${fmt(lastToEdge)} mm</td></tr>`;
 
   // Guide width
   rows += `<tr><td>Styrelistebredde</td><td>${fmt(guideWidth)} mm</td></tr>`;
 
-  // Last guide right edge to belt end
-  const lastGuideRightEdge = guideCenters[numGuides - 1] + guideWidth / 2;
-  const rightEdgeToEnd = beltWidth - lastGuideRightEdge;
-  rows += `<tr><td>Styreliste ${numGuides} højre kant → Båndkant</td><td>${fmt(rightEdgeToEnd)} mm</td></tr>`;
+  // Total belt width
+  rows += `<tr><td>Båndbredde</td><td>${fmt(beltWidth)} mm</td></tr>`;
+
+  // Overlap check
+  if (overlap) {
+    rows += `<tr class="warn"><td colspan="2">⚠ Styrelister overlapper hinanden</td></tr>`;
+  }
+  if (!valid) {
+    rows += `<tr class="warn"><td colspan="2">⚠ Styreliste(r) rager uden for båndet</td></tr>`;
+  }
 
   tableWrap.innerHTML = `
-    <div style="display:flex;align-items:center;margin-bottom:12px;padding-top:4px">
-      <span style="font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:1rem;color:var(--text-dim)">Mål</span>
-      ${statusBadge}
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span class="table-section-title" style="margin:0;border:none;padding:0">Mål</span>
+      ${status}
     </div>
     <table class="measurements-table">
       <thead><tr><th>Beskrivelse</th><th style="text-align:right">Værdi</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    <div style="font-size:0.62rem;color:var(--muted);margin-top:4px">
+      Fremhævet = kant til kant &nbsp;|&nbsp; Almindelig = C/C
+    </div>
   `;
 }
 
-function printDiagram() {
-  window.print();
-}
+// ── Print ────────────────────────────────────────────────────────────────────
+function doPrint() { window.print(); }
 
+// ── Format ───────────────────────────────────────────────────────────────────
 function fmt(n) {
   if (isNaN(n)) return '—';
-  return Number(n.toFixed(3)).toString();
+  const r = parseFloat(n.toFixed(3));
+  return r % 1 === 0 ? r.toString() : r.toString();
 }
 
-// Calculate on Enter key
-document.querySelectorAll('input').forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); }));
+// ── Enter key ────────────────────────────────────────────────────────────────
+document.querySelectorAll('input').forEach(el =>
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); })
+);
 </script>
 </body>
 </html>
