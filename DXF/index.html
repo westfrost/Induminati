@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DXF → NCP Konverter</title>
+<title>DXF → NCP Konverter — Induminati</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 
@@ -12,8 +12,8 @@
     --surface: #161719;
     --surface2: #1e2023;
     --border: #2a2d32;
-    --accent: #00d4ff;
-    --accent2: #ff6b35;
+    --accent: #00A0C0;
+    --accent2: #005F7F;
     --success: #00e5a0;
     --warn: #ffcc00;
     --text: #e8eaed;
@@ -103,7 +103,7 @@
 
   .drop-zone:hover, .drop-zone.drag-over {
     border-color: var(--accent);
-    background: rgba(0, 212, 255, 0.04);
+    background: rgba(0, 160, 192, 0.04);
   }
 
   .drop-zone input[type=file] {
@@ -197,7 +197,7 @@
   .btn-primary:hover:not(:disabled) {
     background: #33ddff;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 160, 192, 0.3);
   }
 
   .btn-primary:disabled {
@@ -415,6 +415,15 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  .btn-home {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--muted); text-decoration: none; font-size: 11px; font-weight: 600;
+    padding: 5px 10px; border: 1px solid var(--border); border-radius: 4px;
+    font-family: var(--mono); letter-spacing: .05em;
+    transition: color .15s, border-color .15s; margin-left: auto;
+  }
+  .btn-home:hover { color: var(--accent); border-color: var(--accent); }
 </style>
 </head>
 <body>

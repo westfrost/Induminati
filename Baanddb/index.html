@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bånd & Medbringer Database</title>
+<title>Bånd & Medbringer DB — Induminati</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
 
@@ -11,8 +11,8 @@
     --bg: #0f1117;
     --surface: #1a1d27;
     --surface2: #22263a;
-    --accent: #e8c547;
-    --accent2: #4ecdc4;
+    --accent: #00A0C0;
+    --accent2: #005F7F;
     --text: #e8eaf0;
     --muted: #6b7080;
     --border: #2e3347;
@@ -66,7 +66,7 @@
   .nav-btn:hover, .nav-btn.active {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(232,197,71,0.07);
+    background: rgba(0,160,192,0.07);
   }
 
   /* === PAGES === */
@@ -154,7 +154,7 @@
   .result-card:hover { border-color: var(--accent2); transform: translateX(2px); }
   .result-card:hover::before { background: var(--accent2); }
   .result-card.best-match::before { background: var(--accent); }
-  .result-card.best-match { border-color: rgba(232,197,71,0.3); }
+  .result-card.best-match { border-color: rgba(0,160,192,0.3); }
 
   .match-badge {
     position: absolute;
@@ -166,7 +166,7 @@
     letter-spacing: 1px;
   }
   .match-badge.exact { background: rgba(81,207,102,0.15); color: var(--success); border: 1px solid rgba(81,207,102,0.3); }
-  .match-badge.close { background: rgba(232,197,71,0.12); color: var(--accent); border: 1px solid rgba(232,197,71,0.3); }
+  .match-badge.close { background: rgba(0,160,192,0.12); color: var(--accent); border: 1px solid rgba(0,160,192,0.3); }
   .match-badge.near { background: rgba(78,205,196,0.1); color: var(--accent2); border: 1px solid rgba(78,205,196,0.3); }
 
   .card-title {
@@ -613,6 +613,15 @@
     margin-bottom: 20px;
     letter-spacing: 1px;
   }
+
+  .btn-home {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--muted); text-decoration: none; font-size: 11px; font-weight: 600;
+    padding: 5px 12px; border: 1px solid var(--border); border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace; letter-spacing: 1px;
+    transition: all .15s;
+  }
+  .btn-home:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
