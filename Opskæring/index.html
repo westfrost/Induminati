@@ -480,7 +480,9 @@ function calculate() {
   for (const [widthStr, items] of Object.entries(groups)) {
     const width = parseFloat(widthStr);
     const lengths = items.map(x => x.l);
-    const { bins } = solveGroup(lengths, mrL, mrB - totalWidth, width, maxStrimlerTotal);
+    const isDornGroup = items.some(x => x.isDorn);
+    const availW = isDornGroup ? mrB : mrB - totalWidth;
+    const { bins } = solveGroup(lengths, mrL, availW, width, maxStrimlerTotal);
 
     // Map bin lengths back to original band objects
     // Build a pool sorted descending to match how bins were built
@@ -500,20 +502,28 @@ function calculate() {
     }
 
     if (totalWidth > mrB) {
-      showError(`Samlet bredde (${fmt(totalWidth)} mm) overskrider moderrullens bredde (${fmt(mrB)} mm).`);
-      return;
+      // Only error if this is NOT a dorn (dorns are pre-split to fit)
+      const lastStrimmel = allStrimler[allStrimler.length - 1];
+      if (!lastStrimmel || !lastStrimmel.isDorn) {
+        showError(`Samlet bredde (${fmt(totalWidth)} mm) overskrider moderrullens bredde (${fmt(mrB)} mm).`);
+        return;
+      }
     }
   }
 
   // cutLen = longest strimmel across all groups
+  // For multi-dorns stacked in length, their width is counted once (they share position)
   const cutLen = Math.max(...allStrimler.map(s => s.totalLen));
 
+  // Recalculate real total width (multi-dorns only occupy one width slot)
+  const realTotalWidth = allStrimler.reduce((s, st) => s + st.width, 0);
+
   const restRulle = { b: mrB, l: mrL - cutLen };
-  const sideRest  = { b: mrB - totalWidth, l: cutLen };
+  const sideRest  = { b: mrB - Math.min(realTotalWidth, mrB), l: cutLen };
 
   const orderRef  = document.getElementById('order-ref').value.trim();
   const orderNote = document.getElementById('order-note').value.trim();
-  renderResult({ mrB, mrL, buffer, strimler: allStrimler, cutLen, totalWidth, restRulle, sideRest, orderRef, orderNote });
+  renderResult({ mrB, mrL, buffer, strimler: allStrimler, cutLen, totalWidth: Math.min(realTotalWidth, mrB), restRulle, sideRest, orderRef, orderNote });
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
