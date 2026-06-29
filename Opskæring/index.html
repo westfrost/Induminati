@@ -65,6 +65,9 @@
   .step-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .tag{background:#fff;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:12px}
   .tag.rest{background:#FFF8ED;border-color:#E0C8A0;color:#7A5A18}
+  .tag.dorn-action{background:#E6F4F7;border-color:#00A0C0;color:#005F7F;font-weight:600}
+  .step-dorn{border-color:#00A0C0;background:#E6F4F7}
+  .step-dorn .step-num{background:#00A0C0}
   .canvas-wrap{background:var(--smoke);border:1px solid var(--border);border-radius:6px;padding:14px;overflow-x:auto}
   canvas{display:block}
 
@@ -119,6 +122,19 @@
     <div class="input-row">
       <div class="field" style="max-width:180px"><label>Buffer</label><input type="number" id="buffer" min="0" placeholder="Buffer mm"></div>
       <div class="field" style="max-width:220px"><label>Maks antal strimler (valgfrit)</label><input type="number" id="max-strimler" min="1" placeholder="Ingen begrænsning"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Dorn — pak bånd i bredden</h2>
+    <div class="input-row">
+      <div class="field" style="max-width:180px">
+        <label>Max længde for dorn</label>
+        <input type="number" id="dorn-max-l" min="1" placeholder="fx 5500 mm">
+      </div>
+      <div class="field" style="max-width:180px">
+        <label>Skæretillæg pr. dorn</label>
+        <input type="number" id="dorn-tillæg" min="0" placeholder="fx 10 mm">
+      </div>
     </div>
   </div>
   <div class="card">
@@ -328,21 +344,68 @@ function calculate() {
   // Apply buffer
   const bands = rawBands.map(b => ({ b: b.b, origL: b.origL, l: b.origL + buffer }));
 
-  // Validate individual bands
+  // ── Dorn settings ──
+  const dornMaxL   = parseFloat(document.getElementById('dorn-max-l').value)  || Infinity;
+  const dornTillæg = parseFloat(document.getElementById('dorn-tillæg').value) || 0;
+
+  // ── Dorn packing ──
+  // Bands with same width AND same origL AND origL <= dornMaxL are packed into
+  // a single "dorn" strimmel: width = sum of widths + dornTillæg, length = single band length + buffer.
+  // Bands over dornMaxL are left as individual strimler.
+
+  // Group by (origL, width) key for dorn candidates
+  const dornGroups = {};
+  const normalBands = [];
+
   for (const band of bands) {
+    if (band.origL <= dornMaxL) {
+      const key = `${band.origL}__${band.b}`;
+      if (!dornGroups[key]) dornGroups[key] = [];
+      dornGroups[key].push(band);
+    } else {
+      normalBands.push(band);
+    }
+  }
+
+  // Build resolved band list: dorns become single wide band, singles stay as-is
+  const resolvedBands = [...normalBands];
+  const dorns = []; // track dorns for step display
+
+  for (const [key, group] of Object.entries(dornGroups)) {
+    if (group.length > 1) {
+      // Pack into dorn
+      const totalW  = group.reduce((s, b) => s + b.b, 0) + dornTillæg;
+      const dorn = {
+        b:      totalW,
+        origL:  group[0].origL,
+        l:      group[0].l,       // already has buffer
+        isDorn: true,
+        dornPieces: group,
+        dornTillæg
+      };
+      resolvedBands.push(dorn);
+      dorns.push(dorn);
+    } else {
+      // Only one band of this exact size — treat normally
+      resolvedBands.push(group[0]);
+    }
+  }
+
+  // Validate resolved bands
+  for (const band of resolvedBands) {
     if (band.l > mrL) {
       showError(`Bånd ${fmt(band.b)} × ${fmt(band.origL)} mm + buffer ${fmt(buffer)} mm = ${fmt(band.l)} mm — overskrider moderrullens længde på ${fmt(mrL)} mm.`);
       return;
     }
     if (band.b > mrB) {
-      showError(`Bånd bredde ${fmt(band.b)} mm overskrider moderrullens bredde på ${fmt(mrB)} mm.`);
+      showError(`Bånd/dorn bredde ${fmt(band.b)} mm overskrider moderrullens bredde på ${fmt(mrB)} mm.`);
       return;
     }
   }
 
   // Group by width
   const groups = {};
-  bands.forEach(b => {
+  resolvedBands.forEach(b => {
     if (!groups[b.b]) groups[b.b] = [];
     groups[b.b].push(b);
   });
@@ -367,7 +430,8 @@ function calculate() {
         if (idx !== -1) { pieces.push(pool[idx]); pool.splice(idx, 1); }
       }
       const totalLen = pieces.reduce((s, p) => s + p.l, 0);
-      allStrimler.push({ width, totalLen, pieces });
+      const isDorn   = pieces.length === 1 && pieces[0].isDorn;
+      allStrimler.push({ width, totalLen, pieces, isDorn });
       totalWidth += width;
     }
 
@@ -418,17 +482,25 @@ function renderResult(d) {
   let n = 1;
   let usedWidth = 0;
   d.strimler.forEach((s, i) => {
-    const tags = s.pieces.map(p =>
-      `${fmt(s.width)} × ${fmt(p.origL)} mm  (+${fmt(d.buffer)} → ${fmt(p.l)} mm)`
-    );
+    let tags, title, detail;
+    if (s.isDorn) {
+      title  = `Strimmel ${i+1} — DORN:  ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
+      detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.  Dorn indeholder ${s.pieces[0].dornPieces.length} bånd à ${fmt(s.pieces[0].dornPieces[0].b)} mm + ${fmt(s.pieces[0].dornTillæg)} mm skæretillæg.`;
+      tags = s.pieces[0].dornPieces.map((p, pi) =>
+        `Bånd ${pi+1}: ${fmt(p.b)} × ${fmt(p.origL)} mm`
+      );
+      tags.push(`→ Skær op i ${s.pieces[0].dornPieces.length} strimler à ${fmt(s.pieces[0].dornPieces[0].b)} mm`);
+    } else {
+      title  = `Strimmel ${i+1} — ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
+      detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.  ${s.pieces.length} bånd i denne strimmel.`;
+      tags = s.pieces.map(p =>
+        `${fmt(s.width)} × ${fmt(p.origL)} mm  (+${fmt(d.buffer)} → ${fmt(p.l)} mm)`
+      );
+    }
     if (s.totalLen < d.cutLen)
       tags.push(`REST: ${fmt(s.width)} × ${fmt(d.cutLen - s.totalLen)} mm`);
 
-    addStep(st, n++,
-      `Strimmel ${i + 1} — ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`,
-      `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.  ${s.pieces.length} bånd i denne strimmel.`,
-      tags
-    );
+    addStep(st, n++, title, detail, tags, s.isDorn);
     usedWidth += s.width;
   });
 
@@ -446,12 +518,14 @@ function renderResult(d) {
   res.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function addStep(container, num, title, detail, tags) {
+function addStep(container, num, title, detail, tags, isDorn) {
   const div = document.createElement('div');
-  div.className = 'step';
-  const tagHTML = tags.map(t =>
-    `<span class="tag${t.startsWith('REST:') ? ' rest' : ''}">${t}</span>`
-  ).join('');
+  div.className = 'step' + (isDorn ? ' step-dorn' : '');
+  const tagHTML = tags.map(t => {
+    const isRest = t.startsWith('REST:');
+    const isDornTag = t.startsWith('→');
+    return `<span class="tag${isRest ? ' rest' : isDornTag ? ' dorn-action' : ''}">${t}</span>`;
+  }).join('');
   div.innerHTML = `
     <div class="step-num">${num}</div>
     <div class="step-body">
@@ -754,7 +828,6 @@ function loadHistEntry(entry) {
     last.querySelector('.r-qty').value  = b.qty || 1;
     last.querySelector('.r-b').value    = b.b;
     last.querySelector('.r-l').value    = b.origL;
-    last.querySelector('.r-note').value = b.note || '';
   });
   // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
