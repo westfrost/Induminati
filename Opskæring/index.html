@@ -127,11 +127,7 @@
   <div class="card">
     <h2>Dorn — pak bånd i bredden</h2>
     <div class="input-row">
-      <div class="field" style="max-width:180px">
-        <label>Max længde for dorn</label>
-        <input type="number" id="dorn-max-l" min="1" placeholder="fx 5500 mm">
-      </div>
-      <div class="field" style="max-width:180px">
+      <div class="field" style="max-width:220px">
         <label>Skæretillæg pr. dorn</label>
         <input type="number" id="dorn-tillæg" min="0" placeholder="fx 10 mm">
       </div>
@@ -345,20 +341,27 @@ function calculate() {
   const bands = rawBands.map(b => ({ b: b.b, origL: b.origL, l: b.origL + buffer }));
 
   // ── Dorn settings ──
-  const dornMaxL   = parseFloat(document.getElementById('dorn-max-l').value)  || Infinity;
-  const dornTillæg = parseFloat(document.getElementById('dorn-tillæg').value) || 0;
+  const DORN_MAX_L  = 5500; // hardcoded
+  const dornTillæg  = parseFloat(document.getElementById('dorn-tillæg').value) || 0;
 
   // ── Dorn packing ──
-  // Bands with same width AND same origL AND origL <= dornMaxL are packed into
-  // a single "dorn" strimmel: width = sum of widths + dornTillæg, length = single band length + buffer.
-  // Bands over dornMaxL are left as individual strimler.
+  // Rule: bands with identical width AND identical origL AND origL <= 5500
+  // are candidates for packing into a dorn.
+  //
+  // A dorn packs N bands side by side: dornWidth = N * bandWidth + dornTillæg
+  //
+  // If dornWidth <= mrB: one dorn, treated as a single strimmel.
+  // If dornWidth > mrB: split into multiple dorns of equal size (as even as possible),
+  //   each fitting within mrB. Each dorn is placed sequentially in LENGTH
+  //   (forskudt/offset), so total length used = numDorns * dornLength.
+  //
+  // Bands with origL > 5500 are left as normal strimler.
 
-  // Group by (origL, width) key for dorn candidates
   const dornGroups = {};
   const normalBands = [];
 
   for (const band of bands) {
-    if (band.origL <= dornMaxL) {
+    if (band.origL <= DORN_MAX_L) {
       const key = `${band.origL}__${band.b}`;
       if (!dornGroups[key]) dornGroups[key] = [];
       dornGroups[key].push(band);
@@ -367,45 +370,105 @@ function calculate() {
     }
   }
 
-  // Build resolved band list: dorns become single wide band, singles stay as-is
+  // resolvedBands = normal bands + dorn placeholders
+  // Each dorn placeholder = { b, origL, l, isDorn, dornPieces, dornTillæg, dornSplit }
+  // dornSplit: how many dorns this group was split into (for length-offset rendering)
   const resolvedBands = [...normalBands];
-  const dorns = []; // track dorns for step display
 
   for (const [key, group] of Object.entries(dornGroups)) {
-    if (group.length > 1) {
-      // Pack into dorn
-      const totalW  = group.reduce((s, b) => s + b.b, 0) + dornTillæg;
-      const dorn = {
-        b:      totalW,
-        origL:  group[0].origL,
-        l:      group[0].l,       // already has buffer
-        isDorn: true,
-        dornPieces: group,
-        dornTillæg
-      };
-      resolvedBands.push(dorn);
-      dorns.push(dorn);
-    } else {
-      // Only one band of this exact size — treat normally
+    if (group.length < 2) {
+      // Single band of this exact size — normal
       resolvedBands.push(group[0]);
+      continue;
+    }
+
+    const bandW   = group[0].b;
+    const bandL   = group[0].l;    // with buffer
+    const origL   = group[0].origL;
+    const n       = group.length;
+
+    // Find how many bands fit per dorn within mrB
+    // bandsPerDorn = max k such that k*bandW + dornTillæg <= mrB
+    const maxPerDorn = Math.floor((mrB - dornTillæg) / bandW);
+
+    if (maxPerDorn < 1) {
+      // Even a single band + tillæg > mrB — impossible, treat as normal bands
+      group.forEach(b => resolvedBands.push(b));
+      continue;
+    }
+
+    // Number of dorns needed
+    const numDorns = Math.ceil(n / maxPerDorn);
+
+    // Distribute bands as evenly as possible across dorns
+    for (let d = 0; d < numDorns; d++) {
+      const start = d * maxPerDorn;
+      const end   = Math.min(start + maxPerDorn, n);
+      const slice = group.slice(start, end);
+      const dornW = slice.length * bandW + dornTillæg;
+
+      resolvedBands.push({
+        b:          dornW,
+        origL:      origL,
+        l:          bandL,
+        isDorn:     true,
+        dornPieces: slice,
+        dornTillæg: dornTillæg,
+        dornIndex:  d,          // which dorn in the sequence
+        numDorns:   numDorns,   // total dorns for this group
+        dornKey:    key         // links dorns of same group
+      });
     }
   }
 
-  // Validate resolved bands
+  // Validate: only check length, never width (width handled by dorn splitting)
   for (const band of resolvedBands) {
     if (band.l > mrL) {
-      showError(`Bånd ${fmt(band.b)} × ${fmt(band.origL)} mm + buffer ${fmt(buffer)} mm = ${fmt(band.l)} mm — overskrider moderrullens længde på ${fmt(mrL)} mm.`);
+      showError(`Bånd/dorn ${fmt(band.b)} × ${fmt(band.origL)} mm + buffer ${fmt(buffer)} mm = ${fmt(band.l)} mm — overskrider moderrullens længde på ${fmt(mrL)} mm.`);
       return;
     }
-    if (band.b > mrB) {
-      showError(`Bånd/dorn bredde ${fmt(band.b)} mm overskrider moderrullens bredde på ${fmt(mrB)} mm.`);
-      return;
+  }
+
+  // For multi-split dorns: each dorn in the same group occupies length sequentially.
+  // We model this by giving each dorn a "lengthOffset" = dornIndex * dornLength,
+  // and treat them as separate strimler all of the SAME width stacked in length.
+  // Actually: they are placed one after another in LENGTH on the same WIDTH position.
+  // So we represent them as a single strimmel with totalLen = numDorns * dornLength,
+  // containing all dorn slices as sub-pieces.
+
+  // Merge multi-split dorns back into one strimmel entry
+  const mergedDorns = {};
+  const singleBands = [];
+
+  for (const band of resolvedBands) {
+    if (band.isDorn && band.numDorns > 1) {
+      const k = band.dornKey;
+      if (!mergedDorns[k]) mergedDorns[k] = { slices: [], band };
+      mergedDorns[k].slices.push(band);
+    } else {
+      singleBands.push(band);
     }
+  }
+
+  const finalBands = [...singleBands];
+  for (const { slices, band } of Object.values(mergedDorns)) {
+    // One strimmel of width = max dorn width in group, length = sum of all dorn lengths
+    const maxW    = Math.max(...slices.map(s => s.b));
+    const totalL  = slices.reduce((s, x) => s + x.l, 0);
+    finalBands.push({
+      b:           maxW,
+      origL:       band.origL,
+      l:           totalL,
+      isDorn:      true,
+      isDornMulti: true,
+      dornSlices:  slices,
+      dornTillæg:  band.dornTillæg
+    });
   }
 
   // Group by width
   const groups = {};
-  resolvedBands.forEach(b => {
+  finalBands.forEach(b => {
     if (!groups[b.b]) groups[b.b] = [];
     groups[b.b].push(b);
   });
@@ -429,9 +492,10 @@ function calculate() {
         const idx = pool.findIndex(x => x.l === len);
         if (idx !== -1) { pieces.push(pool[idx]); pool.splice(idx, 1); }
       }
-      const totalLen = pieces.reduce((s, p) => s + p.l, 0);
-      const isDorn   = pieces.length === 1 && pieces[0].isDorn;
-      allStrimler.push({ width, totalLen, pieces, isDorn });
+      const totalLen  = pieces.reduce((s, p) => s + p.l, 0);
+      const isDorn    = pieces.length === 1 && pieces[0].isDorn;
+      const isDornMulti = isDorn && pieces[0].isDornMulti;
+      allStrimler.push({ width, totalLen, pieces, isDorn, isDornMulti });
       totalWidth += width;
     }
 
@@ -483,13 +547,30 @@ function renderResult(d) {
   let usedWidth = 0;
   d.strimler.forEach((s, i) => {
     let tags, title, detail;
-    if (s.isDorn) {
-      title  = `Strimmel ${i+1} — DORN:  ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
-      detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.  Dorn indeholder ${s.pieces[0].dornPieces.length} bånd à ${fmt(s.pieces[0].dornPieces[0].b)} mm + ${fmt(s.pieces[0].dornTillæg)} mm skæretillæg.`;
-      tags = s.pieces[0].dornPieces.map((p, pi) =>
-        `Bånd ${pi+1}: ${fmt(p.b)} × ${fmt(p.origL)} mm`
+
+    if (s.isDorn && s.isDornMulti) {
+      // Multiple dorns stacked in length
+      const slices   = s.pieces[0].dornSlices;
+      const numD     = slices.length;
+      const bandW    = slices[0].dornPieces[0].b;
+      const perDorn  = slices[0].dornPieces.length;
+      title  = `Strimmel ${i+1} — DORN ×${numD}:  ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
+      detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.\n${numD} dorner à ${perDorn} bånd af ${fmt(bandW)} mm, skåret forskudt i længden.`;
+      tags = slices.map((sl, si) =>
+        `Dorn ${si+1}: ${sl.dornPieces.length} × ${fmt(bandW)} mm  (pos ${fmt(si * sl.l)}–${fmt((si+1) * sl.l)} mm)`
       );
-      tags.push(`→ Skær op i ${s.pieces[0].dornPieces.length} strimler à ${fmt(s.pieces[0].dornPieces[0].b)} mm`);
+      tags.push(`→ Skær hver dorn op i ${perDorn} strimler à ${fmt(bandW)} mm`);
+
+    } else if (s.isDorn) {
+      // Single dorn
+      const piece    = s.pieces[0];
+      const bandW    = piece.dornPieces[0].b;
+      const numBands = piece.dornPieces.length;
+      title  = `Strimmel ${i+1} — DORN:  ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
+      detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.  ${numBands} bånd à ${fmt(bandW)} mm + ${fmt(piece.dornTillæg)} mm tillæg.`;
+      tags = piece.dornPieces.map((p, pi) => `Bånd ${pi+1}: ${fmt(p.b)} × ${fmt(p.origL)} mm`);
+      tags.push(`→ Skær op i ${numBands} strimler à ${fmt(bandW)} mm`);
+
     } else {
       title  = `Strimmel ${i+1} — ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
       detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.  ${s.pieces.length} bånd i denne strimmel.`;
@@ -497,6 +578,7 @@ function renderResult(d) {
         `${fmt(s.width)} × ${fmt(p.origL)} mm  (+${fmt(d.buffer)} → ${fmt(p.l)} mm)`
       );
     }
+
     if (s.totalLen < d.cutLen)
       tags.push(`REST: ${fmt(s.width)} × ${fmt(d.cutLen - s.totalLen)} mm`);
 
