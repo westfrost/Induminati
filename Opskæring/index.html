@@ -110,12 +110,17 @@
 </header>
 <main>
   <div class="card">
-    <h2>Moderrulle</h2>
-    <div class="input-row">
-      <div class="field"><label>Bredde</label><input type="number" id="mr-b" min="1" placeholder="Bredde mm"></div>
-      <div class="sep">×</div>
-      <div class="field"><label>Længde</label><input type="number" id="mr-l" min="1" placeholder="Længde mm"></div>
+    <h2>Moderruller</h2>
+    <div class="col-labels">
+      <span>Bredde mm</span>
+      <span>Længde mm</span>
+      <span class="col-del"></span>
     </div>
+    <div class="band-list" id="roll-list"></div>
+    <button class="btn-add" id="btn-add-roll">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Tilføj moderrulle
+    </button>
   </div>
   <div class="card">
     <h2>Buffer — tillæg per bånd</h2>
@@ -211,6 +216,43 @@ function addRow() {
 document.getElementById('btn-add').addEventListener('click', addRow);
 document.getElementById('btn-print').addEventListener('click', () => { if (_printData) openPrintWindow(_printData); });
 addRow();
+
+// ── Moderrulle rows ───────────────────────────────────────────────────────────
+const rollList = document.getElementById('roll-list');
+
+function addRollRow(b, l) {
+  const row = document.createElement('div');
+  row.className = 'band-row';
+  row.innerHTML = `
+    <div class="field"><label>Bredde</label><input type="number" class="roll-b" min="1" placeholder="Bredde mm" value="${b ?? ''}"></div>
+    <div class="field"><label>Længde</label><input type="number" class="roll-l" min="1" placeholder="Længde mm" value="${l ?? ''}"></div>
+    <button class="btn-del" title="Fjern">×</button>
+  `;
+  row.querySelector('.btn-del').addEventListener('click', () => {
+    if (rollList.children.length > 1) row.remove();
+  });
+  row.querySelector('.roll-l').addEventListener('keydown', e => {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      addRollRow();
+    }
+  });
+  rollList.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+document.getElementById('btn-add-roll').addEventListener('click', () => addRollRow());
+addRollRow();
+
+function readRolls() {
+  const out = [];
+  rollList.querySelectorAll('.band-row').forEach((r, i) => {
+    const b = parseFloat(r.querySelector('.roll-b').value);
+    const l = parseFloat(r.querySelector('.roll-l').value);
+    if (!isNaN(b) && b > 0 && !isNaN(l) && l > 0) out.push({ id: i, b, l, usedL: 0 });
+  });
+  return out;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmt = n => Number(n).toLocaleString('da-DK');
@@ -323,14 +365,14 @@ document.getElementById('btn-calc').addEventListener('click', calculate);
 function calculate() {
   clearError();
 
-  const mrB    = parseFloat(document.getElementById('mr-b').value);
-  const mrL    = parseFloat(document.getElementById('mr-l').value);
+  const rolls = readRolls();
+  if (rolls.length === 0) {
+    showError('Tilføj mindst én moderrulle med bredde og længde.'); return;
+  }
+
   const buffer = parseFloat(document.getElementById('buffer').value) || 0;
   const maxStrimlerInput = parseInt(document.getElementById('max-strimler').value);
   const maxStrimlerTotal = isNaN(maxStrimlerInput) || maxStrimlerInput < 1 ? null : maxStrimlerInput;
-  if (isNaN(mrB) || mrB <= 0 || isNaN(mrL) || mrL <= 0) {
-    showError('Angiv gyldige mål for moderrullen (bredde og længde).'); return;
-  }
 
   const rawBands = readBands();
   if (rawBands.length === 0) {
@@ -340,22 +382,14 @@ function calculate() {
   // Apply buffer
   const bands = rawBands.map(b => ({ b: b.b, origL: b.origL, l: b.origL + buffer }));
 
+  // Reference dimensions for the packing algorithm (uses widest/longest roll
+  // as the working envelope; actual roll assignment happens afterwards)
+  const maxRollB = Math.max(...rolls.map(r => r.b));
+  const maxRollL = Math.max(...rolls.map(r => r.l));
+
   // ── Dorn settings ──
   const DORN_MAX_L  = 5500; // hardcoded
   const dornTillæg  = parseFloat(document.getElementById('dorn-tillæg').value) || 0;
-
-  // ── Dorn packing ──
-  // Rule: bands with identical width AND identical origL AND origL <= 5500
-  // are candidates for packing into a dorn.
-  //
-  // A dorn packs N bands side by side: dornWidth = N * bandWidth + dornTillæg
-  //
-  // If dornWidth <= mrB: one dorn, treated as a single strimmel.
-  // If dornWidth > mrB: split into multiple dorns of equal size (as even as possible),
-  //   each fitting within mrB. Each dorn is placed sequentially in LENGTH
-  //   (forskudt/offset), so total length used = numDorns * dornLength.
-  //
-  // Bands with origL > 5500 are left as normal strimler.
 
   const dornGroups = {};
   const normalBands = [];
@@ -370,38 +404,30 @@ function calculate() {
     }
   }
 
-  // resolvedBands = normal bands + dorn placeholders
-  // Each dorn placeholder = { b, origL, l, isDorn, dornPieces, dornTillæg, dornSplit }
-  // dornSplit: how many dorns this group was split into (for length-offset rendering)
   const resolvedBands = [...normalBands];
 
   for (const [key, group] of Object.entries(dornGroups)) {
     if (group.length < 2) {
-      // Single band of this exact size — normal
       resolvedBands.push(group[0]);
       continue;
     }
 
     const bandW   = group[0].b;
-    const bandL   = group[0].l;    // with buffer
+    const bandL   = group[0].l;
     const origL   = group[0].origL;
     const n       = group.length;
 
-    // Find how many bands fit per dorn within mrB AND within max dorn width (700mm)
     const DORN_MAX_W = 700;
-    const effectiveMax = Math.min(mrB, DORN_MAX_W);
+    const effectiveMax = Math.min(maxRollB, DORN_MAX_W);
     const maxPerDorn = Math.floor((effectiveMax - dornTillæg) / bandW);
 
     if (maxPerDorn < 1) {
-      // Even a single band + tillæg > mrB — impossible, treat as normal bands
       group.forEach(b => resolvedBands.push(b));
       continue;
     }
 
-    // Number of dorns needed
     const numDorns = Math.ceil(n / maxPerDorn);
 
-    // Distribute bands as evenly as possible across dorns
     for (let d = 0; d < numDorns; d++) {
       const start = d * maxPerDorn;
       const end   = Math.min(start + maxPerDorn, n);
@@ -409,38 +435,21 @@ function calculate() {
       const dornW = slice.length * bandW + dornTillæg;
 
       resolvedBands.push({
-        b:          dornW,
-        origL:      origL,
-        l:          bandL,
-        isDorn:     true,
-        dornPieces: slice,
-        dornTillæg: dornTillæg,
-        dornIndex:  d,          // which dorn in the sequence
-        numDorns:   numDorns,   // total dorns for this group
-        dornKey:    key         // links dorns of same group
+        b: dornW, origL, l: bandL, isDorn: true,
+        dornPieces: slice, dornTillæg, dornIndex: d, numDorns, dornKey: key
       });
     }
   }
 
-  // Validate: only check length, never width (width handled by dorn splitting)
   for (const band of resolvedBands) {
-    if (band.l > mrL) {
-      showError(`Bånd/dorn ${fmt(band.b)} × ${fmt(band.origL)} mm + buffer ${fmt(buffer)} mm = ${fmt(band.l)} mm — overskrider moderrullens længde på ${fmt(mrL)} mm.`);
+    if (band.l > maxRollL) {
+      showError(`Bånd/dorn ${fmt(band.b)} × ${fmt(band.origL)} mm + buffer ${fmt(buffer)} mm = ${fmt(band.l)} mm — overskrider den længste moderrulle (${fmt(maxRollL)} mm).`);
       return;
     }
   }
 
-  // For multi-split dorns: each dorn in the same group occupies length sequentially.
-  // We model this by giving each dorn a "lengthOffset" = dornIndex * dornLength,
-  // and treat them as separate strimler all of the SAME width stacked in length.
-  // Actually: they are placed one after another in LENGTH on the same WIDTH position.
-  // So we represent them as a single strimmel with totalLen = numDorns * dornLength,
-  // containing all dorn slices as sub-pieces.
-
-  // Merge multi-split dorns back into one strimmel entry
   const mergedDorns = {};
   const singleBands = [];
-
   for (const band of resolvedBands) {
     if (band.isDorn && band.numDorns > 1) {
       const k = band.dornKey;
@@ -453,40 +462,31 @@ function calculate() {
 
   const finalBands = [...singleBands];
   for (const { slices, band } of Object.values(mergedDorns)) {
-    // One strimmel of width = max dorn width in group, length = sum of all dorn lengths
-    const maxW    = Math.max(...slices.map(s => s.b));
-    const totalL  = slices.reduce((s, x) => s + x.l, 0);
+    const maxW   = Math.max(...slices.map(s => s.b));
+    const totalL = slices.reduce((s, x) => s + x.l, 0);
     finalBands.push({
-      b:           maxW,
-      origL:       band.origL,
-      l:           totalL,
-      isDorn:      true,
-      isDornMulti: true,
-      dornSlices:  slices,
-      dornTillæg:  band.dornTillæg
+      b: maxW, origL: band.origL, l: totalL, isDorn: true, isDornMulti: true,
+      dornSlices: slices, dornTillæg: band.dornTillæg
     });
   }
 
-  // Group by width
+  // Group by width, solve each group against the widest roll envelope
   const groups = {};
   finalBands.forEach(b => {
     if (!groups[b.b]) groups[b.b] = [];
     groups[b.b].push(b);
   });
 
-  // Solve each group
   const allStrimler = [];
-  let totalWidth = 0;
+  let totalWidthUsed = 0;
 
   for (const [widthStr, items] of Object.entries(groups)) {
     const width = parseFloat(widthStr);
     const lengths = items.map(x => x.l);
     const isDornGroup = items.some(x => x.isDorn);
-    const availW = isDornGroup ? mrB : mrB - totalWidth;
-    const { bins } = solveGroup(lengths, mrL, availW, width, maxStrimlerTotal);
+    const availW = isDornGroup ? maxRollB : maxRollB - totalWidthUsed;
+    const { bins } = solveGroup(lengths, maxRollL, availW, width, maxStrimlerTotal);
 
-    // Map bin lengths back to original band objects
-    // Build a pool sorted descending to match how bins were built
     let pool = [...items].sort((a, b) => b.l - a.l);
 
     for (const bin of bins) {
@@ -495,119 +495,221 @@ function calculate() {
         const idx = pool.findIndex(x => x.l === len);
         if (idx !== -1) { pieces.push(pool[idx]); pool.splice(idx, 1); }
       }
-      const totalLen  = pieces.reduce((s, p) => s + p.l, 0);
-      const isDorn    = pieces.length === 1 && pieces[0].isDorn;
-      const isDornMulti = isDorn && pieces[0].isDornMulti;
+      const totalLen    = pieces.reduce((s, p) => s + p.l, 0);
+      const isDorn       = pieces.length === 1 && pieces[0].isDorn;
+      const isDornMulti  = isDorn && pieces[0].isDornMulti;
       allStrimler.push({ width, totalLen, pieces, isDorn, isDornMulti });
-      totalWidth += width;
-    }
-
-    if (totalWidth > mrB) {
-      // Only error if this is NOT a dorn (dorns are pre-split to fit)
-      const lastStrimmel = allStrimler[allStrimler.length - 1];
-      if (!lastStrimmel || !lastStrimmel.isDorn) {
-        showError(`Samlet bredde (${fmt(totalWidth)} mm) overskrider moderrullens bredde (${fmt(mrB)} mm).`);
-        return;
-      }
+      totalWidthUsed += width;
     }
   }
 
-  // cutLen = longest strimmel across all groups
-  // For multi-dorns stacked in length, their width is counted once (they share position)
-  const cutLen = Math.max(...allStrimler.map(s => s.totalLen));
-
-  // Recalculate real total width (multi-dorns only occupy one width slot)
-  const realTotalWidth = allStrimler.reduce((s, st) => s + st.width, 0);
-
-  const restRulle = { b: mrB, l: mrL - cutLen };
-  const sideRest  = { b: mrB - Math.min(realTotalWidth, mrB), l: cutLen };
+  // ── Distribute strimler across rolls (best-fit, minimise leftover waste) ──
+  const assignment = assignStrimlerToRolls(allStrimler, rolls);
+  if (assignment.unplaced.length > 0) {
+    const w = assignment.unplaced.reduce((s,x)=>s+x.width,0);
+    showError(`${assignment.unplaced.length} strimmel/strimler (samlet ${fmt(w)} mm bred) kunne ikke placeres på nogen af de angivne moderruller. Tilføj flere/bredere/længere ruller.`);
+    return;
+  }
 
   const orderRef  = document.getElementById('order-ref').value.trim();
   const orderNote = document.getElementById('order-note').value.trim();
-  renderResult({ mrB, mrL, buffer, strimler: allStrimler, cutLen, totalWidth: Math.min(realTotalWidth, mrB), restRulle, sideRest, orderRef, orderNote });
+  renderResult({ rolls: assignment.rolls, buffer, orderRef, orderNote });
+}
+
+// ── Multi-roll assignment ──────────────────────────────────────────────────────
+// Strategy: sort strimler by length descending (longest/hardest to place first).
+// For each strimmel, evaluate every roll that currently has enough WIDTH left
+// (rolls are filled width-wise like the single-roll case — once a roll's
+// current "row" width is exhausted, a new length-cut/row starts) and enough
+// LENGTH left for a new row if needed. Pick the roll+row placement that
+// minimises leftover waste (best-fit decreasing across multiple bins).
+//
+// Each roll is modeled as a sequence of "cut rows": a row has a width budget
+// (roll.b) and consumes some of the roll's total length. We pack strimler into
+// rows greedily: try to add to the current row if it fits in width AND the
+// row's height (=max strimmel length in that row) doesn't shrink the remaining
+// roll length below what's needed — practically: we always start a new row
+// when width is exhausted, and we pick whichever roll gives least wasted length
+// for this strimmel.
+
+function assignStrimlerToRolls(strimler, rollDefs) {
+  // Each roll instance: { id, b, l, rows: [ {width, items[], rowLen} ], usedL }
+  const rolls = rollDefs.map(r => ({ ...r, rows: [], usedL: 0 }));
+  const sorted = [...strimler].sort((a, b) => b.totalLen - a.totalLen);
+  const unplaced = [];
+
+  for (const s of sorted) {
+    let bestRoll = null, bestRow = null, bestWaste = Infinity, bestIsNewRow = false;
+
+    for (const roll of rolls) {
+      if (s.width > roll.b) continue; // never fits width-wise
+
+      // Option A: add to an existing row that has width left and enough length
+      for (const row of roll.rows) {
+        if (row.width + s.width <= roll.b && s.totalLen <= row.rowLen) {
+          // Fits without growing row length — zero extra length waste
+          const waste = row.rowLen - s.totalLen; // not exact global waste but local heuristic
+          if (waste < bestWaste) {
+            bestWaste = waste; bestRoll = roll; bestRow = row; bestIsNewRow = false;
+          }
+        }
+      }
+
+      // Option B: start a new row in this roll
+      const remainingL = roll.l - roll.usedL;
+      if (s.totalLen <= remainingL) {
+        const waste = remainingL - s.totalLen;
+        if (waste < bestWaste) {
+          bestWaste = waste; bestRoll = roll; bestRow = null; bestIsNewRow = true;
+        }
+      }
+    }
+
+    if (!bestRoll) { unplaced.push(s); continue; }
+
+    if (bestIsNewRow) {
+      const newRow = { width: s.width, items: [s], rowLen: s.totalLen };
+      bestRoll.rows.push(newRow);
+      bestRoll.usedL += s.totalLen;
+    } else {
+      bestRow.width += s.width;
+      bestRow.items.push(s);
+      // rowLen stays the same (s.totalLen <= row.rowLen guaranteed)
+    }
+  }
+
+  // Build final per-roll result objects
+  const result = rolls.map(roll => {
+    const cutLen     = roll.rows.reduce((s, r) => s + r.rowLen, 0);
+    const restRulle  = { b: roll.b, l: roll.l - cutLen };
+    const rowResults = roll.rows.map(row => ({
+      width: row.width,
+      rowLen: row.rowLen,
+      strimler: row.items,
+      sideRest: { b: roll.b - row.width, l: row.rowLen }
+    }));
+    return { id: roll.id, mrB: roll.b, mrL: roll.l, cutLen, restRulle, rows: rowResults };
+  }).filter(r => r.rows.length > 0);
+
+  return { rolls: result, unplaced };
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function renderResult(d) {
   const res = document.getElementById('result');
   res.style.display = 'flex';
+  res.innerHTML = '';
 
-  // Summary
-  // Show order ref in result header if present
   if (d.orderRef) {
-    document.querySelector('#result .card h2').textContent = 'Oversigt — ' + d.orderRef;
+    const h = document.createElement('div');
+    h.className = 'card';
+    h.innerHTML = `<h2 style="margin:0;padding:0;border:none">Ordre — ${d.orderRef}${d.orderNote ? ' · ' + d.orderNote : ''}</h2>`;
+    res.appendChild(h);
   }
-  const sg = document.getElementById('summary-grid');
-  sg.innerHTML = '';
-  [
-    { lbl: 'Antal strimler', val: String(d.strimler.length), sub: 'på langs af rullen' },
-    { lbl: 'Opskæret stykke', val: `${fmt(d.totalWidth)} × ${fmt(d.cutLen)} mm`, sub: 'bredde × længde' },
-    { lbl: 'Siderest i opskæret stykke', val: d.sideRest.b > 0 ? `${fmt(d.sideRest.b)} × ${fmt(d.sideRest.l)} mm` : '—', sub: d.sideRest.b > 0 ? 'bredde × længde' : '' },
-    { lbl: 'Tilbage som moderrulle', val: `${fmt(d.restRulle.b)} × ${fmt(d.restRulle.l)} mm`, sub: 'bredde × længde', green: true },
-  ].forEach(item => {
-    const el = document.createElement('div');
-    el.className = 'sum-card' + (item.green ? ' green' : '');
-    el.innerHTML = `<div class="sc-lbl">${item.lbl}</div><div class="sc-val">${item.val}</div>${item.sub ? `<div class="sc-sub">${item.sub}</div>` : ''}`;
-    sg.appendChild(el);
+
+  d.rolls.forEach((roll, ri) => {
+    const rollCard = document.createElement('div');
+    rollCard.className = 'card';
+    rollCard.innerHTML = `<h2>Moderrulle ${ri+1} — ${fmt(roll.mrB)} × ${fmt(roll.mrL)} mm</h2>`;
+
+    // Summary grid for this roll
+    const sg = document.createElement('div');
+    sg.className = 'summary-grid';
+    const totalStrimler = roll.rows.reduce((s,r) => s + r.strimler.length, 0);
+    [
+      { lbl: 'Antal strimler', val: String(totalStrimler) },
+      { lbl: 'Antal snit (rækker)', val: String(roll.rows.length) },
+      { lbl: 'Brugt længde', val: `${fmt(roll.cutLen)} mm` },
+      { lbl: 'Tilbage som moderrulle', val: `${fmt(roll.restRulle.b)} × ${fmt(roll.restRulle.l)} mm`, green: true },
+    ].forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'sum-card' + (item.green ? ' green' : '');
+      el.innerHTML = `<div class="sc-lbl">${item.lbl}</div><div class="sc-val">${item.val}</div>${item.sub ? `<div class="sc-sub">${item.sub}</div>` : ''}`;
+      sg.appendChild(el);
+    });
+    rollCard.appendChild(sg);
+    res.appendChild(rollCard);
+
+    // Steps per row (a "row" = one length-cut on this roll, may contain several strimler side by side)
+    const stepsCard = document.createElement('div');
+    stepsCard.className = 'card';
+    stepsCard.innerHTML = `<h2>Opskæringsplan</h2>`;
+    const st = document.createElement('div');
+    st.className = 'steps';
+    let n = 1;
+
+    roll.rows.forEach((row, rowIdx) => {
+      let usedWidth = 0;
+      row.strimler.forEach(s => {
+        let tags, title, detail;
+
+        if (s.isDorn && s.isDornMulti) {
+          const slices  = s.pieces[0].dornSlices;
+          const numD    = slices.length;
+          const bandW   = slices[0].dornPieces[0].b;
+          const perDorn = slices[0].dornPieces.length;
+          title  = `Strimmel — DORN ×${numD}:  ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
+          detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm (række ${rowIdx+1}).\n${numD} dorner à ${perDorn} bånd af ${fmt(bandW)} mm, skåret forskudt i længden.`;
+          tags = slices.map((sl, si) =>
+            `Dorn ${si+1}: ${sl.dornPieces.length} × ${fmt(bandW)} mm  (pos ${fmt(si * sl.l)}–${fmt((si+1) * sl.l)} mm)`
+          );
+          tags.push(`→ Skær hver dorn op i ${perDorn} strimler à ${fmt(bandW)} mm`);
+
+        } else if (s.isDorn) {
+          const piece    = s.pieces[0];
+          const bandW    = piece.dornPieces[0].b;
+          const numBands = piece.dornPieces.length;
+          title  = `Strimmel — DORN:  ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
+          detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm (række ${rowIdx+1}).  ${numBands} bånd à ${fmt(bandW)} mm + ${fmt(piece.dornTillæg)} mm tillæg.`;
+          tags = piece.dornPieces.map((p, pi) => `Bånd ${pi+1}: ${fmt(p.b)} × ${fmt(p.origL)} mm`);
+          tags.push(`→ Skær op i ${numBands} strimler à ${fmt(bandW)} mm`);
+
+        } else {
+          title  = `Strimmel — ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
+          detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm (række ${rowIdx+1}).  ${s.pieces.length} bånd i denne strimmel.`;
+          tags = s.pieces.map(p =>
+            `${fmt(s.width)} × ${fmt(p.origL)} mm  (+${fmt(d.buffer)} → ${fmt(p.l)} mm)`
+          );
+        }
+
+        if (s.totalLen < row.rowLen)
+          tags.push(`REST: ${fmt(s.width)} × ${fmt(row.rowLen - s.totalLen)} mm`);
+
+        addStep(st, n++, title, detail, tags, s.isDorn);
+        usedWidth += s.width;
+      });
+
+      if (row.sideRest.b > 0)
+        addStep(st, n++,
+          `Siderest (række ${rowIdx+1}) — ${fmt(row.sideRest.b)} × ${fmt(row.sideRest.l)} mm`,
+          `Ubrugt bredde i denne række.`,
+          []
+        );
+    });
+
+    stepsCard.appendChild(st);
+    res.appendChild(stepsCard);
+
+    // Visual canvas per roll
+    const visCard = document.createElement('div');
+    visCard.className = 'card';
+    visCard.innerHTML = `<h2>Visuel oversigt</h2><div class="canvas-wrap"><canvas id="vis-${ri}"></canvas></div>`;
+    res.appendChild(visCard);
   });
 
-  // Steps
-  const st = document.getElementById('steps');
-  st.innerHTML = '';
-  let n = 1;
-  let usedWidth = 0;
-  d.strimler.forEach((s, i) => {
-    let tags, title, detail;
+  // Print button
+  const printBtn = document.createElement('button');
+  printBtn.className = 'btn-print';
+  printBtn.style.display = 'inline-flex';
+  printBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M3 11H1V6h13v5h-2M3 9h9v5H3z" stroke="white" stroke-width="1.4" stroke-linejoin="round"/></svg> Udskriv arbejdsseddel`;
+  printBtn.onclick = () => openPrintWindow(d);
+  res.appendChild(printBtn);
 
-    if (s.isDorn && s.isDornMulti) {
-      // Multiple dorns stacked in length
-      const slices   = s.pieces[0].dornSlices;
-      const numD     = slices.length;
-      const bandW    = slices[0].dornPieces[0].b;
-      const perDorn  = slices[0].dornPieces.length;
-      title  = `Strimmel ${i+1} — DORN ×${numD}:  ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
-      detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.\n${numD} dorner à ${perDorn} bånd af ${fmt(bandW)} mm, skåret forskudt i længden.`;
-      tags = slices.map((sl, si) =>
-        `Dorn ${si+1}: ${sl.dornPieces.length} × ${fmt(bandW)} mm  (pos ${fmt(si * sl.l)}–${fmt((si+1) * sl.l)} mm)`
-      );
-      tags.push(`→ Skær hver dorn op i ${perDorn} strimler à ${fmt(bandW)} mm`);
+  // Draw canvases after DOM insert
+  d.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
 
-    } else if (s.isDorn) {
-      // Single dorn
-      const piece    = s.pieces[0];
-      const bandW    = piece.dornPieces[0].b;
-      const numBands = piece.dornPieces.length;
-      title  = `Strimmel ${i+1} — DORN:  ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
-      detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.  ${numBands} bånd à ${fmt(bandW)} mm + ${fmt(piece.dornTillæg)} mm tillæg.`;
-      tags = piece.dornPieces.map((p, pi) => `Bånd ${pi+1}: ${fmt(p.b)} × ${fmt(p.origL)} mm`);
-      tags.push(`→ Skær op i ${numBands} strimler à ${fmt(bandW)} mm`);
-
-    } else {
-      title  = `Strimmel ${i+1} — ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
-      detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm.  ${s.pieces.length} bånd i denne strimmel.`;
-      tags = s.pieces.map(p =>
-        `${fmt(s.width)} × ${fmt(p.origL)} mm  (+${fmt(d.buffer)} → ${fmt(p.l)} mm)`
-      );
-    }
-
-    if (s.totalLen < d.cutLen)
-      tags.push(`REST: ${fmt(s.width)} × ${fmt(d.cutLen - s.totalLen)} mm`);
-
-    addStep(st, n++, title, detail, tags, s.isDorn);
-    usedWidth += s.width;
-  });
-
-  if (d.sideRest.b > 0)
-    addStep(st, n++,
-      `Siderest — ${fmt(d.sideRest.b)} × ${fmt(d.sideRest.l)} mm`,
-      `Position ${fmt(usedWidth)} – ${fmt(d.mrB)} mm er ubrugt i det afskårne stykke.`,
-      []
-    );
-
-  drawCanvas(d);
   _printData = d;
   saveToHistory(d);
-  document.getElementById('result').classList.add('ready');
   res.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -631,115 +733,76 @@ function addStep(container, num, title, detail, tags, isDorn) {
 }
 
 // ── Print window ──────────────────────────────────────────────────────────────
-function buildPrintCanvas(d) {
-  const W = 1200;
-  const scaleW = W / d.mrB;
-  const H = Math.max(80, Math.round(W * 0.12));
-  const scaleL = H / d.cutLen;
-  const c = document.createElement('canvas');
-  c.width = W; c.height = H;
-  const ctx = c.getContext('2d');
-  const COLORS = ['#C94F1E','#1565C0','#2E7D32','#6A1B9A','#00695C','#E65100','#0277BD','#558B2F'];
-  ctx.fillStyle = '#E8E4DE';
-  ctx.fillRect(0, 0, W, H);
-  let xOff = 0;
-  d.strimler.forEach((s, i) => {
-    const sw = s.width * scaleW;
-    const sh = s.totalLen * scaleL;
-    const col = COLORS[i % COLORS.length];
-    ctx.fillStyle = hexA(col, 0.18); ctx.fillRect(xOff, 0, sw, H);
-    ctx.fillStyle = hexA(col, 0.7);  ctx.fillRect(xOff, 0, sw, sh);
-    ctx.strokeStyle = hexA(col, 0.9); ctx.lineWidth = 1.5;
-    ctx.strokeRect(xOff + 0.5, 0.5, sw - 1, sh - 1);
-    if (sw > 30 && sh > 14) {
-      const fs = clamp(9, sw / 8, 14);
-      ctx.save();
-      ctx.font = `700 ${fs}px Arial,sans-serif`;
-      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(`${fmt(s.width)} mm`, xOff + sw/2, sh/2 - fs*0.6);
-      ctx.font = `${clamp(8,fs*0.85,12)}px Arial,monospace`;
-      ctx.fillText(`${fmt(s.totalLen)} mm`, xOff + sw/2, sh/2 + fs*0.7);
-      ctx.restore();
-    }
-    xOff += sw;
-  });
-  if (d.sideRest.b > 0) {
-    const rw = d.sideRest.b * scaleW;
-    ctx.fillStyle = 'rgba(150,140,130,0.2)';
-    ctx.fillRect(xOff, 0, rw, H);
-    if (rw > 40) {
-      ctx.save(); ctx.font = '12px Arial,sans-serif'; ctx.fillStyle = '#aaa';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('Siderest', xOff + rw/2, H/2); ctx.restore();
-    }
-  }
-  ctx.strokeStyle = '#999'; ctx.lineWidth = 1.5;
-  ctx.strokeRect(0.5, 0.5, W-1, H-1);
-  return c.toDataURL('image/png');
-}
-
 function openPrintWindow(d) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('da-DK', {day:'2-digit',month:'2-digit',year:'numeric'});
   const timeStr = now.toLocaleTimeString('da-DK', {hour:'2-digit',minute:'2-digit'});
 
-  let sections = '';
-  let usedWidth = 0;
+  let allSections = '';
 
-  d.strimler.forEach((s, si) => {
-    let rows = '';
+  d.rolls.forEach((roll, ri) => {
+    let sections = `<div class="roll-header">Moderrulle ${ri+1} — ${fmt(roll.mrB)} × ${fmt(roll.mrL)} mm</div>`;
 
-    if (s.isDorn && s.isDornMulti) {
-      const slices  = s.pieces[0].dornSlices;
-      const bandW   = slices[0].dornPieces[0].b;
-      const perDorn = slices[0].dornPieces.length;
-      slices.forEach((sl, dIdx) => {
-        rows += `<tr class="dorn-row"><td colspan="3"><strong>Dorn ${dIdx+1}</strong> — pos ${fmt(dIdx*sl.l)}–${fmt((dIdx+1)*sl.l)} mm i strimlen</td></tr>`;
-        sl.dornPieces.forEach((p, pi) => {
-          rows += `<tr><td>${pi+1}</td><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td></tr>`;
-        });
+    roll.rows.forEach((row, rowIdx) => {
+      let usedWidth = 0;
+      row.strimler.forEach(s => {
+        let rows = '';
+
+        if (s.isDorn && s.isDornMulti) {
+          const slices  = s.pieces[0].dornSlices;
+          const bandW   = slices[0].dornPieces[0].b;
+          const perDorn = slices[0].dornPieces.length;
+          slices.forEach((sl, dIdx) => {
+            rows += `<tr class="dorn-row"><td colspan="3"><strong>Dorn ${dIdx+1}</strong> — pos ${fmt(dIdx*sl.l)}–${fmt((dIdx+1)*sl.l)} mm i strimlen</td></tr>`;
+            sl.dornPieces.forEach((p, pi) => {
+              rows += `<tr><td>${pi+1}</td><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td></tr>`;
+            });
+          });
+          rows += `<tr class="action-row"><td colspan="3">→ Skær hver dorn op i ${perDorn} strimler à ${fmt(bandW)} mm</td></tr>`;
+
+        } else if (s.isDorn) {
+          const piece    = s.pieces[0];
+          const bandW    = piece.dornPieces[0].b;
+          const numBands = piece.dornPieces.length;
+          piece.dornPieces.forEach((p, pi) => {
+            rows += `<tr><td>${pi+1}</td><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td></tr>`;
+          });
+          rows += `<tr class="action-row"><td colspan="3">→ Skær op i ${numBands} strimler à ${fmt(bandW)} mm  (tillæg ${fmt(piece.dornTillæg)} mm)</td></tr>`;
+
+        } else {
+          s.pieces.forEach((p, pi) => {
+            rows += `<tr><td>${pi+1}</td><td>${fmt(s.width)} mm</td><td>${fmt(p.origL)} mm  <span class="muted">(+${fmt(d.buffer)} → ${fmt(p.l)} mm)</span></td></tr>`;
+          });
+        }
+
+        if (s.totalLen < row.rowLen) {
+          rows += `<tr class="rest-row"><td colspan="3">Længderest: ${fmt(s.width)} × ${fmt(row.rowLen - s.totalLen)} mm</td></tr>`;
+        }
+
+        const title = s.isDorn
+          ? `Strimmel — DORN — ${fmt(s.width)} mm bred, ${fmt(s.totalLen)} mm lang`
+          : `Strimmel — ${fmt(s.width)} mm bred, ${fmt(s.totalLen)} mm lang`;
+
+        sections += `
+          <div class="strimmel-block">
+            <div class="strimmel-title">${title}</div>
+            <div class="strimmel-pos">Position ${fmt(usedWidth)} – ${fmt(usedWidth+s.width)} mm  ·  Række ${rowIdx+1}</div>
+            <table><tbody>${rows}</tbody></table>
+          </div>`;
+        usedWidth += s.width;
       });
-      rows += `<tr class="action-row"><td colspan="3">→ Skær hver dorn op i ${perDorn} strimler à ${fmt(bandW)} mm</td></tr>`;
 
-    } else if (s.isDorn) {
-      const piece    = s.pieces[0];
-      const bandW    = piece.dornPieces[0].b;
-      const numBands = piece.dornPieces.length;
-      piece.dornPieces.forEach((p, pi) => {
-        rows += `<tr><td>${pi+1}</td><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td></tr>`;
-      });
-      rows += `<tr class="action-row"><td colspan="3">→ Skær op i ${numBands} strimler à ${fmt(bandW)} mm  (tillæg ${fmt(piece.dornTillæg)} mm)</td></tr>`;
+      if (row.sideRest.b > 0) {
+        sections += `
+          <div class="strimmel-block siderest-block">
+            <div class="strimmel-title">Siderest (række ${rowIdx+1})</div>
+            <div class="strimmel-pos">${fmt(row.sideRest.b)} × ${fmt(row.sideRest.l)} mm — ubrugt bredde</div>
+          </div>`;
+      }
+    });
 
-    } else {
-      s.pieces.forEach((p, pi) => {
-        rows += `<tr><td>${pi+1}</td><td>${fmt(s.width)} mm</td><td>${fmt(p.origL)} mm  <span class="muted">(+${fmt(d.buffer)} → ${fmt(p.l)} mm)</span></td></tr>`;
-      });
-    }
-
-    if (s.totalLen < d.cutLen) {
-      rows += `<tr class="rest-row"><td colspan="3">Længderest: ${fmt(s.width)} × ${fmt(d.cutLen - s.totalLen)} mm</td></tr>`;
-    }
-
-    const title = s.isDorn
-      ? `Strimmel ${si+1} — DORN — ${fmt(s.width)} mm bred, ${fmt(s.totalLen)} mm lang`
-      : `Strimmel ${si+1} — ${fmt(s.width)} mm bred, ${fmt(s.totalLen)} mm lang`;
-
-    sections += `
-      <div class="strimmel-block">
-        <div class="strimmel-title">${title}</div>
-        <div class="strimmel-pos">Position ${fmt(usedWidth)} – ${fmt(usedWidth+s.width)} mm</div>
-        <table><tbody>${rows}</tbody></table>
-      </div>`;
-    usedWidth += s.width;
+    allSections += sections;
   });
-
-  if (d.sideRest.b > 0) {
-    sections += `
-      <div class="strimmel-block siderest-block">
-        <div class="strimmel-title">Siderest</div>
-        <div class="strimmel-pos">${fmt(d.sideRest.b)} × ${fmt(d.sideRest.l)} mm — ubrugt bredde i det afskårne stykke</div>
-      </div>`;
-  }
 
   const html = `<!DOCTYPE html><html lang="da"><head>
 <meta charset="UTF-8"><title>Arbejdsseddel</title>
@@ -751,6 +814,7 @@ body{font-family:Arial,sans-serif;font-size:11px;color:#1C2B3A;background:#fff}
 .hdr-title{font-size:16px;font-weight:700}
 .hdr-sub{font-size:9px;color:#666;margin-top:3px}
 .hdr-meta{text-align:right;font-size:9px;color:#666;font-family:monospace}
+.roll-header{font-size:13px;font-weight:700;color:#005F7F;background:#E6F4F7;padding:6px 10px;border-radius:4px;margin:14px 0 8px;page-break-after:avoid}
 .strimmel-block{margin-bottom:14px;page-break-inside:avoid;border:1px solid #ddd;border-radius:4px;padding:8px 10px}
 .strimmel-title{font-size:12px;font-weight:700;margin-bottom:2px}
 .strimmel-pos{font-size:9px;color:#666;font-family:monospace;margin-bottom:7px}
@@ -768,11 +832,11 @@ tr:last-child td{border-bottom:none}
 <div class="hdr">
   <div>
     <div class="hdr-title">Opskæringsplan — Strimler</div>
-    <div class="hdr-sub">${d.orderRef ? d.orderRef + ' &nbsp;|&nbsp; ' : ''}Moderrulle: ${fmt(d.mrB)} × ${fmt(d.mrL)} mm &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm${d.orderNote ? ' &nbsp;|&nbsp; ' + d.orderNote : ''}</div>
+    <div class="hdr-sub">${d.orderRef ? d.orderRef + ' &nbsp;|&nbsp; ' : ''}${d.rolls.length} moderrulle(r)  &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm${d.orderNote ? ' &nbsp;|&nbsp; ' + d.orderNote : ''}</div>
   </div>
   <div class="hdr-meta">Dato: ${dateStr}<br>Kl. ${timeStr}</div>
 </div>
-${sections}
+${allSections}
 <div class="footer">Udskrevet ${dateStr} kl. ${timeStr} — Opskæringskalkulator Induminati</div>
 </body></html>`;
 
@@ -783,14 +847,15 @@ ${sections}
   setTimeout(() => w.print(), 400);
 }
 
-// ── Canvas (screen) ───────────────────────────────────────────────────────────
-function drawCanvas(d) {
-  const canvas = document.getElementById('vis');
+// ── Canvas (screen) — draws all rows for one roll ──────────────────────────────
+function drawRollCanvas(roll, rollIndex) {
+  const canvas = document.getElementById(`vis-${rollIndex}`);
+  if (!canvas) return;
   const W = Math.min(760, canvas.parentElement.clientWidth - 28);
-  const scaleW = W / d.mrB;
-  const aspect = Math.min(d.cutLen / d.mrB, 0.35);
-  const H = Math.max(60, Math.round(W * aspect));
-  const scaleL = H / d.cutLen;
+  const scaleW = W / roll.mrB;
+  const aspect = Math.min(roll.cutLen / roll.mrB, 3);
+  const H = Math.max(100, Math.round(W * aspect));
+  const scaleL = H / roll.cutLen;
 
   canvas.width  = W;
   canvas.height = H;
@@ -798,73 +863,79 @@ function drawCanvas(d) {
   const ctx = canvas.getContext('2d');
   const COLORS = ['#C94F1E','#1565C0','#2E7D32','#6A1B9A','#00695C','#E65100','#0277BD','#558B2F'];
 
-  // Background = cut piece
   ctx.fillStyle = '#DDD8D0';
   ctx.fillRect(0, 0, W, H);
 
-  let xOff = 0;
-  d.strimler.forEach((s, i) => {
-    const sw  = s.width * scaleW;
-    const sh  = s.totalLen * scaleL;
-    const col = COLORS[i % COLORS.length];
+  let yOff = 0;
+  let colorIdx = 0;
+  roll.rows.forEach(row => {
+    const rowH = row.rowLen * scaleL;
+    let xOff = 0;
+    row.strimler.forEach(s => {
+      const sw = s.width * scaleW;
+      const sh = s.totalLen * scaleL;
+      const col = COLORS[colorIdx % COLORS.length];
+      colorIdx++;
 
-    // Tint for full cut zone height (length-rest)
-    ctx.fillStyle = hexA(col, 0.15);
-    ctx.fillRect(xOff, 0, sw, H);
+      ctx.fillStyle = hexA(col, 0.15);
+      ctx.fillRect(xOff, yOff, sw, rowH);
+      ctx.fillStyle = hexA(col, 0.65);
+      ctx.fillRect(xOff, yOff, sw, sh);
+      ctx.strokeStyle = hexA(col, 0.85);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(xOff + 0.5, yOff + 0.5, sw - 1, sh - 1);
 
-    // Solid for actual band usage
-    ctx.fillStyle = hexA(col, 0.65);
-    ctx.fillRect(xOff, 0, sw, sh);
+      if (sw >= 22 && sh >= 18) {
+        ctx.save();
+        const fs = clamp(8, sw / 5, 12);
+        ctx.font = `600 ${fs}px Inter,sans-serif`;
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${fmt(s.width)}`, xOff + sw / 2, yOff + sh / 2 - fs * 0.7);
+        ctx.font = `${clamp(7, sw / 6, 10)}px DM Mono,monospace`;
+        ctx.fillText(`${fmt(s.totalLen)}`, xOff + sw / 2, yOff + sh / 2 + fs * 0.7);
+        ctx.restore();
+      }
+      xOff += sw;
+    });
 
-    // Border
-    ctx.strokeStyle = hexA(col, 0.85);
-    ctx.lineWidth = 1;
-    ctx.strokeRect(xOff + 0.5, 0.5, sw - 1, sh - 1);
-
-    // Label
-    if (sw >= 22 && sh >= 18) {
-      ctx.save();
-      const fs = clamp(8, sw / 5, 12);
-      ctx.font = `600 ${fs}px Inter,sans-serif`;
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${fmt(s.width)}`, xOff + sw / 2, sh / 2 - fs * 0.7);
-      ctx.font = `${clamp(7, sw / 6, 10)}px DM Mono,monospace`;
-      ctx.fillText(`${fmt(s.totalLen)}`, xOff + sw / 2, sh / 2 + fs * 0.7);
-      ctx.restore();
+    if (row.sideRest.b > 0) {
+      const rw = row.sideRest.b * scaleW;
+      ctx.fillStyle = 'rgba(150,140,130,0.2)';
+      ctx.fillRect(xOff, yOff, rw, rowH);
+      if (rw >= 20 && rowH >= 16) {
+        ctx.save();
+        ctx.font = '10px Inter,sans-serif';
+        ctx.fillStyle = '#999';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Siderest', xOff + rw / 2, yOff + rowH / 2);
+        ctx.restore();
+      }
     }
-    xOff += sw;
+
+    if (yOff > 0) {
+      ctx.strokeStyle = '#888';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(W, yOff); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    yOff += rowH;
   });
 
-  // Side rest
-  if (d.sideRest.b > 0) {
-    const rw = d.sideRest.b * scaleW;
-    ctx.fillStyle = 'rgba(150,140,130,0.2)';
-    ctx.fillRect(xOff, 0, rw, H);
-    if (rw >= 20 && H >= 16) {
-      ctx.save();
-      ctx.font = '10px Inter,sans-serif';
-      ctx.fillStyle = '#999';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Siderest', xOff + rw / 2, H / 2);
-      ctx.restore();
-    }
-  }
-
-  // Border
   ctx.strokeStyle = '#AAA49C';
   ctx.lineWidth = 1;
   ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
 
-  // Width label
   if (H > 20) {
     ctx.save();
     ctx.font = '10px DM Mono,monospace';
     ctx.fillStyle = '#666';
     ctx.textAlign = 'center';
-    ctx.fillText(`← ${fmt(d.mrB)} mm →`, W / 2, H - 4);
+    ctx.fillText(`← ${fmt(roll.mrB)} mm →`, W / 2, H - 4);
     ctx.restore();
   }
 }
@@ -881,14 +952,9 @@ function saveToHistory(d) {
     time:      new Date().toLocaleTimeString('da-DK', {hour:'2-digit',minute:'2-digit'}),
     orderRef:  d.orderRef  || '',
     orderNote: d.orderNote || '',
-    mrB:       d.mrB,
-    mrL:       d.mrL,
     buffer:    d.buffer,
-    cutLen:    d.cutLen,
-    restRulle: d.restRulle,
-    totalWidth:d.totalWidth,
-    strimler:  d.strimler,
-    sideRest:  d.sideRest,
+    rolls:     d.rolls,
+    rollDefs:  readRolls().map(r => ({ b: r.b, l: r.l })),
     // Store raw band inputs for reload
     bands: readBands().map(b => ({ ...b }))
   };
@@ -919,10 +985,11 @@ function loadHistEntry(entry) {
   // Restore order fields
   document.getElementById('order-ref').value  = entry.orderRef  || '';
   document.getElementById('order-note').value = entry.orderNote || '';
-  // Restore moderrulle
-  document.getElementById('mr-b').value    = entry.mrB;
-  document.getElementById('mr-l').value    = entry.mrL;
-  document.getElementById('buffer').value  = entry.buffer;
+  document.getElementById('buffer').value     = entry.buffer;
+  // Restore moderruller
+  rollList.innerHTML = '';
+  (entry.rollDefs || []).forEach(r => addRollRow(r.b, r.l));
+  if (rollList.children.length === 0) addRollRow();
   // Restore bands
   bandList.innerHTML = '';
   (entry.bands || []).forEach(b => {
@@ -943,11 +1010,14 @@ function renderHistory() {
     el.innerHTML = '<div class="hist-empty">Ingen gemte beregninger endnu</div>';
     return;
   }
+  window._histCache = hist;
   el.innerHTML = hist.map(e => {
-    const title = e.orderRef ? e.orderRef : `Moderrulle ${fmt(e.mrB)}×${fmt(e.mrL)}`;
-    const sub   = `${e.date} ${e.time}  ·  Snit: ${fmt(e.totalWidth)}×${fmt(e.cutLen)} mm  ·  Rest: ${fmt(e.restRulle.b)}×${fmt(e.restRulle.l)} mm${e.orderNote ? '  ·  ' + e.orderNote : ''}`;
+    const numRolls = (e.rolls || []).length;
+    const title = e.orderRef ? e.orderRef : `${numRolls} moderrulle(r)`;
+    const restSummary = (e.rolls || []).map(r => `${fmt(r.restRulle.b)}×${fmt(r.restRulle.l)}`).join(', ');
+    const sub   = `${e.date} ${e.time}  ·  ${numRolls} rulle(r)  ·  Rest: ${restSummary}${e.orderNote ? '  ·  ' + e.orderNote : ''}`;
     return `
-      <div class="hist-item" onclick="loadHistEntry(${JSON.stringify(e).replace(/"/g,'&quot;')})">
+      <div class="hist-item" onclick="loadHistEntryById(${e.id})">
         <div class="hist-meta">
           <div class="hist-title">${title}</div>
           <div class="hist-sub">${sub}</div>
@@ -955,6 +1025,11 @@ function renderHistory() {
         <button class="hist-del" onclick="event.stopPropagation();deleteHistEntry(${e.id})" title="Slet">×</button>
       </div>`;
   }).join('');
+}
+
+function loadHistEntryById(id) {
+  const entry = (window._histCache || loadHistory()).find(e => e.id === id);
+  if (entry) loadHistEntry(entry);
 }
 
 // Init history on load
