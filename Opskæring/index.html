@@ -505,15 +505,10 @@ function calculate() {
 
   // ── Distribute strimler across rolls (best-fit, minimise leftover waste) ──
   const assignment = assignStrimlerToRolls(allStrimler, rolls);
-  if (assignment.unplaced.length > 0) {
-    const w = assignment.unplaced.reduce((s,x)=>s+x.width,0);
-    showError(`${assignment.unplaced.length} strimmel/strimler (samlet ${fmt(w)} mm bred) kunne ikke placeres på nogen af de angivne moderruller. Tilføj flere/bredere/længere ruller.`);
-    return;
-  }
 
   const orderRef  = document.getElementById('order-ref').value.trim();
   const orderNote = document.getElementById('order-note').value.trim();
-  renderResult({ rolls: assignment.rolls, buffer, orderRef, orderNote });
+  renderResult({ rolls: assignment.rolls, unplaced: assignment.unplaced, buffer, orderRef, orderNote });
 }
 
 // ── Multi-roll assignment ──────────────────────────────────────────────────────
@@ -605,6 +600,50 @@ function renderResult(d) {
     h.className = 'card';
     h.innerHTML = `<h2 style="margin:0;padding:0;border:none">Ordre — ${d.orderRef}${d.orderNote ? ' · ' + d.orderNote : ''}</h2>`;
     res.appendChild(h);
+  }
+
+  if (d.unplaced && d.unplaced.length > 0) {
+    const totalW = d.unplaced.reduce((s,x) => s + x.width, 0);
+    const warnCard = document.createElement('div');
+    warnCard.className = 'card';
+    warnCard.style.borderColor = '#C94F1E';
+    warnCard.style.background = '#FDF3EF';
+
+    let rows = '';
+    d.unplaced.forEach(s => {
+      if (s.isDorn && s.isDornMulti) {
+        const slices = s.pieces[0].dornSlices;
+        slices.forEach(sl => {
+          sl.dornPieces.forEach(p => {
+            rows += `<tr><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td><td>Dorn-bånd</td></tr>`;
+          });
+        });
+      } else if (s.isDorn) {
+        s.pieces[0].dornPieces.forEach(p => {
+          rows += `<tr><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td><td>Dorn-bånd</td></tr>`;
+        });
+      } else {
+        s.pieces.forEach(p => {
+          rows += `<tr><td>${fmt(s.width)} mm</td><td>${fmt(p.origL)} mm</td><td>—</td></tr>`;
+        });
+      }
+    });
+
+    warnCard.innerHTML = `
+      <h2 style="color:#C94F1E;border-color:#f0c7b8">⚠ Manglende materiale — ${d.unplaced.length} strimmel/strimler kunne ikke placeres</h2>
+      <p style="font-size:13px;color:#C94F1E;margin-bottom:14px">
+        Samlet ${fmt(totalW)} mm bredde kunne ikke være på de angivne moderruller. Tilføj flere, bredere eller længere ruller for at få plads til disse bånd.
+      </p>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace">
+        <thead><tr style="text-align:left;color:#7A5A18">
+          <th style="padding:6px 8px;border-bottom:1px solid #f0c7b8">Bredde</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #f0c7b8">Længde</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #f0c7b8">Type</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+    res.appendChild(warnCard);
   }
 
   d.rolls.forEach((roll, ri) => {
@@ -740,6 +779,30 @@ function openPrintWindow(d) {
 
   let allSections = '';
 
+  if (d.unplaced && d.unplaced.length > 0) {
+    let unplacedRows = '';
+    d.unplaced.forEach(s => {
+      if (s.isDorn && s.isDornMulti) {
+        s.pieces[0].dornSlices.forEach(sl => sl.dornPieces.forEach(p => {
+          unplacedRows += `<tr><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td></tr>`;
+        }));
+      } else if (s.isDorn) {
+        s.pieces[0].dornPieces.forEach(p => {
+          unplacedRows += `<tr><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td></tr>`;
+        });
+      } else {
+        s.pieces.forEach(p => {
+          unplacedRows += `<tr><td>${fmt(s.width)} mm</td><td>${fmt(p.origL)} mm</td></tr>`;
+        });
+      }
+    });
+    allSections += `
+      <div class="unplaced-block">
+        <div class="unplaced-title">⚠ Manglende materiale — kunne ikke placeres</div>
+        <table><thead><tr><th>Bredde</th><th>Længde</th></tr></thead><tbody>${unplacedRows}</tbody></table>
+      </div>`;
+  }
+
   d.rolls.forEach((roll, ri) => {
     let sections = `<div class="roll-header">Moderrulle ${ri+1} — ${fmt(roll.mrB)} × ${fmt(roll.mrL)} mm</div>`;
 
@@ -815,6 +878,9 @@ body{font-family:Arial,sans-serif;font-size:11px;color:#1C2B3A;background:#fff}
 .hdr-sub{font-size:9px;color:#666;margin-top:3px}
 .hdr-meta{text-align:right;font-size:9px;color:#666;font-family:monospace}
 .roll-header{font-size:13px;font-weight:700;color:#005F7F;background:#E6F4F7;padding:6px 10px;border-radius:4px;margin:14px 0 8px;page-break-after:avoid}
+.unplaced-block{margin-bottom:14px;page-break-inside:avoid;border:1.5px solid #C94F1E;border-radius:4px;padding:10px}
+.unplaced-title{font-size:12px;font-weight:700;color:#C94F1E;margin-bottom:8px}
+.unplaced-block table th{text-align:left;font-size:8px;text-transform:uppercase;color:#999;padding:4px 6px;border-bottom:1px solid #f0c7b8}
 .strimmel-block{margin-bottom:14px;page-break-inside:avoid;border:1px solid #ddd;border-radius:4px;padding:8px 10px}
 .strimmel-title{font-size:12px;font-weight:700;margin-bottom:2px}
 .strimmel-pos{font-size:9px;color:#666;font-family:monospace;margin-bottom:7px}
