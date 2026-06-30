@@ -387,9 +387,10 @@ function calculate() {
     const origL   = group[0].origL;
     const n       = group.length;
 
-    // Find how many bands fit per dorn within mrB
-    // bandsPerDorn = max k such that k*bandW + dornTillæg <= mrB
-    const maxPerDorn = Math.floor((mrB - dornTillæg) / bandW);
+    // Find how many bands fit per dorn within mrB AND within max dorn width (700mm)
+    const DORN_MAX_W = 700;
+    const effectiveMax = Math.min(mrB, DORN_MAX_W);
+    const maxPerDorn = Math.floor((effectiveMax - dornTillæg) / bandW);
 
     if (maxPerDorn < 1) {
       // Even a single band + tillæg > mrB — impossible, treat as normal bands
@@ -681,33 +682,63 @@ function openPrintWindow(d) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('da-DK', {day:'2-digit',month:'2-digit',year:'numeric'});
   const timeStr = now.toLocaleTimeString('da-DK', {hour:'2-digit',minute:'2-digit'});
-  const imgSrc  = buildPrintCanvas(d);
 
-  let tableRows = '';
+  let sections = '';
   let usedWidth = 0;
-  let rowNum = 1;
+
   d.strimler.forEach((s, si) => {
-    s.pieces.forEach(p => {
-      tableRows += `<tr>
-        <td>${fmt(rowNum++)}</td><td>Strimmel ${si+1}</td>
-        <td>${fmt(usedWidth)} – ${fmt(usedWidth+s.width)}</td>
-        <td>${fmt(s.width)} mm</td>
-        <td>${fmt(p.origL)} mm</td>
-        <td>+ ${fmt(d.buffer)} mm</td>
-        <td><strong>${fmt(p.l)} mm</strong></td></tr>`;
-    });
-    if (s.totalLen < d.cutLen) {
-      tableRows += `<tr class="rest-row"><td>—</td><td>Strimmel ${si+1}</td>
-        <td>${fmt(usedWidth)} – ${fmt(usedWidth+s.width)}</td>
-        <td colspan="3">Længderest</td>
-        <td><strong>${fmt(d.cutLen - s.totalLen)} mm</strong></td></tr>`;
+    let rows = '';
+
+    if (s.isDorn && s.isDornMulti) {
+      const slices  = s.pieces[0].dornSlices;
+      const bandW   = slices[0].dornPieces[0].b;
+      const perDorn = slices[0].dornPieces.length;
+      slices.forEach((sl, dIdx) => {
+        rows += `<tr class="dorn-row"><td colspan="3"><strong>Dorn ${dIdx+1}</strong> — pos ${fmt(dIdx*sl.l)}–${fmt((dIdx+1)*sl.l)} mm i strimlen</td></tr>`;
+        sl.dornPieces.forEach((p, pi) => {
+          rows += `<tr><td>${pi+1}</td><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td></tr>`;
+        });
+      });
+      rows += `<tr class="action-row"><td colspan="3">→ Skær hver dorn op i ${perDorn} strimler à ${fmt(bandW)} mm</td></tr>`;
+
+    } else if (s.isDorn) {
+      const piece    = s.pieces[0];
+      const bandW    = piece.dornPieces[0].b;
+      const numBands = piece.dornPieces.length;
+      piece.dornPieces.forEach((p, pi) => {
+        rows += `<tr><td>${pi+1}</td><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td></tr>`;
+      });
+      rows += `<tr class="action-row"><td colspan="3">→ Skær op i ${numBands} strimler à ${fmt(bandW)} mm  (tillæg ${fmt(piece.dornTillæg)} mm)</td></tr>`;
+
+    } else {
+      s.pieces.forEach((p, pi) => {
+        rows += `<tr><td>${pi+1}</td><td>${fmt(s.width)} mm</td><td>${fmt(p.origL)} mm  <span class="muted">(+${fmt(d.buffer)} → ${fmt(p.l)} mm)</span></td></tr>`;
+      });
     }
+
+    if (s.totalLen < d.cutLen) {
+      rows += `<tr class="rest-row"><td colspan="3">Længderest: ${fmt(s.width)} × ${fmt(d.cutLen - s.totalLen)} mm</td></tr>`;
+    }
+
+    const title = s.isDorn
+      ? `Strimmel ${si+1} — DORN — ${fmt(s.width)} mm bred, ${fmt(s.totalLen)} mm lang`
+      : `Strimmel ${si+1} — ${fmt(s.width)} mm bred, ${fmt(s.totalLen)} mm lang`;
+
+    sections += `
+      <div class="strimmel-block">
+        <div class="strimmel-title">${title}</div>
+        <div class="strimmel-pos">Position ${fmt(usedWidth)} – ${fmt(usedWidth+s.width)} mm</div>
+        <table><tbody>${rows}</tbody></table>
+      </div>`;
     usedWidth += s.width;
   });
+
   if (d.sideRest.b > 0) {
-    tableRows += `<tr class="rest-row"><td>—</td><td colspan="2">Siderest</td>
-      <td>${fmt(d.sideRest.b)} mm</td><td colspan="2">—</td>
-      <td><strong>${fmt(d.sideRest.l)} mm</strong></td></tr>`;
+    sections += `
+      <div class="strimmel-block siderest-block">
+        <div class="strimmel-title">Siderest</div>
+        <div class="strimmel-pos">${fmt(d.sideRest.b)} × ${fmt(d.sideRest.l)} mm — ubrugt bredde i det afskårne stykke</div>
+      </div>`;
   }
 
   const html = `<!DOCTYPE html><html lang="da"><head>
@@ -716,60 +747,40 @@ function openPrintWindow(d) {
 @page{size:A4 portrait;margin:13mm 13mm 13mm 13mm}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;font-size:11px;color:#1C2B3A;background:#fff}
-.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #1C2B3A;padding-bottom:8px;margin-bottom:11px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #1C2B3A;padding-bottom:8px;margin-bottom:14px}
 .hdr-title{font-size:16px;font-weight:700}
 .hdr-sub{font-size:9px;color:#666;margin-top:3px}
 .hdr-meta{text-align:right;font-size:9px;color:#666;font-family:monospace}
-.section{margin-bottom:11px;page-break-inside:avoid}
-.stitle{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;border-bottom:1px solid #ddd;padding-bottom:3px;margin-bottom:6px}
-.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.info-cell{background:#F0EDE8;border-radius:3px;padding:6px 8px}
-.info-cell.green{background:#E8F5E9}
-.lbl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:2px}
-.info-cell.green .lbl{color:#2E7D32}
-.val{font-size:13px;font-weight:700;font-family:monospace}
-.info-cell.green .val{color:#2E7D32}
+.strimmel-block{margin-bottom:14px;page-break-inside:avoid;border:1px solid #ddd;border-radius:4px;padding:8px 10px}
+.strimmel-title{font-size:12px;font-weight:700;margin-bottom:2px}
+.strimmel-pos{font-size:9px;color:#666;font-family:monospace;margin-bottom:7px}
 table{width:100%;border-collapse:collapse}
-th{background:#1C2B3A;color:#fff;font-size:7px;text-transform:uppercase;letter-spacing:.05em;padding:5px 6px;text-align:left;font-weight:700}
-td{padding:4px 6px;border-bottom:1px solid #E8E4DE;font-family:monospace;font-size:10px}
-tr:nth-child(even) td{background:#F8F6F3}
-tr.rest-row td{background:#FFF8ED!important;color:#7A5A18}
-.graf{width:100%;height:auto;display:block;border:1px solid #ccc;border-radius:2px}
+td{padding:4px 6px;border-bottom:1px solid #eee;font-family:monospace;font-size:10px}
+tr:last-child td{border-bottom:none}
+.muted{color:#999}
+.dorn-row td{background:#E6F4F7;font-family:Arial,sans-serif;font-size:9px;padding-top:8px}
+.action-row td{background:#E6F4F7;color:#005F7F;font-weight:700;font-family:Arial,sans-serif;font-size:10px}
+.rest-row td{background:#FFF8ED;color:#7A5A18;font-weight:700;font-family:Arial,sans-serif;font-size:10px}
+.siderest-block{background:#FAFAF8;border-style:dashed}
+.siderest-block .strimmel-pos{margin-bottom:0}
 .footer{margin-top:8px;font-size:7px;color:#bbb;text-align:right;border-top:1px solid #eee;padding-top:4px}
 </style></head><body>
 <div class="hdr">
   <div>
-    <div class="hdr-title">Opskæringsplan — Transportbånd</div>
-    <div class="hdr-sub">${d.orderRef ? d.orderRef + ' &nbsp;|&nbsp; ' : ''}Moderrulle: ${fmt(d.mrB)} × ${fmt(d.mrL)} mm &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm &nbsp;|&nbsp; Snit: ${fmt(d.totalWidth)} × ${fmt(d.cutLen)} mm${d.orderNote ? ' &nbsp;|&nbsp; ' + d.orderNote : ''}</div>
+    <div class="hdr-title">Opskæringsplan — Strimler</div>
+    <div class="hdr-sub">${d.orderRef ? d.orderRef + ' &nbsp;|&nbsp; ' : ''}Moderrulle: ${fmt(d.mrB)} × ${fmt(d.mrL)} mm &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm${d.orderNote ? ' &nbsp;|&nbsp; ' + d.orderNote : ''}</div>
   </div>
   <div class="hdr-meta">Dato: ${dateStr}<br>Kl. ${timeStr}</div>
 </div>
-<div class="section">
-  <div class="stitle">Oversigt</div>
-  <div class="info-grid">
-    <div class="info-cell"><div class="lbl">Antal strimler</div><div class="val">${d.strimler.length}</div></div>
-    <div class="info-cell"><div class="lbl">Opskæret stykke</div><div class="val">${fmt(d.totalWidth)} × ${fmt(d.cutLen)} mm</div></div>
-    <div class="info-cell"><div class="lbl">Siderest</div><div class="val">${d.sideRest.b > 0 ? fmt(d.sideRest.b)+' × '+fmt(d.sideRest.l)+' mm' : '—'}</div></div>
-    <div class="info-cell green"><div class="lbl">Moderrulle tilbage</div><div class="val">${fmt(d.restRulle.b)} × ${fmt(d.restRulle.l)} mm</div></div>
-  </div>
-</div>
-<div class="section">
-  <div class="stitle">Strimler og bånd</div>
-  <table><thead><tr><th>#</th><th>Strimmel</th><th>Position mm</th><th>Bredde</th><th>Orig. længde</th><th>+ Buffer</th><th>= Total</th></tr></thead>
-  <tbody>${tableRows}</tbody></table>
-</div>
-<div class="section">
-  <div class="stitle">Visuel oversigt — afskåret stykke</div>
-  <img class="graf" src="${imgSrc}">
-</div>
-<div class="footer">Udskrevet ${dateStr} kl. ${timeStr} — Opskæringskalkulator Transportbånd</div>
+${sections}
+<div class="footer">Udskrevet ${dateStr} kl. ${timeStr} — Opskæringskalkulator Induminati</div>
 </body></html>`;
 
   const w = window.open('', '_blank', 'width=900,height=750');
   w.document.write(html);
   w.document.close();
   w.focus();
-  setTimeout(() => w.print(), 500);
+  setTimeout(() => w.print(), 400);
 }
 
 // ── Canvas (screen) ───────────────────────────────────────────────────────────
