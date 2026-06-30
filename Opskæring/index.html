@@ -533,7 +533,7 @@ function assignStrimlerToRolls(strimler, rollDefs) {
   const sorted = [...strimler].sort((a, b) => b.totalLen - a.totalLen);
   const unplaced = [];
 
-  for (const s of sorted) {
+  function tryPlace(s) {
     let bestRoll = null, bestRow = null, bestWaste = Infinity, bestIsNewRow = false;
 
     for (const roll of rolls) {
@@ -542,8 +542,7 @@ function assignStrimlerToRolls(strimler, rollDefs) {
       // Option A: add to an existing row that has width left and enough length
       for (const row of roll.rows) {
         if (row.width + s.width <= roll.b && s.totalLen <= row.rowLen) {
-          // Fits without growing row length — zero extra length waste
-          const waste = row.rowLen - s.totalLen; // not exact global waste but local heuristic
+          const waste = row.rowLen - s.totalLen;
           if (waste < bestWaste) {
             bestWaste = waste; bestRoll = roll; bestRow = row; bestIsNewRow = false;
           }
@@ -560,7 +559,7 @@ function assignStrimlerToRolls(strimler, rollDefs) {
       }
     }
 
-    if (!bestRoll) { unplaced.push(s); continue; }
+    if (!bestRoll) return false;
 
     if (bestIsNewRow) {
       const newRow = { width: s.width, items: [s], rowLen: s.totalLen };
@@ -569,7 +568,50 @@ function assignStrimlerToRolls(strimler, rollDefs) {
     } else {
       bestRow.width += s.width;
       bestRow.items.push(s);
-      // rowLen stays the same (s.totalLen <= row.rowLen guaranteed)
+    }
+    return true;
+  }
+
+  // Split a strimmel that didn't fit into its individual band-level pieces,
+  // each becoming its own mini-strimmel (same width, but only that piece's length).
+  // Dorn strimler split back into their individual dorn-bands (no longer packed
+  // together as a dorn — flagged so the UI/print can explain this).
+  function splitToPieces(s) {
+    const out = [];
+    if (s.isDorn && s.isDornMulti) {
+      // Each dorn-slice's individual bands become single strimler
+      s.pieces[0].dornSlices.forEach(slice => {
+        slice.dornPieces.forEach(p => {
+          out.push({ width: p.b, totalLen: p.l, pieces: [p], isDorn: false, wasSplitFromDorn: true });
+        });
+      });
+    } else if (s.isDorn) {
+      s.pieces[0].dornPieces.forEach(p => {
+        out.push({ width: p.b, totalLen: p.l, pieces: [p], isDorn: false, wasSplitFromDorn: true });
+      });
+    } else {
+      // Normal strimmel with multiple bands → split into one strimmel per band
+      s.pieces.forEach(p => {
+        out.push({ width: s.width, totalLen: p.l, pieces: [p], isDorn: false });
+      });
+    }
+    return out;
+  }
+
+  for (const s of sorted) {
+    if (tryPlace(s)) continue;
+
+    // Couldn't place as a whole — try splitting into individual bands
+    const pieces = splitToPieces(s);
+    if (pieces.length <= 1) {
+      // Nothing to split further — truly unplaceable
+      unplaced.push(s);
+      continue;
+    }
+
+    const piecesSorted = pieces.sort((a, b) => b.totalLen - a.totalLen);
+    for (const piece of piecesSorted) {
+      if (!tryPlace(piece)) unplaced.push(piece);
     }
   }
 
@@ -704,7 +746,7 @@ function renderResult(d) {
           tags.push(`→ Skær op i ${numBands} strimler à ${fmt(bandW)} mm`);
 
         } else {
-          title  = `Strimmel — ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang`;
+          title  = `Strimmel — ${fmt(s.width)} mm bred,  ${fmt(s.totalLen)} mm lang${s.wasSplitFromDorn ? '  (enkeltbånd, splittet fra dorn)' : ''}`;
           detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm (række ${rowIdx+1}).  ${s.pieces.length} bånd i denne strimmel.`;
           tags = s.pieces.map(p =>
             `${fmt(s.width)} × ${fmt(p.origL)} mm  (+${fmt(d.buffer)} → ${fmt(p.l)} mm)`
