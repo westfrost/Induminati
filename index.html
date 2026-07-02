@@ -13,7 +13,8 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Inter',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh}
   header{background:var(--dark);padding:24px 36px;display:flex;align-items:center;gap:18px}
-  .logo-mark{width:42px;height:42px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .logo-mark{width:42px;height:42px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;transition:background .15s}
+  .logo-mark:hover{background:#007a9a}
   .logo-mark svg{width:26px;height:26px}
   .logo-text .brand{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.01em}
   .logo-text .brand span{color:var(--accent)}
@@ -33,14 +34,14 @@
 </head>
 <body>
 <header>
-  <div class="logo-mark">
+  <a class="logo-mark" href="Ordrer/index.html" title="Ordrer">
     <svg viewBox="0 0 26 26" fill="none">
       <rect x="2" y="10" width="22" height="7" rx="3.5" fill="white" opacity=".9"/>
       <circle cx="6" cy="13.5" r="3" fill="white"/>
       <circle cx="20" cy="13.5" r="3" fill="white"/>
       <rect x="5" y="12.5" width="16" height="2" fill="#00A0C0"/>
     </svg>
-  </div>
+  </a>
   <div class="logo-text">
     <div class="brand">Indu<span>minati</span></div>
     <div class="sub">Interne værktøjer</div>
