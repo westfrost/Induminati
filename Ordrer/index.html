@@ -299,7 +299,7 @@
       Formaterer også manuelt indtastede datoer i <code>Rykket</code> og <code>Ny leveringsdato</code> korrekt.<br>
       <strong>Ved sammenligning:</strong> hvis en række i "i går" har en værdi i <code>Ny leveringsdato</code>, flyttes værdien over i <code>Rykket</code>, og <code>Ny leveringsdato</code> tømmes.<br>
       <strong>Hvis kun "i dag" er uploadet:</strong> resultatet er blot det rensede "i dag"-ark – brug det som "i går" i morgen.<br>
-      <strong>Hvis "i går" også er uploadet:</strong> alle rækker fra "i går" bevares uændret (så dine udfyldte felter i <code>Rykket</code>/<code>Grund</code>/<code>Ny leveringsdato</code> ikke overskrives), og kun ordrenumre der er nye i "i dag" tilføjes nederst, markeret med gult.<br>
+      <strong>Hvis "i går" også er uploadet:</strong> rækker fra "i går" bevares (så dine udfyldte felter i <code>Rykket</code>/<code>Grund</code>/<code>Ny leveringsdato</code> ikke overskrives) – de fjernes kun hvis ordren enten er helt væk fra "i dag" eller nu har status <code>6. SFE</code>/<code>3. FÆRDIG</code>. En ordre der bare er rykket udenfor dit ugevalg, bliver <u>ikke</u> fjernet. Nye ordrenumre i "i dag" (indenfor dit ugevalg) tilføjes nederst, markeret med gult.<br>
       Output-filen får kolonneoverskrifter med filtre (autofilter).
     </div>
     <div class="actions">
@@ -609,11 +609,27 @@ processBtn.addEventListener('click', () => {
   const newOrders = cleanedToday.filter(r => !yesterdayKeys.has(String(r[KEY_COLUMN]).trim()));
   newOrders.forEach(r => newRowKeys.add(String(r[KEY_COLUMN]).trim()));
 
+  const todayKeyStatus = new Map();
+  todayRawRows.forEach(r => {
+    const key = String(r[KEY_COLUMN]).trim();
+    if (key) todayKeyStatus.set(key, String(r[STATUS_COLUMN] ?? '').trim());
+  });
+
+  const beforeRemoval = yesterdayAligned.length;
+  yesterdayAligned = yesterdayAligned.filter(r => {
+    const key = String(r[KEY_COLUMN]).trim();
+    if (!todayKeyStatus.has(key)) return false;
+    if (STATUS_VALUES_TO_DELETE.includes(todayKeyStatus.get(key))) return false;
+    return true;
+  });
+  const removedCount = beforeRemoval - yesterdayAligned.length;
+
   resultRows = yesterdayAligned.concat(newOrders);
   renderPreview();
   downloadBtn.disabled = false;
   const movedMsg = movedToRykket ? ` ${movedToRykket} dato(er) flyttet fra "Ny leveringsdato" til "Rykket".` : '';
-  showStatus(`${missingMsg}Sammenlignet. ${yesterdayAligned.length} rækker bevaret fra "i går", ${newOrders.length} nye ordre(r) tilføjet${weekMsg}.${movedMsg} I alt ${resultRows.length} rækker.`, missing.length ? 'info' : 'ok');
+  const removedMsg = removedCount ? ` ${removedCount} ordre(r) fjernet (ikke længere i "i dag").` : '';
+  showStatus(`${missingMsg}Sammenlignet. ${yesterdayAligned.length} rækker bevaret fra "i går", ${newOrders.length} nye ordre(r) tilføjet${weekMsg}.${movedMsg}${removedMsg} I alt ${resultRows.length} rækker.`, missing.length ? 'info' : 'ok');
 });
 
 function renderPreview() {
