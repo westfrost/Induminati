@@ -782,8 +782,8 @@
     <div class="github-body" id="githubBody">
       <!-- Hidden inputs to satisfy saveGhSettings reads -->
       <input type="hidden" id="gh_user" value="westfrost">
-      <input type="hidden" id="gh_repo" value="baanddb">
-      <input type="hidden" id="gh_path" value="database.json">
+      <input type="hidden" id="gh_repo" value="Induminati">
+      <input type="hidden" id="gh_path" value="Baanddb/database.json">
       <div class="github-fields">
         <div class="github-field" style="grid-column:1/-1">
           <label>GitHub Personal Access Token — kun nødvendigt for at skrive/pushe (gemmes i din browser)</label>
@@ -791,7 +791,7 @@
         </div>
       </div>
       <p style="color:var(--muted);font-size:0.78rem;margin-bottom:12px">
-        Database: <span style="color:var(--accent2);font-family:'IBM Plex Mono',monospace">westfrost/baanddb → database.json</span>
+        Database: <span style="color:var(--accent2);font-family:'IBM Plex Mono',monospace">westfrost/Induminati → Baanddb/database.json</span>
         &nbsp;·&nbsp; Pull fra GitHub virker uden token hvis repo er public.
       </p>
 
@@ -1212,8 +1212,8 @@ function saveGhSettings() {
   const s = {
     token: document.getElementById('gh_token').value,
     user:  'westfrost',
-    repo:  'baanddb',
-    path:  'database.json',
+    repo:  'Induminati',
+    path:  'Baanddb/database.json',
   };
   localStorage.setItem(GH_SETTINGS_KEY, JSON.stringify(s));
   updateGhDot(s);
@@ -1231,7 +1231,7 @@ function applyGhSettings() {
   const s = loadGhSettings();
   if (s.token) document.getElementById('gh_token').value = s.token;
   // user/repo/path are hardcoded — no need to restore
-  updateGhDot({ user: 'westfrost', repo: 'baanddb', token: s.token });
+  updateGhDot({ user: 'westfrost', repo: 'Induminati', token: s.token });
 }
 
 function updateGhDot(s) {
@@ -1254,8 +1254,8 @@ function toggleGithubPanel() {
 function ghSettings() {
   const s = loadGhSettings();
   s.user = 'westfrost';
-  s.repo = 'baanddb';
-  s.path = s.path || 'database.json';
+  s.repo = 'Induminati';
+  s.path = 'Baanddb/database.json';
   return s;
 }
 
@@ -1743,6 +1743,6 @@ renderPreview();
 applyGhSettings();
 autoLoadFromGithub();
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.0 &middot; 06-07-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.1 &middot; 06-07-2026</div>
 </body>
 </html>
