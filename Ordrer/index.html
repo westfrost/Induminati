@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Ordreliste-værktøj</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
   :root{
     --ink:#1c2b2d;
@@ -317,7 +318,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v1.3 &middot; 06-07-2026</footer>
+  <footer>Byg til intern brug &middot; v1.4 &middot; 06-07-2026</footer>
 </div>
 
 <script>
@@ -696,20 +697,40 @@ function escapeHtml(v) {
   return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-downloadBtn.addEventListener('click', () => {
+downloadBtn.addEventListener('click', async () => {
   if (!resultRows) return;
-  const ws = XLSX.utils.json_to_sheet(resultRows, { header: resultHeaders });
-  const lastCol = resultHeaders.length - 1;
-  const lastRow = resultRows.length;
-  ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: lastRow, c: lastCol } }) };
-  const colWidths = resultHeaders.map(h => {
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Frigivne produktionsordrer');
+
+  ws.columns = resultHeaders.map(h => {
     const maxLen = Math.max(h.length, ...resultRows.map(r => String(r[h] ?? '').length));
-    return { wch: Math.min(Math.max(maxLen + 2, 10), 40) };
+    return { header: h, key: h, width: Math.min(Math.max(maxLen + 2, 10), 40) };
   });
-  ws['!cols'] = colWidths;
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Frigivne produktionsordrer');
-  XLSX.writeFile(wb, `Frigivne produktionsordrer ${todayDK()}.xlsx`);
+
+  resultRows.forEach(row => {
+    ws.addRow(resultHeaders.map(h => row[h] ?? ''));
+  });
+
+  const thickBorder = { style: 'thick' };
+  ws.eachRow({ includeEmpty: true }, row => {
+    row.eachCell({ includeEmpty: true }, cell => {
+      cell.border = { top: thickBorder, left: thickBorder, bottom: thickBorder, right: thickBorder };
+    });
+  });
+
+  ws.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: resultRows.length + 1, column: resultHeaders.length }
+  };
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Frigivne produktionsordrer ${todayDK()}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 });
 </script>
 </body>
