@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Induminati</title>
+<title>Induminati — Test</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   :root {
@@ -20,21 +20,24 @@
   .logo-text .brand span{color:var(--accent)}
   .logo-text .sub{font-size:11px;color:#7ABCCC;letter-spacing:.04em}
   main{max-width:960px;margin:0 auto;padding:44px 22px 64px}
-  .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:20px}
+  .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+  .section-note{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
   .app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
   .app-card{background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:22px;text-decoration:none;color:var(--text);display:flex;flex-direction:column;gap:10px;transition:border-color .15s,box-shadow .15s,transform .1s}
   .app-card:hover{border-color:var(--accent);box-shadow:0 4px 18px rgba(0,160,192,.12);transform:translateY(-2px)}
   .app-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .app-icon svg{width:22px;height:22px}
-  .app-name{font-size:15px;font-weight:600}
+  .app-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .app-badge{font-family:monospace;font-size:10px;font-weight:700;letter-spacing:.04em;color:#a3722c;background:#f3e9d8;padding:2px 7px;border-radius:3px;}
   .app-desc{font-size:13px;color:var(--muted);line-height:1.55;flex:1}
   .app-arrow{font-size:12px;font-weight:600;color:var(--accent)}
   footer{text-align:center;font-size:11px;color:var(--muted);padding:28px 20px;border-top:1px solid var(--border)}
+  footer a{color:var(--muted)}
 </style>
 </head>
 <body>
 <header>
-  <a class="logo-mark" href="Test/index.html" title="Test">
+  <a class="logo-mark" href="../index.html" title="Forside">
     <svg viewBox="0 0 26 26" fill="none">
       <rect x="2" y="10" width="22" height="7" rx="3.5" fill="white" opacity=".9"/>
       <circle cx="6" cy="13.5" r="3" fill="white"/>
@@ -44,68 +47,45 @@
   </a>
   <div class="logo-text">
     <div class="brand">Indu<span>minati</span></div>
-    <div class="sub">Interne værktøjer</div>
+    <div class="sub">Test / under udvikling</div>
   </div>
 </header>
 <main>
-  <div class="section-label">Værktøjer</div>
+  <div class="section-label">Test-værktøjer</div>
+  <div class="section-note">Ikke færdige endnu — flyttes til forsiden når de er klar.</div>
   <div class="app-grid">
 
-    <a class="app-card" href="Opskæring/index.html">
+    <a class="app-card" href="../Ordrer/index.html">
       <div class="app-icon" style="background:#E6F4F7;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#005F7F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="8" width="20" height="8" rx="3"/>
-          <circle cx="6" cy="12" r="2"/><circle cx="18" cy="12" r="2"/>
-          <line x1="8" y1="12" x2="16" y2="12"/>
-          <line x1="12" y1="5" x2="12" y2="2"/><line x1="12" y1="19" x2="12" y2="22"/>
+        <svg viewBox="0 0 26 26" fill="none">
+          <rect x="2" y="10" width="22" height="7" rx="3.5" fill="#005F7F" opacity=".9"/>
+          <circle cx="6" cy="13.5" r="3" fill="#005F7F"/>
+          <circle cx="20" cy="13.5" r="3" fill="#005F7F"/>
+          <rect x="5" y="12.5" width="16" height="2" fill="#00A0C0"/>
         </svg>
       </div>
-      <div class="app-name">Opskæringsberegner</div>
-      <div class="app-desc">Optimal opskæring af transportbånd fra moderrulle. Minimerer spild.</div>
+      <div class="app-name">Ordreliste-værktøj <span class="app-badge">TEST</span></div>
+      <div class="app-desc">Renser og sammenligner "Frigivne produktionsordrer"-eksporter fra BC dag for dag.</div>
       <div class="app-arrow">Åbn →</div>
     </a>
 
-    <a class="app-card" href="Styreliste/index.html">
+    <a class="app-card" href="../Kapacitet/index.html">
       <div class="app-icon" style="background:#E6F4F7;">
         <svg viewBox="0 0 24 24" fill="none" stroke="#005F7F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="9" width="20" height="6" rx="2"/>
-          <line x1="7" y1="9" x2="7" y2="15"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="17" y1="9" x2="17" y2="15"/>
-          <line x1="2" y1="6" x2="22" y2="6"/><line x1="2" y1="18" x2="22" y2="18"/>
+          <line x1="4" y1="21" x2="20" y2="21"/>
+          <rect x="6" y="14" width="3.5" height="7"/>
+          <rect x="11.5" y="9" width="3.5" height="12"/>
+          <rect x="17" y="4" width="3.5" height="17"/>
+          <line x1="4" y1="10" x2="20" y2="10" stroke-dasharray="2 2"/>
         </svg>
       </div>
-      <div class="app-name">Styreliste Beregner</div>
-      <div class="app-desc">Beregn placering og mål for styrelister på transportbånd.</div>
-      <div class="app-arrow">Åbn →</div>
-    </a>
-
-    <a class="app-card" href="DXF/index.html">
-      <div class="app-icon" style="background:#E6F4F7;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#005F7F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="14 2 14 8 20 8"/>
-          <path d="M20 8L14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/>
-        </svg>
-      </div>
-      <div class="app-name">DXF → NCP Konverter</div>
-      <div class="app-desc">Konverter DXF-filer til NCP-format til vandskæring og CNC.</div>
-      <div class="app-arrow">Åbn →</div>
-    </a>
-
-    <a class="app-card" href="Baanddb/index.html">
-      <div class="app-icon" style="background:#E6F4F7;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#005F7F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <ellipse cx="12" cy="5" rx="9" ry="3"/>
-          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-        </svg>
-      </div>
-      <div class="app-name">Bånd &amp; Medbringer DB</div>
-      <div class="app-desc">Database over bånd- og medbringertyper med søgning og GitHub-sync.</div>
+      <div class="app-name">Kapacitetsoverblik <span class="app-badge">TEST</span></div>
+      <div class="app-desc">Visualiser ordremængde vs. reel kapacitet pr. afdeling og uge.</div>
       <div class="app-arrow">Åbn →</div>
     </a>
 
   </div>
 </main>
-<footer>Induminati &middot; v1.0 &middot; 06-07-2026</footer>
+<footer>Induminati &middot; test &middot; <a href="../index.html">Tilbage til forsiden</a></footer>
 </body>
 </html>
