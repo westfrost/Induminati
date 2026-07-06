@@ -317,7 +317,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v1.2 &middot; 06-07-2026</footer>
+  <footer>Byg til intern brug &middot; v1.3 &middot; 06-07-2026</footer>
 </div>
 
 <script>
@@ -378,6 +378,14 @@ function formatDateDK(value) {
   const dd = String(date.getUTCDate()).padStart(2, '0');
   const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
   const yyyy = date.getUTCFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+}
+
+function todayDK() {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
   return `${dd}-${mm}-${yyyy}`;
 }
 
@@ -701,7 +709,7 @@ downloadBtn.addEventListener('click', () => {
   ws['!cols'] = colWidths;
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Frigivne produktionsordrer');
-  XLSX.writeFile(wb, 'Frigivne_produktionsordrer_opdateret.xlsx');
+  XLSX.writeFile(wb, `Frigivne produktionsordrer ${todayDK()}.xlsx`);
 });
 </script>
 </body>
