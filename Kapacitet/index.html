@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kapacitetsoverblik</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#0b0b0b;
+    --paper:#f9f9f7;
+    --surface:#fcfcfb;
+    --line:#e1e0d9;
+    --baseline:#c3c2b7;
+    --secondary:#52514e;
+    --muted:#898781;
+    --accent:#2a78d6;
+    --accent-soft:#e7f0fb;
+    --good:#0ca30c;
+    --warn:#fab219;
+    --crit:#d03b3b;
+    --mono: "IBM Plex Mono", "Courier New", monospace;
+    --sans: "IBM Plex Sans", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#ffffff;
+      --paper:#0d0d0d;
+      --surface:#1a1a19;
+      --line:#2c2c2a;
+      --baseline:#383835;
+      --secondary:#c3c2b7;
+      --muted:#898781;
+      --accent:#3987e5;
+      --accent-soft:#152840;
+      --good:#0ca30c;
+      --warn:#fab219;
+      --crit:#e66767;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    padding:32px 24px 64px;
+  }
+  .wrap{max-width:1120px;margin:0 auto;}
+  header{
+    border-bottom:2px solid var(--ink);
+    padding-bottom:16px;
+    margin-bottom:28px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  h1{font-size:22px;letter-spacing:0.02em;margin:0;font-weight:700;}
+  .step-tag{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent);
+    background:var(--accent-soft);
+    padding:4px 10px;
+    border-radius:3px;
+    letter-spacing:0.03em;
+  }
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:24px;
+    margin-bottom:20px;
+  }
+  .panel h2{
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin:0 0 14px;
+    color:var(--secondary);
+  }
+  .panel h3{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin:24px 0 12px;
+    color:var(--secondary);
+  }
+  .rules{font-size:13px;color:var(--secondary);line-height:1.7;margin-bottom:14px;}
+  .rules code{
+    font-family:var(--mono);
+    background:var(--accent-soft);
+    padding:1px 6px;
+    border-radius:3px;
+    font-size:12px;
+  }
+  table{border-collapse:collapse;width:100%;font-size:13px;}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;}
+  th{background:var(--accent-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--secondary);}
+  td input[type=text], td input[type=number]{
+    width:100%;
+    border:1px solid transparent;
+    background:transparent;
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:13px;
+    padding:4px 6px;
+    border-radius:3px;
+  }
+  td input[type=text]:hover, td input[type=number]:hover,
+  td input[type=text]:focus, td input[type=number]:focus{
+    border-color:var(--line);
+    background:var(--paper);
+    outline:none;
+  }
+  td select{
+    width:100%;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:13px;
+    padding:4px 6px;
+    border-radius:3px;
+  }
+  tr.unmapped td{background:#fdf3e0;}
+  @media (prefers-color-scheme: dark){ tr.unmapped td{background:#3a2f14;} }
+  .table-scroll{overflow-x:auto;border-radius:4px;}
+  .row-actions{white-space:nowrap;width:1%;}
+  button{
+    font-family:var(--sans);
+    font-size:13.5px;
+    font-weight:600;
+    padding:9px 18px;
+    border-radius:5px;
+    border:1px solid var(--accent);
+    background:var(--accent);
+    color:#fff;
+    cursor:pointer;
+  }
+  button:disabled{opacity:0.4;cursor:not-allowed;}
+  button.secondary{background:transparent;color:var(--accent);}
+  button.danger{background:transparent;color:var(--crit);border-color:var(--crit);padding:5px 10px;font-size:12px;}
+  .actions{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap;}
+  .field-row{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+  .field-row label{font-size:13px;color:var(--secondary);display:flex;align-items:center;gap:8px;}
+  .field-row input[type=number]{
+    width:70px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;
+    background:var(--paper);color:var(--ink);font-family:var(--mono);font-size:13px;
+  }
+  .field-row select{
+    padding:6px 8px;border:1px solid var(--line);border-radius:4px;
+    background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:13px;
+  }
+  .drop{
+    border:2px dashed var(--line);
+    border-radius:6px;
+    padding:26px 16px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .drop:hover, .drop.drag{border-color:var(--accent);background:var(--accent-soft);}
+  .drop p{margin:4px 0;color:var(--secondary);font-size:13.5px;}
+  .drop strong{color:var(--ink);}
+  input[type=file]{display:none;}
+  .filename{font-family:var(--mono);font-size:12.5px;margin-top:10px;color:var(--accent);word-break:break-all;}
+  .status{
+    font-size:13px;margin-top:14px;padding:10px 14px;border-radius:4px;display:none;white-space:pre-line;
+  }
+  .status.show{display:block;}
+  .status.ok{background:var(--accent-soft);color:var(--accent);}
+  .status.err{background:#fbe4e0;color:var(--crit);}
+  .status.info{background:#f3e9d8;color:#a3722c;}
+  @media (prefers-color-scheme: dark){ .status.info{background:#3a2f14;color:var(--warn);} }
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:18px;font-size:12.5px;color:var(--secondary);align-items:center;}
+  .legend-item{display:flex;align-items:center;gap:7px;}
+  .legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+
+  .dept-chart-card{border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin-bottom:16px;}
+  .dept-chart-title{font-size:14px;font-weight:600;margin-bottom:2px;}
+  .dept-chart-sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;}
+  .dept-chart-note{font-size:12.5px;color:var(--muted);font-style:italic;margin-bottom:6px;}
+  svg.capchart{display:block;max-width:100%;}
+  svg.capchart text{font-family:var(--sans);}
+  .bar-hit{fill:transparent;cursor:pointer;}
+  .bar-hit:hover + .bar-shape, .bar-hit:focus + .bar-shape{filter:brightness(1.12);outline:none;}
+
+  .status-dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+  .tooltip{
+    position:fixed;
+    display:none;
+    background:var(--ink);
+    color:var(--paper);
+    font-size:12px;
+    line-height:1.6;
+    padding:8px 11px;
+    border-radius:5px;
+    pointer-events:none;
+    z-index:1000;
+    max-width:240px;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .tooltip .tt-title{font-weight:700;margin-bottom:2px;}
+  .tooltip .tt-value{font-weight:700;}
+
+  .warn-list{font-size:13px;color:var(--secondary);line-height:1.8;}
+  .warn-list strong{color:var(--ink);}
+
+  .github-section{border:1px solid var(--line);border-radius:6px;padding:0;overflow:hidden;margin-top:10px;}
+  .github-header{
+    padding:12px 16px;background:var(--paper);cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;
+  }
+  .github-body{display:none;padding:16px;border-top:1px solid var(--line);}
+  .github-body.open{display:block;}
+  .github-body input[type=password]{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;
+    background:var(--paper);color:var(--ink);font-family:var(--mono);font-size:12.5px;
+  }
+  .sync-log{font-family:var(--mono);font-size:12px;margin-top:10px;white-space:pre-line;color:var(--secondary);}
+  .sync-log.ok{color:var(--good);}
+  .sync-log.err{color:var(--crit);}
+  .gh-note{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.7;}
+  .gh-note a{color:var(--accent);}
+
+  footer{margin-top:30px;font-size:12px;color:var(--muted);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Kapacitetsoverblik</h1>
+    <span class="step-tag">Ordremængde vs. kapacitet</span>
+  </header>
+
+  <div class="panel">
+    <h2>1. Afdelinger &amp; kapacitet</h2>
+    <p class="rules">
+      Kapacitet pr. uge for en afdeling = <code>antal ansatte × timer pr. ansat</code> (default 37 t – en fuldtidsuge).
+      Opsætningen gemmes i din browser og kan deles via GitHub-sync nederst i panelet.
+    </p>
+    <div class="table-scroll">
+      <table id="deptTable">
+        <thead><tr><th>Afdeling</th><th style="width:130px">Ansatte</th><th style="width:150px">Timer/ansat/uge</th><th style="width:140px">Kapacitet/uge</th><th class="row-actions"></th></tr></thead>
+        <tbody id="deptTbody"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button class="secondary" id="addDeptBtn">+ Tilføj afdeling</button>
+    </div>
+
+    <div class="github-section">
+      <div class="github-header" id="ghHeader">
+        <span>⇅ GitHub-sync — del opsætning (afdelinger &amp; kategorier) med kollegaer</span>
+        <span style="color:var(--muted);font-family:var(--mono)" id="ghToggleLabel">ÅBEN ▾</span>
+      </div>
+      <div class="github-body" id="githubBody">
+        <label style="font-size:12.5px;color:var(--secondary);display:block;margin-bottom:6px;">
+          GitHub Personal Access Token — kun nødvendigt for at pushe (gemmes i din browser)
+        </label>
+        <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveGhSettings()">
+        <p style="color:var(--muted);font-size:12px;margin:10px 0 0;">
+          Fil: <span style="color:var(--accent);font-family:var(--mono)">westfrost/Induminati → Kapacitet/config.json</span>
+          &nbsp;·&nbsp; Pull virker uden token (repoet er offentligt).
+        </p>
+        <div class="actions">
+          <button id="btnPush">⬆ Push opsætning</button>
+          <button class="secondary" id="btnPull">⬇ Pull opsætning</button>
+        </div>
+        <div class="sync-log" id="syncLog"></div>
+        <div class="gh-note">
+          Opret et token på <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a>
+          med <strong>Contents: Read &amp; Write</strong>, hvis du vil kunne pushe ændringer.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Varekategori → afdeling &amp; standardtid</h2>
+    <p class="rules">
+      Upload ordrelisten i trin 3 for automatisk at finde de kategorier der er i brug, eller tilføj dem manuelt.
+      For hver kategori: vælg hvilken afdeling den belaster, om timerne er <code>pr. ordre</code> (fast) eller <code>pr. styk</code> (ganges med en antal-kolonne), og selve timetallet.
+      Der findes intet systematisk grundlag for dette i BC endnu — udfyld ud fra jeres erfaring og forfin over tid.
+    </p>
+    <div class="field-row" id="qtyColumnRow" style="display:none;">
+      <label>Antal/styk-kolonne (bruges ved "pr. styk"):
+        <select id="qtyColumnSelect"></select>
+      </label>
+    </div>
+    <div class="table-scroll">
+      <table id="mappingTable">
+        <thead><tr><th>Varekategori</th><th style="width:170px">Afdeling</th><th style="width:130px">Beregning</th><th style="width:110px">Timer</th><th class="row-actions"></th></tr></thead>
+        <tbody id="mappingTbody"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button class="secondary" id="addCategoryBtn">+ Tilføj kategori manuelt</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Upload ordreliste</h2>
+    <p class="rules">
+      Samme filformat som Ordreliste-værktøjet ("Frigivne produktionsordrer"-eksport fra BC). Kolonnerne
+      <code>Varekategori</code>, <code>Status</code> og <code>Bekræftet leveringsdato</code> skal findes i arket.
+      Ordrer med status <code>6. SFE</code> eller <code>3. FÆRDIG</code> springes automatisk over.
+    </p>
+    <div class="drop" id="dropOrders">
+      <p><strong>Klik her</strong> eller træk filen ind</p>
+      <p>.xlsx / .xls</p>
+      <div class="filename" id="filenameOrders"></div>
+    </div>
+    <input type="file" id="fileInputOrders" accept=".xlsx,.xls">
+    <div class="status" id="uploadStatus"></div>
+  </div>
+
+  <div class="panel">
+    <h2>4. Beregn</h2>
+    <div class="field-row">
+      <label>Antal uger frem: <input type="number" id="weeksInput" value="8" min="1" max="26"></label>
+    </div>
+    <div class="actions">
+      <button id="computeBtn" disabled>Beregn kapacitet</button>
+    </div>
+    <div class="status" id="computeStatus"></div>
+  </div>
+
+  <div class="panel" id="resultsPanel" style="display:none;">
+    <h2>5. Resultat</h2>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot" style="background:var(--good)"></span>God margin (&lt;85% af kapacitet)</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--warn)"></span>Tæt på grænsen (85–100%)</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--crit)"></span>Overbelastet (&gt;100%)</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--baseline)"></span>Kapacitet ikke sat</div>
+    </div>
+    <div id="chartsContainer"></div>
+
+    <h3>Tabel</h3>
+    <div class="table-scroll" id="tableContainer"></div>
+
+    <h3>Advarsler &amp; ikke-tildelte kategorier</h3>
+    <div class="warn-list" id="warningsContainer"></div>
+  </div>
+
+  <footer>Byg til intern brug &middot; v1.0 &middot; 06-07-2026</footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ============================================================
+// CONFIG (departments + category mapping), persisted locally + GitHub sync
+// ============================================================
+const CONFIG_KEY = 'kapacitet_config_v1';
+const STATUS_EXCLUDE = ['6. SFE', '3. FÆRDIG'];
+const DATE_COLUMN = 'Bekræftet leveringsdato';
+const CATEGORY_COLUMN = 'Varekategori';
+const STATUS_COLUMN = 'Status';
+const QTY_CANDIDATES = ['Restantal', 'Bestilt antal', 'Antal', 'Mængde', 'Restmængde', 'Levering antal', 'Ordreantal'];
+
+function sameId(a, b) {
+  return String(a) === String(b);
+}
+
+function defaultConfig() {
+  return { departments: [], mapping: [], quantityColumn: '' };
+}
+
+function loadConfig() {
+  try {
+    const raw = localStorage.getItem(CONFIG_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return Object.assign(defaultConfig(), parsed);
+    }
+  } catch (e) {}
+  return defaultConfig();
+}
+
+function saveConfig() {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+}
+
+let config = loadConfig();
+let nextDeptId = config.departments.length ? Math.max(...config.departments.map(d => d.id)) + 1 : 1;
+let nextMapId = config.mapping.length ? Math.max(...config.mapping.map(m => m.id)) + 1 : 1;
+
+let uploadedRows = null;
+let uploadedHeaders = [];
+
+// ============================================================
+// DEPARTMENT TABLE
+// ============================================================
+function renderDeptTable() {
+  const tbody = document.getElementById('deptTbody');
+  tbody.innerHTML = '';
+  config.departments.forEach(dept => {
+    const tr = document.createElement('tr');
+
+    const tdName = document.createElement('td');
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = dept.name;
+    nameInput.placeholder = 'fx Opskæring';
+    nameInput.addEventListener('input', () => { dept.name = nameInput.value; saveConfig(); refreshMappingDeptOptions(); });
+    tdName.appendChild(nameInput);
+
+    const tdEmp = document.createElement('td');
+    const empInput = document.createElement('input');
+    empInput.type = 'number';
+    empInput.min = '0';
+    empInput.step = '1';
+    empInput.value = dept.employees;
+    empInput.addEventListener('input', () => { dept.employees = Number(empInput.value) || 0; saveConfig(); updateCapacityCell(dept.id); });
+    tdEmp.appendChild(empInput);
+
+    const tdHrs = document.createElement('td');
+    const hrsInput = document.createElement('input');
+    hrsInput.type = 'number';
+    hrsInput.min = '0';
+    hrsInput.step = '0.5';
+    hrsInput.value = dept.hoursPerEmployee;
+    hrsInput.addEventListener('input', () => { dept.hoursPerEmployee = Number(hrsInput.value) || 0; saveConfig(); updateCapacityCell(dept.id); });
+    tdHrs.appendChild(hrsInput);
+
+    const tdCap = document.createElement('td');
+    tdCap.id = 'cap-' + dept.id;
+    tdCap.style.fontFamily = 'var(--mono)';
+    tdCap.textContent = capacityOf(dept) + ' t';
+
+    const tdDel = document.createElement('td');
+    tdDel.className = 'row-actions';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'danger';
+    delBtn.textContent = 'Fjern';
+    delBtn.addEventListener('click', () => {
+      config.departments = config.departments.filter(d => d.id !== dept.id);
+      config.mapping.forEach(m => { if (sameId(m.departmentId, dept.id)) m.departmentId = ''; });
+      saveConfig();
+      renderDeptTable();
+      renderMappingTable();
+    });
+    tdDel.appendChild(delBtn);
+
+    tr.append(tdName, tdEmp, tdHrs, tdCap, tdDel);
+    tbody.appendChild(tr);
+  });
+}
+
+function capacityOf(dept) {
+  const c = (Number(dept.employees) || 0) * (Number(dept.hoursPerEmployee) || 0);
+  return Math.round(c * 10) / 10;
+}
+
+function updateCapacityCell(deptId) {
+  const dept = config.departments.find(d => d.id === deptId);
+  const cell = document.getElementById('cap-' + deptId);
+  if (dept && cell) cell.textContent = capacityOf(dept) + ' t';
+}
+
+document.getElementById('addDeptBtn').addEventListener('click', () => {
+  config.departments.push({ id: nextDeptId++, name: '', employees: 0, hoursPerEmployee: 37 });
+  saveConfig();
+  renderDeptTable();
+  refreshMappingDeptOptions();
+});
+
+// ============================================================
+// CATEGORY MAPPING TABLE
+// ============================================================
+function renderMappingTable() {
+  const tbody = document.getElementById('mappingTbody');
+  tbody.innerHTML = '';
+  config.mapping.forEach(m => {
+    const tr = document.createElement('tr');
+    if (!m.departmentId) tr.classList.add('unmapped');
+
+    const tdCat = document.createElement('td');
+    if (m.auto) {
+      tdCat.textContent = m.category;
+      tdCat.style.fontFamily = 'var(--mono)';
+    } else {
+      const catInput = document.createElement('input');
+      catInput.type = 'text';
+      catInput.value = m.category;
+      catInput.addEventListener('input', () => { m.category = catInput.value.trim(); saveConfig(); });
+      tdCat.appendChild(catInput);
+    }
+
+    const tdDept = document.createElement('td');
+    const deptSelect = document.createElement('select');
+    deptSelect.appendChild(new Option('— vælg —', ''));
+    config.departments.forEach(d => deptSelect.appendChild(new Option(d.name || '(uden navn)', d.id)));
+    deptSelect.value = m.departmentId || '';
+    deptSelect.addEventListener('change', () => {
+      m.departmentId = deptSelect.value;
+      saveConfig();
+      tr.classList.toggle('unmapped', !m.departmentId);
+    });
+    tdDept.appendChild(deptSelect);
+
+    const tdMode = document.createElement('td');
+    const modeSelect = document.createElement('select');
+    modeSelect.appendChild(new Option('pr. ordre', 'per_order'));
+    modeSelect.appendChild(new Option('pr. styk', 'per_unit'));
+    modeSelect.value = m.mode;
+    modeSelect.addEventListener('change', () => { m.mode = modeSelect.value; saveConfig(); updateQtyColumnVisibility(); });
+    tdMode.appendChild(modeSelect);
+
+    const tdHours = document.createElement('td');
+    const hoursInput = document.createElement('input');
+    hoursInput.type = 'number';
+    hoursInput.min = '0';
+    hoursInput.step = '0.1';
+    hoursInput.value = m.hours;
+    hoursInput.addEventListener('input', () => { m.hours = Number(hoursInput.value) || 0; saveConfig(); });
+    tdHours.appendChild(hoursInput);
+
+    const tdDel = document.createElement('td');
+    tdDel.className = 'row-actions';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'danger';
+    delBtn.textContent = 'Fjern';
+    delBtn.addEventListener('click', () => {
+      config.mapping = config.mapping.filter(x => x.id !== m.id);
+      saveConfig();
+      renderMappingTable();
+    });
+    tdDel.appendChild(delBtn);
+
+    tr.append(tdCat, tdDept, tdMode, tdHours, tdDel);
+    tbody.appendChild(tr);
+  });
+  updateQtyColumnVisibility();
+}
+
+function refreshMappingDeptOptions() {
+  renderMappingTable();
+}
+
+function updateQtyColumnVisibility() {
+  const needsQty = config.mapping.some(m => m.mode === 'per_unit');
+  document.getElementById('qtyColumnRow').style.display = (needsQty && uploadedHeaders.length) ? 'flex' : 'none';
+}
+
+document.getElementById('addCategoryBtn').addEventListener('click', () => {
+  config.mapping.push({ id: nextMapId++, category: '', departmentId: '', mode: 'per_order', hours: 0, auto: false });
+  saveConfig();
+  renderMappingTable();
+});
+
+document.getElementById('qtyColumnSelect').addEventListener('change', (e) => {
+  config.quantityColumn = e.target.value;
+  saveConfig();
+});
+
+function populateQtyColumnSelect() {
+  const sel = document.getElementById('qtyColumnSelect');
+  sel.innerHTML = '';
+  sel.appendChild(new Option('— vælg kolonne —', ''));
+  uploadedHeaders.forEach(h => sel.appendChild(new Option(h, h)));
+  let preferred = config.quantityColumn && uploadedHeaders.includes(config.quantityColumn) ? config.quantityColumn : '';
+  if (!preferred) {
+    preferred = QTY_CANDIDATES.find(c => uploadedHeaders.includes(c)) || '';
+  }
+  sel.value = preferred;
+  config.quantityColumn = preferred;
+  saveConfig();
+}
+
+// ============================================================
+// FILE UPLOAD
+// ============================================================
+const dropOrders = document.getElementById('dropOrders');
+const fileInputOrders = document.getElementById('fileInputOrders');
+const filenameOrdersEl = document.getElementById('filenameOrders');
+const uploadStatusEl = document.getElementById('uploadStatus');
+const computeBtn = document.getElementById('computeBtn');
+
+dropOrders.addEventListener('click', () => fileInputOrders.click());
+dropOrders.addEventListener('dragover', e => { e.preventDefault(); dropOrders.classList.add('drag'); });
+dropOrders.addEventListener('dragleave', () => dropOrders.classList.remove('drag'));
+dropOrders.addEventListener('drop', e => {
+  e.preventDefault();
+  dropOrders.classList.remove('drag');
+  if (e.dataTransfer.files.length) handleOrdersFile(e.dataTransfer.files[0]);
+});
+fileInputOrders.addEventListener('change', e => {
+  if (e.target.files.length) handleOrdersFile(e.target.files[0]);
+});
+
+function showStatus(el, msg, type) {
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+}
+
+function handleOrdersFile(file) {
+  filenameOrdersEl.textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('frigivne')) || wb.SheetNames[0];
+      const sheet = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      if (!rows.length) { showStatus(uploadStatusEl, 'Arket ser tomt ud.', 'err'); computeBtn.disabled = true; return; }
+
+      const headers = Object.keys(rows[0]);
+      const missing = [CATEGORY_COLUMN, STATUS_COLUMN, DATE_COLUMN].filter(c => !headers.includes(c));
+      uploadedRows = rows;
+      uploadedHeaders = headers;
+      populateQtyColumnSelect();
+
+      const categories = new Set(rows.map(r => String(r[CATEGORY_COLUMN] || '').trim()).filter(Boolean));
+      const known = new Set(config.mapping.map(m => m.category));
+      let added = 0;
+      categories.forEach(cat => {
+        if (!known.has(cat)) {
+          config.mapping.push({ id: nextMapId++, category: cat, departmentId: '', mode: 'per_order', hours: 0, auto: true });
+          known.add(cat);
+          added++;
+        }
+      });
+      saveConfig();
+      renderMappingTable();
+
+      const missingMsg = missing.length ? `Advarsel: mangler kolonne(r): ${missing.join(', ')}. ` : '';
+      const addedMsg = added ? `${added} ny(e) kategori(er) tilføjet i trin 2 — husk at tildele afdeling. ` : '';
+      showStatus(uploadStatusEl, `${missingMsg}Indlæst: ark "${sheetName}", ${rows.length} rækker. ${addedMsg}`, missing.length ? 'err' : (added ? 'info' : 'ok'));
+      computeBtn.disabled = !!missing.length;
+    } catch (err) {
+      showStatus(uploadStatusEl, 'Kunne ikke læse filen: ' + err.message, 'err');
+      computeBtn.disabled = true;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ============================================================
+// DATE / WEEK HELPERS
+// ============================================================
+function excelSerialToDate(serial) {
+  const utcDays = Math.floor(serial - 25569);
+  return new Date(utcDays * 86400 * 1000);
+}
+
+function parseDateValue(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === 'number') return excelSerialToDate(value);
+  if (typeof value === 'string') {
+    const m = value.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+  }
+  return null;
+}
+
+function getMonday(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function getWeekRange(offsetWeeks) {
+  const monday = getMonday(new Date());
+  monday.setDate(monday.getDate() + offsetWeeks * 7);
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { start: monday, end: sunday };
+}
+
+function formatShortDate(d) {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}`;
+}
+
+// ============================================================
+// COMPUTE
+// ============================================================
+const weeksInput = document.getElementById('weeksInput');
+const computeStatusEl = document.getElementById('computeStatus');
+const resultsPanel = document.getElementById('resultsPanel');
+
+computeBtn.addEventListener('click', runCompute);
+
+function runCompute() {
+  if (!uploadedRows) { showStatus(computeStatusEl, 'Upload en ordreliste i trin 3 først.', 'err'); return; }
+  if (!config.departments.length) { showStatus(computeStatusEl, 'Tilføj mindst én afdeling i trin 1 først.', 'err'); return; }
+
+  const weeksCount = Math.min(Math.max(parseInt(weeksInput.value, 10) || 8, 1), 26);
+  const weekRanges = [];
+  for (let i = 0; i < weeksCount; i++) {
+    const r = getWeekRange(i);
+    weekRanges.push({ start: r.start, end: r.end, label: formatShortDate(r.start) + '–' + formatShortDate(r.end) });
+  }
+
+  const mappingByCategory = new Map(config.mapping.filter(m => m.departmentId).map(m => [m.category, m]));
+  const results = config.departments.map(d => ({
+    dept: d,
+    hours: new Array(weeksCount).fill(0),
+    orders: new Array(weeksCount).fill(0)
+  }));
+  const resultsByDeptId = new Map(results.map(r => [String(r.dept.id), r]));
+
+  const unmapped = new Map();
+  let skippedStatus = 0, skippedNoDate = 0, skippedOutsideWindow = 0, skippedQty = 0;
+
+  uploadedRows.forEach(row => {
+    const status = String(row[STATUS_COLUMN] ?? '').trim();
+    if (STATUS_EXCLUDE.includes(status)) { skippedStatus++; return; }
+
+    const cat = String(row[CATEGORY_COLUMN] ?? '').trim();
+    const mapping = mappingByCategory.get(cat);
+    if (!mapping) { unmapped.set(cat, (unmapped.get(cat) || 0) + 1); return; }
+
+    const dateVal = parseDateValue(row[DATE_COLUMN]);
+    if (!dateVal) { skippedNoDate++; return; }
+
+    const weekIdx = weekRanges.findIndex(r => dateVal.getTime() >= r.start.getTime() && dateVal.getTime() <= r.end.getTime());
+    if (weekIdx === -1) { skippedOutsideWindow++; return; }
+
+    let hours = 0;
+    if (mapping.mode === 'per_order') {
+      hours = Number(mapping.hours) || 0;
+    } else {
+      const qtyRaw = config.quantityColumn ? row[config.quantityColumn] : undefined;
+      const qty = Number(qtyRaw);
+      if (!config.quantityColumn || isNaN(qty)) { skippedQty++; hours = 0; }
+      else hours = (Number(mapping.hours) || 0) * qty;
+    }
+
+    const r = resultsByDeptId.get(String(mapping.departmentId));
+    if (r) { r.hours[weekIdx] += hours; r.orders[weekIdx] += 1; }
+  });
+
+  renderResults(results, weekRanges, { skippedStatus, skippedNoDate, skippedOutsideWindow, skippedQty, unmapped });
+  showStatus(computeStatusEl, `Beregnet: ${uploadedRows.length} rækker gennemgået, ${weeksCount} uge(r), ${config.departments.length} afdeling(er).`, 'ok');
+}
+
+// ============================================================
+// RENDER RESULTS — charts, table, warnings
+// ============================================================
+function statusColor(pct, capacity) {
+  if (capacity <= 0) return 'var(--baseline)';
+  if (pct > 100) return 'var(--crit)';
+  if (pct >= 85) return 'var(--warn)';
+  return 'var(--good)';
+}
+function statusLabel(pct, capacity) {
+  if (capacity <= 0) return 'Ikke sat';
+  if (pct > 100) return 'Overbelastet';
+  if (pct >= 85) return 'Tæt på grænsen';
+  return 'OK';
+}
+
+function roundedTopRectPath(x, y, w, h, r) {
+  if (h <= 0) return '';
+  const rr = Math.min(r, h, w / 2);
+  return `M${x + rr},${y} L${x + w - rr},${y} Q${x + w},${y} ${x + w},${y + rr} L${x + w},${y + h} L${x},${y + h} L${x},${y + rr} Q${x},${y} ${x + rr},${y} Z`;
+}
+
+function buildDeptChart(result, weekRanges) {
+  const capacity = capacityOf(result.dept);
+  const maxHours = Math.max(...result.hours, 0);
+  const maxVal = Math.max(capacity, maxHours, 1) * 1.15;
+
+  const slotW = 66, barW = 22, chartH = 170, topPad = 26, bottomPad = 36, leftPad = 8, rightPad = 70;
+  const width = leftPad + slotW * weekRanges.length + rightPad;
+  const height = topPad + chartH + bottomPad;
+  const baseY = topPad + chartH;
+
+  let svg = `<svg class="capchart" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Belastning pr. uge for ${escapeHtml(result.dept.name || 'afdeling')}">`;
+
+  // baseline
+  svg += `<line x1="${leftPad}" y1="${baseY}" x2="${width - rightPad + 10}" y2="${baseY}" stroke="var(--baseline)" stroke-width="1"/>`;
+
+  // capacity reference line
+  if (capacity > 0) {
+    const capY = baseY - (capacity / maxVal) * chartH;
+    svg += `<line x1="${leftPad}" y1="${capY}" x2="${width - rightPad + 10}" y2="${capY}" stroke="var(--baseline)" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+    svg += `<text x="${width - rightPad + 14}" y="${capY + 4}" font-size="11" fill="var(--muted)">${capacity}t</text>`;
+  }
+
+  weekRanges.forEach((wr, i) => {
+    const slotX = leftPad + i * slotW;
+    const barX = slotX + (slotW - barW) / 2;
+    const hours = Math.round(result.hours[i] * 10) / 10;
+    const barH = (hours / maxVal) * chartH;
+    const barY = baseY - barH;
+    const pct = capacity > 0 ? (hours / capacity) * 100 : 0;
+    const color = statusColor(pct, capacity);
+    const label = statusLabel(pct, capacity);
+
+    // hit area (full slot height, bigger than the bar)
+    svg += `<rect class="bar-hit" tabindex="0" data-week="${escapeHtml(wr.label)}" data-hours="${hours}" data-capacity="${capacity}" data-pct="${Math.round(pct)}" data-label="${escapeHtml(label)}" data-dept="${escapeHtml(result.dept.name || '')}" x="${slotX}" y="${topPad}" width="${slotW}" height="${chartH}"/>`;
+
+    if (barH > 0) {
+      svg += `<path class="bar-shape" d="${roundedTopRectPath(barX, barY, barW, barH, 4)}" fill="${color}"/>`;
+      svg += `<text x="${barX + barW / 2}" y="${barY - 6}" font-size="11" fill="var(--secondary)" text-anchor="middle">${hours}t</text>`;
+    } else {
+      svg += `<text x="${barX + barW / 2}" y="${baseY - 6}" font-size="11" fill="var(--muted)" text-anchor="middle">0t</text>`;
+    }
+
+    svg += `<text x="${barX + barW / 2}" y="${baseY + 18}" font-size="11" fill="var(--muted)" text-anchor="middle">${escapeHtml(wr.label.split('–')[0])}</text>`;
+  });
+
+  svg += `</svg>`;
+  return svg;
+}
+
+function attachChartTooltips(container) {
+  const tooltip = document.getElementById('tooltip');
+  container.querySelectorAll('.bar-hit').forEach(hit => {
+    const show = (evt) => {
+      const d = hit.dataset;
+      tooltip.innerHTML = '';
+      const title = document.createElement('div');
+      title.className = 'tt-title';
+      title.textContent = d.dept + ' · uge ' + d.week;
+      const line1 = document.createElement('div');
+      const capTxt = Number(d.capacity) > 0 ? `${d.capacity}t kapacitet (${d.pct}%)` : 'kapacitet ikke sat';
+      line1.innerHTML = '';
+      const valueSpan = document.createElement('span');
+      valueSpan.className = 'tt-value';
+      valueSpan.textContent = d.hours + 't booket';
+      line1.appendChild(valueSpan);
+      line1.appendChild(document.createTextNode(' · ' + capTxt));
+      const line2 = document.createElement('div');
+      line2.textContent = 'Status: ' + d.label;
+      tooltip.append(title, line1, line2);
+      tooltip.style.display = 'block';
+      positionTooltip(evt);
+    };
+    const hide = () => { tooltip.style.display = 'none'; };
+    hit.addEventListener('pointermove', show);
+    hit.addEventListener('pointerenter', show);
+    hit.addEventListener('pointerleave', hide);
+    hit.addEventListener('focus', show);
+    hit.addEventListener('blur', hide);
+  });
+}
+
+function positionTooltip(evt) {
+  const tooltip = document.getElementById('tooltip');
+  const x = (evt.clientX !== undefined ? evt.clientX : 0) + 14;
+  const y = (evt.clientY !== undefined ? evt.clientY : 0) + 14;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+
+function renderResults(results, weekRanges, warnings) {
+  resultsPanel.style.display = 'block';
+
+  const chartsContainer = document.getElementById('chartsContainer');
+  chartsContainer.innerHTML = '';
+  results.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'dept-chart-card';
+    const capacity = capacityOf(r.dept);
+    const totalOrders = r.orders.reduce((a, b) => a + b, 0);
+    card.innerHTML = `
+      <div class="dept-chart-title">${escapeHtml(r.dept.name || '(uden navn)')}</div>
+      <div class="dept-chart-sub">${r.dept.employees} ansatte × ${r.dept.hoursPerEmployee}t = ${capacity}t/uge kapacitet &middot; ${totalOrders} ordre(r) i alt</div>
+      ${capacity <= 0 ? '<div class="dept-chart-note">Kapacitet ikke sat — udfyld antal ansatte i trin 1 for at se belastning i %.</div>' : ''}
+      ${buildDeptChart(r, weekRanges)}
+    `;
+    chartsContainer.appendChild(card);
+    attachChartTooltips(card);
+  });
+
+  const tableContainer = document.getElementById('tableContainer');
+  let html = '<table><thead><tr><th>Afdeling</th>';
+  weekRanges.forEach(wr => { html += `<th>${escapeHtml(wr.label)}</th>`; });
+  html += '</tr></thead><tbody>';
+  results.forEach(r => {
+    const capacity = capacityOf(r.dept);
+    html += `<tr><td>${escapeHtml(r.dept.name || '(uden navn)')}</td>`;
+    r.hours.forEach(h => {
+      const hours = Math.round(h * 10) / 10;
+      const pct = capacity > 0 ? Math.round((hours / capacity) * 100) : 0;
+      const color = statusColor(pct, capacity);
+      const label = statusLabel(pct, capacity);
+      const pctTxt = capacity > 0 ? ` (${pct}%)` : '';
+      html += `<td><span class="status-dot" style="background:${color}"></span>${hours}t${pctTxt}<br><span style="font-size:11px;color:var(--muted)">${label}</span></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  tableContainer.innerHTML = html;
+
+  const warningsContainer = document.getElementById('warningsContainer');
+  let wHtml = '';
+  if (warnings.unmapped.size) {
+    wHtml += `<div><strong>${warnings.unmapped.size} kategori(er) uden afdeling (medregnes ikke):</strong><br>`;
+    Array.from(warnings.unmapped.entries()).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => {
+      wHtml += `${escapeHtml(cat || '(tom)')} — ${count} ordre(r)<br>`;
+    });
+    wHtml += '</div><br>';
+  }
+  const extra = [];
+  if (warnings.skippedStatus) extra.push(`${warnings.skippedStatus} ordre(r) sprunget over pga. status (SFE/FÆRDIG)`);
+  if (warnings.skippedNoDate) extra.push(`${warnings.skippedNoDate} ordre(r) uden gyldig ${DATE_COLUMN}`);
+  if (warnings.skippedOutsideWindow) extra.push(`${warnings.skippedOutsideWindow} ordre(r) uden for det valgte ugevindue`);
+  if (warnings.skippedQty) extra.push(`${warnings.skippedQty} ordre(r) med "pr. styk"-kategori manglede en gyldig antal-værdi (talt som 0 timer)`);
+  if (extra.length) wHtml += extra.join('<br>');
+  if (!wHtml) wHtml = 'Ingen advarsler.';
+  warningsContainer.innerHTML = wHtml;
+}
+
+function escapeHtml(v) {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ============================================================
+// GITHUB SYNC (config: departments + mapping + quantityColumn)
+// ============================================================
+const GH_SETTINGS_KEY = 'kapacitet_gh_settings';
+const GH_USER = 'westfrost', GH_REPO = 'Induminati', GH_PATH = 'Kapacitet/config.json';
+
+function saveGhSettings() {
+  const s = { token: document.getElementById('gh_token').value };
+  localStorage.setItem(GH_SETTINGS_KEY, JSON.stringify(s));
+}
+function loadGhSettings() {
+  try {
+    const raw = localStorage.getItem(GH_SETTINGS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch (e) { return {}; }
+}
+function applyGhSettings() {
+  const s = loadGhSettings();
+  if (s.token) document.getElementById('gh_token').value = s.token;
+}
+function ghSettings() {
+  const s = loadGhSettings();
+  s.user = GH_USER; s.repo = GH_REPO; s.path = GH_PATH;
+  return s;
+}
+
+document.getElementById('ghHeader').addEventListener('click', () => {
+  const body = document.getElementById('githubBody');
+  const label = document.getElementById('ghToggleLabel');
+  const open = body.classList.toggle('open');
+  label.textContent = open ? 'LUK ▴' : 'ÅBEN ▾';
+});
+
+function syncLog(msg, type) {
+  const el = document.getElementById('syncLog');
+  el.textContent = msg;
+  el.className = 'sync-log show' + (type ? ' ' + type : '');
+}
+function setBtnsDisabled(disabled) {
+  document.getElementById('btnPush').disabled = disabled;
+  document.getElementById('btnPull').disabled = disabled;
+}
+
+async function getFileSha(s) {
+  const url = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${s.path}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${s.token}`, 'Accept': 'application/vnd.github+json' } });
+  if (res.status === 404) return null;
+  if (!res.ok) { const err = await res.json(); throw new Error(err.message || `HTTP ${res.status}`); }
+  const data = await res.json();
+  return data.sha;
+}
+
+document.getElementById('btnPush').addEventListener('click', async () => {
+  const s = ghSettings();
+  if (!s.token) {
+    syncLog('⚠ Indsæt et token først.', 'err');
+    document.getElementById('githubBody').classList.add('open');
+    document.getElementById('ghToggleLabel').textContent = 'LUK ▴';
+    return;
+  }
+  setBtnsDisabled(true);
+  syncLog('⟳ Henter fil-SHA fra GitHub...', '');
+  try {
+    const sha = await getFileSha(s);
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))));
+    const body = { message: `Opdateret kapacitetsopsætning (${new Date().toLocaleString('da-DK')})`, content, ...(sha ? { sha } : {}) };
+    syncLog('⟳ Pusher til GitHub...', '');
+    const url = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${s.path}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${s.token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+    syncLog(`✓ Push lykkedes! Opsætning gemt i ${s.user}/${s.repo}/${s.path}`, 'ok');
+  } catch (err) {
+    syncLog(`✗ Fejl: ${err.message}`, 'err');
+  }
+  setBtnsDisabled(false);
+});
+
+document.getElementById('btnPull').addEventListener('click', async () => {
+  if (!confirm('Erstat lokal opsætning (afdelinger og kategorier) med versionen fra GitHub?')) return;
+  setBtnsDisabled(true);
+  syncLog('⟳ Henter opsætning fra GitHub...', '');
+  try {
+    const rawUrl = `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/${GH_PATH}?t=${Date.now()}`;
+    const res = await fetch(rawUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const parsed = await res.json();
+    applyLoadedConfig(parsed);
+    syncLog(`✓ Pull lykkedes! ${config.departments.length} afdeling(er), ${config.mapping.length} kategori(er) hentet.`, 'ok');
+  } catch (err) {
+    syncLog(`✗ Fejl: ${err.message}`, 'err');
+  }
+  setBtnsDisabled(false);
+});
+
+function applyLoadedConfig(parsed) {
+  config = Object.assign(defaultConfig(), parsed);
+  nextDeptId = config.departments.length ? Math.max(...config.departments.map(d => d.id)) + 1 : 1;
+  nextMapId = config.mapping.length ? Math.max(...config.mapping.map(m => m.id)) + 1 : 1;
+  saveConfig();
+  renderDeptTable();
+  renderMappingTable();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+applyGhSettings();
+renderDeptTable();
+renderMappingTable();
+</script>
+</body>
+</html>
