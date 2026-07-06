@@ -300,6 +300,7 @@
       <strong>Ved sammenligning:</strong> hvis en række i "i går" har en værdi i <code>Ny leveringsdato</code>, flyttes værdien over i <code>Rykket</code>, og <code>Ny leveringsdato</code> tømmes.<br>
       <strong>Hvis kun "i dag" er uploadet:</strong> resultatet er blot det rensede "i dag"-ark – brug det som "i går" i morgen.<br>
       <strong>Hvis "i går" også er uploadet:</strong> rækker fra "i går" bevares (så dine udfyldte felter i <code>Rykket</code>/<code>Grund</code>/<code>Ny leveringsdato</code> ikke overskrives) – de fjernes kun hvis ordren enten er helt væk fra "i dag" eller nu har status <code>6. SFE</code>/<code>3. FÆRDIG</code>. En ordre der bare er rykket udenfor dit ugevalg, bliver <u>ikke</u> fjernet. Nye ordrenumre i "i dag" (indenfor dit ugevalg) tilføjes nederst, markeret med gult.<br>
+      For ordrer der findes i både "i går" og "i dag" opdateres <code>Status</code> altid til dagens værdi. <code>Kildenr.</code> opdateres kun hvis feltet var tomt i går og er blevet udfyldt i dag – ellers rører værktøjet ikke ved den.<br>
       Output-filen får kolonneoverskrifter med filtre (autofilter).
     </div>
     <div class="actions">
@@ -316,7 +317,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v1.0 &middot; 06-07-2026</footer>
+  <footer>Byg til intern brug &middot; v1.1 &middot; 06-07-2026</footer>
 </div>
 
 <script>
@@ -610,9 +611,33 @@ processBtn.addEventListener('click', () => {
   newOrders.forEach(r => newRowKeys.add(String(r[KEY_COLUMN]).trim()));
 
   const todayKeyStatus = new Map();
+  const todayKeyKildenr = new Map();
   todayRawRows.forEach(r => {
     const key = String(r[KEY_COLUMN]).trim();
-    if (key) todayKeyStatus.set(key, String(r[STATUS_COLUMN] ?? '').trim());
+    if (!key) return;
+    todayKeyStatus.set(key, String(r[STATUS_COLUMN] ?? '').trim());
+    if (headers.includes('Kildenr.')) todayKeyKildenr.set(key, r['Kildenr.'] !== undefined ? r['Kildenr.'] : '');
+  });
+
+  let statusUpdated = 0;
+  let kildenrFilled = 0;
+  yesterdayAligned = yesterdayAligned.map(row => {
+    const key = String(row[KEY_COLUMN]).trim();
+    if (headers.includes(STATUS_COLUMN) && todayKeyStatus.has(key)) {
+      const newStatus = todayKeyStatus.get(key);
+      if (newStatus !== String(row[STATUS_COLUMN] ?? '').trim()) {
+        row[STATUS_COLUMN] = newStatus;
+        statusUpdated++;
+      }
+    }
+    if (headers.includes('Kildenr.') && !String(row['Kildenr.'] ?? '').trim() && todayKeyKildenr.has(key)) {
+      const todayVal = String(todayKeyKildenr.get(key) ?? '').trim();
+      if (todayVal) {
+        row['Kildenr.'] = todayKeyKildenr.get(key);
+        kildenrFilled++;
+      }
+    }
+    return row;
   });
 
   const beforeRemoval = yesterdayAligned.length;
@@ -629,7 +654,9 @@ processBtn.addEventListener('click', () => {
   downloadBtn.disabled = false;
   const movedMsg = movedToRykket ? ` ${movedToRykket} dato(er) flyttet fra "Ny leveringsdato" til "Rykket".` : '';
   const removedMsg = removedCount ? ` ${removedCount} ordre(r) fjernet (ikke længere i "i dag").` : '';
-  showStatus(`${missingMsg}Sammenlignet. ${yesterdayAligned.length} rækker bevaret fra "i går", ${newOrders.length} nye ordre(r) tilføjet${weekMsg}.${movedMsg}${removedMsg} I alt ${resultRows.length} rækker.`, missing.length ? 'info' : 'ok');
+  const statusMsg = statusUpdated ? ` ${statusUpdated} status(ser) opdateret.` : '';
+  const kildenrMsg = kildenrFilled ? ` ${kildenrFilled} Kildenr. udfyldt fra "i dag".` : '';
+  showStatus(`${missingMsg}Sammenlignet. ${yesterdayAligned.length} rækker bevaret fra "i går", ${newOrders.length} nye ordre(r) tilføjet${weekMsg}.${movedMsg}${removedMsg}${statusMsg}${kildenrMsg} I alt ${resultRows.length} rækker.`, missing.length ? 'info' : 'ok');
 });
 
 function renderPreview() {
