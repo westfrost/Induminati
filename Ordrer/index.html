@@ -291,7 +291,7 @@
   <div class="panel">
     <h2>3. Hvad værktøjet gør</h2>
     <div class="rules">
-      Renser "i dag"-arket: fjerner <code>Rettet den</code>, <code>Forfaldsdato</code>, <code>Rutenr.</code>, <code>Søgebeskrivelse</code>, <code>Status1</code> og <code>Kildenr.</code> (kolonnen <code>Beskrivelse 2</code> beholdes).<br>
+      Renser "i dag"-arket: fjerner <code>Rettet den</code>, <code>Forfaldsdato</code>, <code>Rutenr.</code>, <code>Søgebeskrivelse</code> og <code>Status1</code> (kolonnerne <code>Beskrivelse 2</code> og <code>Kildenr.</code> beholdes).<br>
       Flytter <code>Varekategori</code> til at stå mellem <code>Nummer</code> og <code>Beskrivelse</code>, og <code>Beskrivelse 2</code> til at stå ved siden af <code>Status</code>.<br>
       Formaterer <code>Bekræftet leveringsdato</code> korrekt som dato (dd-mm-åååå).<br>
       Tilføjer de tomme kolonner <code>Rykket</code>, <code>Grund</code> og <code>Ny leveringsdato</code> efter <code>Beskrivelse 2</code>.<br>
@@ -336,7 +336,7 @@ const previewPanel = document.getElementById('previewPanel');
 const previewTable = document.getElementById('previewTable');
 const rowCountEl = document.getElementById('rowCount');
 
-const COLUMNS_TO_REMOVE = ['Rettet den', 'Forfaldsdato', 'Rutenr.', 'Søgebeskrivelse', 'Status1', 'Kildenr.'];
+const COLUMNS_TO_REMOVE = ['Rettet den', 'Forfaldsdato', 'Rutenr.', 'Søgebeskrivelse', 'Status1'];
 const MOVE_COLUMN = 'Varekategori';
 const MOVE_AFTER = 'Nummer';
 const STATUS_COLUMN = 'Status';
