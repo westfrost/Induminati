@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Samlevejledninger — Induminati</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --dark:#005F7F; --accent:#00A0C0; --text:#1A3A4A;
+    --smoke:#F0F6F8; --light:#FAFCFD; --border:#C8DDE4; --muted:#5A7A88;
+    --pu:#0F8B6C; --pu-bg:#E4F5EF; --pvc:#B2660A; --pvc-bg:#FBEEDD;
+    --danger:#C4453A;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh}
+
+  header{background:var(--dark);padding:18px 32px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+  .logo-mark{width:38px;height:38px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;transition:background .15s}
+  .logo-mark:hover{background:#007a9a}
+  .logo-mark svg{width:22px;height:22px}
+  .logo-text .brand{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.01em}
+  .logo-text .brand span{color:var(--accent)}
+  .logo-text .sub{font-size:11px;color:#7ABCCC;letter-spacing:.04em}
+  header nav{display:flex;gap:8px;margin-left:auto}
+  .nav-btn{background:none;border:1px solid rgba(255,255,255,.25);color:#cfe9f0;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;padding:8px 16px;cursor:pointer;border-radius:6px;transition:all .15s;letter-spacing:.02em}
+  .nav-btn:hover{border-color:var(--accent);color:#fff}
+  .nav-btn.active{background:var(--accent);border-color:var(--accent);color:#04222b}
+
+  main{max-width:1040px;margin:0 auto;padding:32px 22px 64px}
+  .page{display:none}
+  .page.active{display:block}
+
+  .page-title{font-size:22px;font-weight:700;margin-bottom:4px}
+  .page-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+
+  /* === TOOLBAR (search + filter + print) === */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:22px}
+  .search-input{flex:1;min-width:200px;background:var(--light);border:1.5px solid var(--border);color:var(--text);font-size:14px;padding:10px 14px;border-radius:7px;outline:none;transition:border-color .15s}
+  .search-input:focus{border-color:var(--accent)}
+  .filter-tabs{display:flex;gap:6px;background:var(--light);border:1.5px solid var(--border);border-radius:7px;padding:3px}
+  .filter-tab{background:none;border:none;color:var(--muted);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:5px;cursor:pointer;transition:all .15s;letter-spacing:.02em}
+  .filter-tab:hover{color:var(--text)}
+  .filter-tab.active{background:var(--dark);color:#fff}
+  .filter-tab.active.tab-pu{background:var(--pu)}
+  .filter-tab.active.tab-pvc{background:var(--pvc)}
+
+  .print-group{display:flex;gap:8px;flex-wrap:wrap}
+  .btn-print{background:var(--light);border:1.5px solid var(--border);color:var(--text);font-size:12.5px;font-weight:600;padding:9px 14px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+  .btn-print:hover{border-color:var(--accent);color:var(--dark)}
+
+  /* === REFERENCE ENTRIES (opslag) === */
+  .category-heading{display:flex;align-items:center;gap:10px;margin:30px 0 14px}
+  .category-heading:first-child{margin-top:0}
+  .category-tag{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;letter-spacing:1.5px;padding:4px 12px;border-radius:5px}
+  .category-tag.PU{background:var(--pu-bg);color:var(--pu)}
+  .category-tag.PVC{background:var(--pvc-bg);color:var(--pvc)}
+  .category-count{font-size:12px;color:var(--muted)}
+  .category-line{flex:1;height:1px;background:var(--border)}
+
+  .entry-list{display:flex;flex-direction:column;gap:10px}
+  .entry-card{background:var(--light);border:1.5px solid var(--border);border-left:4px solid var(--border);border-radius:8px;padding:18px 22px}
+  .entry-card.PU{border-left-color:var(--pu)}
+  .entry-card.PVC{border-left-color:var(--pvc)}
+  .entry-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+  .entry-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px 18px;margin-bottom:10px}
+  .entry-field .fl{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+  .entry-field .fv{font-size:15px;font-weight:600;color:var(--text)}
+  .entry-note{font-size:13px;color:var(--muted);line-height:1.6;padding-top:8px;border-top:1px dashed var(--border)}
+  .entry-actions{margin-top:10px;display:flex;gap:8px}
+
+  .empty-state{text-align:center;padding:56px 20px;color:var(--muted)}
+  .empty-state .em-icon{font-size:34px;margin-bottom:10px}
+  .empty-state p{font-size:13.5px;line-height:1.6}
+
+  /* === TABLE (alle poster) === */
+  .stats-bar{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+  .stat{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:12px 18px}
+  .stat-num{font-size:1.3rem;font-weight:700;color:var(--dark)}
+  .stat-label{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+  .table-wrap{overflow-x:auto;background:var(--light);border:1.5px solid var(--border);border-radius:10px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:var(--smoke);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-size:10.5px;padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap}
+  td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--smoke)}
+  .cat-pill{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:700;letter-spacing:.05em;padding:3px 9px;border-radius:4px}
+  .cat-pill.PU{background:var(--pu-bg);color:var(--pu)}
+  .cat-pill.PVC{background:var(--pvc-bg);color:var(--pvc)}
+  .action-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:5px;cursor:pointer;font-size:12px;transition:all .15s;margin-right:4px}
+  .action-btn:hover{border-color:var(--dark);color:var(--dark)}
+  .action-btn.del:hover{border-color:var(--danger);color:var(--danger)}
+
+  /* === FORM (tilføj/rediger) === */
+  .section-title{font-size:12px;font-weight:700;color:var(--dark);letter-spacing:.06em;text-transform:uppercase;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+  @media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+  .form-group.full{grid-column:1/-1}
+  .form-group label{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
+  .form-group input,.form-group select,.form-group textarea{width:100%;background:var(--light);border:1.5px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:10px 12px;border-radius:7px;outline:none;transition:border-color .15s}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+  .form-group textarea{resize:vertical;min-height:70px}
+
+  .btn-primary{background:var(--dark);color:#fff;border:none;font-weight:700;font-size:13.5px;padding:11px 26px;border-radius:7px;cursor:pointer;transition:background .15s}
+  .btn-primary:hover{background:#007a9a}
+  .btn-secondary{background:none;color:var(--muted);border:1px solid var(--border);font-size:13px;padding:10px 18px;border-radius:7px;cursor:pointer;margin-right:10px;transition:all .15s}
+  .btn-secondary:hover{border-color:var(--muted);color:var(--text)}
+
+  .export-section{margin-top:28px;padding:18px 20px;background:var(--light);border:1px solid var(--border);border-radius:10px}
+  .export-section p{color:var(--muted);font-size:13px;margin-bottom:12px;line-height:1.6}
+
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--pu);color:#fff;font-size:13px;font-weight:700;padding:12px 20px;border-radius:7px;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;z-index:999}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.err{background:var(--danger)}
+
+  .edit-modal{display:none;position:fixed;inset:0;background:rgba(10,30,40,.55);z-index:200;align-items:center;justify-content:center;padding:20px}
+  .edit-modal.open{display:flex}
+  .modal-box{background:var(--light);border:1px solid var(--border);border-radius:12px;padding:26px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto}
+  .modal-title{font-size:15px;font-weight:700;color:var(--dark);margin-bottom:18px}
+
+  footer{text-align:center;font-size:11px;color:var(--muted);padding:28px 20px;border-top:1px solid var(--border)}
+  footer a{color:var(--muted)}
+
+  /* === PRINT === */
+  #printArea{display:none}
+  @media print {
+    header, .toolbar, footer, .page:not(#page-opslag), .entry-actions { display:none !important; }
+    body{background:#fff;color:#000}
+    main{max-width:100%;padding:0;margin:0}
+    #page-opslag{display:block !important}
+    .entry-card{border:1px solid #ccc;border-left:4px solid #888;break-inside:avoid;box-shadow:none}
+    .category-tag.PU{color:#000;background:#eee}
+    .category-tag.PVC{color:#000;background:#eee}
+    #printTitle{display:block !important;text-align:center;font-size:20px;font-weight:700;margin-bottom:6px}
+    #printMeta{display:block !important;text-align:center;font-size:11px;color:#555;margin-bottom:24px}
+  }
+  #printTitle,#printMeta{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo-mark" href="../Test/index.html" title="Test">
+    <svg viewBox="0 0 26 26" fill="none">
+      <rect x="2" y="10" width="22" height="7" rx="3.5" fill="white" opacity=".9"/>
+      <circle cx="6" cy="13.5" r="3" fill="white"/>
+      <circle cx="20" cy="13.5" r="3" fill="white"/>
+      <rect x="5" y="12.5" width="16" height="2" fill="#00A0C0"/>
+    </svg>
+  </a>
+  <div class="logo-text">
+    <div class="brand">Samle<span>vejledninger</span></div>
+    <div class="sub">Opslagsværk — PU &amp; PVC bånd</div>
+  </div>
+  <nav>
+    <button class="nav-btn active" onclick="showPage('opslag')">OPSLAG</button>
+    <button class="nav-btn" onclick="showPage('alle')">ALLE POSTER</button>
+    <button class="nav-btn" onclick="showPage('tilfoj')">TILFØJ / REDIGER</button>
+  </nav>
+</header>
+
+<main>
+
+  <div id="printTitle">Samlevejledninger</div>
+  <div id="printMeta"></div>
+
+  <!-- OPSLAG PAGE -->
+  <div class="page active" id="page-opslag">
+    <div class="page-title">Opslagsværk — Samlevejledninger</div>
+    <div class="page-sub">Find samlevejledning pr. båndtype. Sortér mellem PU og PVC bånd, eller søg direkte på båndtype.</div>
+
+    <div class="toolbar">
+      <input class="search-input" id="searchInput" placeholder="Søg på båndtype..." oninput="renderOpslag()" autocomplete="off">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" data-cat="ALLE" onclick="setFilter('ALLE')">ALLE</button>
+        <button class="filter-tab tab-pu" data-cat="PU" onclick="setFilter('PU')">PU</button>
+        <button class="filter-tab tab-pvc" data-cat="PVC" onclick="setFilter('PVC')">PVC</button>
+      </div>
+    </div>
+
+    <div class="print-group" style="margin-bottom:24px">
+      <button class="btn-print" onclick="doPrint('PU')">🖨 Print PU-database</button>
+      <button class="btn-print" onclick="doPrint('PVC')">🖨 Print PVC-database</button>
+      <button class="btn-print" onclick="doPrint('ALLE')">🖨 Print samlet database</button>
+    </div>
+
+    <div id="opslagContainer"></div>
+  </div>
+
+  <!-- ALLE POSTER PAGE -->
+  <div class="page" id="page-alle">
+    <div class="page-title">Alle poster</div>
+    <div class="page-sub">Fuldt overblik over databasen med redigering og sletning.</div>
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Kategori</th>
+            <th>Båndtype</th>
+            <th>Temp. over</th>
+            <th>Temp. under</th>
+            <th>Holdetid</th>
+            <th>Tryk (bar)</th>
+            <th>Bemærkning</th>
+            <th>Handling</th>
+          </tr>
+        </thead>
+        <tbody id="allTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TILFØJ / REDIGER PAGE -->
+  <div class="page" id="page-tilfoj">
+    <div class="section-title" id="formTitle">TILFØJ NY POST</div>
+    <input type="hidden" id="editId" value="">
+
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Båndtype *</label>
+        <input type="text" id="f_baandtype" placeholder="f.eks. PU 2M24W">
+      </div>
+      <div class="form-group">
+        <label>Kategori *</label>
+        <select id="f_kategori">
+          <option value="PU">PU</option>
+          <option value="PVC">PVC</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tryk (bar)</label>
+        <input type="text" id="f_tryk" placeholder="f.eks. 4 bar">
+      </div>
+      <div class="form-group">
+        <label>Temperatur — over</label>
+        <input type="text" id="f_tempOver" placeholder="f.eks. 160°C">
+      </div>
+      <div class="form-group">
+        <label>Temperatur — under</label>
+        <input type="text" id="f_tempUnder" placeholder="f.eks. 140°C">
+      </div>
+      <div class="form-group full">
+        <label>Holdetid</label>
+        <input type="text" id="f_holdetid" placeholder="f.eks. 20 sek">
+      </div>
+      <div class="form-group full">
+        <label>Bemærkning / kommentarer</label>
+        <textarea id="f_bemaerkning" placeholder="Valgfrit..."></textarea>
+      </div>
+    </div>
+
+    <div>
+      <button class="btn-secondary" id="cancelEditBtn" style="display:none" onclick="cancelEdit()">ANNULLER</button>
+      <button class="btn-primary" onclick="saveEntry()">GEM POST</button>
+    </div>
+
+    <div class="export-section">
+      <div class="section-title" style="margin-bottom:10px;border:none">LOKAL BACKUP</div>
+      <p>Kopiér databasen som JSON til backup, eller indsæt tidligere JSON for at gendanne.</p>
+      <button class="btn-secondary" onclick="exportDB()">KOPIÉR JSON</button>
+      <button class="btn-secondary" onclick="importDB()">IMPORTÉR JSON</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- EDIT MODAL -->
+<div class="edit-modal" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title">Rediger post</div>
+    <div id="modalFormContainer"></div>
+    <div style="margin-top:16px">
+      <button class="btn-secondary" onclick="closeModal()">ANNULLER</button>
+      <button class="btn-primary" onclick="saveModal()">GEM ÆNDRINGER</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>Induminati &middot; test / work in progress &middot; <a href="../Test/index.html">Tilbage til test</a></footer>
+
+<script>
+// ============================================================
+// DATABASE
+// ============================================================
+const DB_KEY = 'samlevejledninger_v1';
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [];
+}
+function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+let db = loadDB();
+let nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+let currentFilter = 'ALLE';
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('header .nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'opslag') renderOpslag();
+  if (name === 'alle') renderAllTable();
+  if (name === 'tilfoj') cancelEdit();
+}
+
+function setFilter(cat) {
+  currentFilter = cat;
+  document.querySelectorAll('#filterTabs .filter-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#filterTabs [data-cat="${cat}"]`).classList.add('active');
+  renderOpslag();
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============================================================
+// OPSLAG (reference view)
+// ============================================================
+function fieldBlock(label, value) {
+  return `<div class="entry-field"><div class="fl">${label}</div><div class="fv">${value ? escapeHtml(value) : '—'}</div></div>`;
+}
+
+function entryCard(e) {
+  return `
+  <div class="entry-card ${e.kategori}">
+    <div class="entry-title">
+      <span class="category-tag ${e.kategori}">${e.kategori}</span>
+      ${escapeHtml(e.baandtype)}
+    </div>
+    <div class="entry-fields">
+      ${fieldBlock('Temperatur over', e.tempOver)}
+      ${fieldBlock('Temperatur under', e.tempUnder)}
+      ${fieldBlock('Holdetid', e.holdetid)}
+      ${fieldBlock('Tryk (bar)', e.tryk)}
+    </div>
+    ${e.bemaerkning ? `<div class="entry-note">📝 ${escapeHtml(e.bemaerkning)}</div>` : ''}
+    <div class="entry-actions">
+      <button class="action-btn" onclick="editEntry(${e.id})">Rediger</button>
+      <button class="action-btn del" onclick="deleteEntry(${e.id})">Slet</button>
+    </div>
+  </div>`;
+}
+
+function renderOpslag() {
+  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  const container = document.getElementById('opslagContainer');
+
+  let cats = currentFilter === 'ALLE' ? ['PU','PVC'] : [currentFilter];
+  let html = '';
+  let totalShown = 0;
+
+  cats.forEach(cat => {
+    const entries = db
+      .filter(e => e.kategori === cat)
+      .filter(e => !q || e.baandtype.toLowerCase().includes(q))
+      .sort((a,b) => a.baandtype.localeCompare(b.baandtype, 'da'));
+    if (entries.length === 0) return;
+    totalShown += entries.length;
+    html += `
+      <div class="category-heading">
+        <span class="category-tag ${cat}">${cat}</span>
+        <span class="category-count">${entries.length} båndtype${entries.length===1?'':'r'}</span>
+        <span class="category-line"></span>
+      </div>
+      <div class="entry-list">${entries.map(entryCard).join('')}</div>
+    `;
+  });
+
+  if (totalShown === 0) {
+    html = `<div class="empty-state"><div class="em-icon">📘</div><p>${db.length===0 ? 'Ingen poster i databasen endnu. Gå til "Tilføj / Rediger" for at oprette den første samlevejledning.' : 'Ingen poster matcher søgningen/filteret.'}</p></div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+// ============================================================
+// ALLE POSTER (table)
+// ============================================================
+function renderAllTable() {
+  const stats = document.getElementById('statsBar');
+  const pu = db.filter(e => e.kategori === 'PU').length;
+  const pvc = db.filter(e => e.kategori === 'PVC').length;
+  stats.innerHTML = `
+    <div class="stat"><div class="stat-num">${db.length}</div><div class="stat-label">Poster i alt</div></div>
+    <div class="stat"><div class="stat-num">${pu}</div><div class="stat-label">PU bånd</div></div>
+    <div class="stat"><div class="stat-num">${pvc}</div><div class="stat-label">PVC bånd</div></div>
+  `;
+
+  const tbody = document.getElementById('allTableBody');
+  if (db.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Ingen poster endnu</td></tr>';
+    return;
+  }
+  const sorted = [...db].sort((a,b) => a.baandtype.localeCompare(b.baandtype, 'da'));
+  tbody.innerHTML = sorted.map(e => `
+    <tr>
+      <td><span class="cat-pill ${e.kategori}">${e.kategori}</span></td>
+      <td style="font-weight:600">${escapeHtml(e.baandtype)}</td>
+      <td>${escapeHtml(e.tempOver) || '—'}</td>
+      <td>${escapeHtml(e.tempUnder) || '—'}</td>
+      <td>${escapeHtml(e.holdetid) || '—'}</td>
+      <td>${escapeHtml(e.tryk) || '—'}</td>
+      <td>${escapeHtml(e.bemaerkning) || '—'}</td>
+      <td>
+        <button class="action-btn" onclick="editEntry(${e.id})">Rediger</button>
+        <button class="action-btn del" onclick="deleteEntry(${e.id})">Slet</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// ADD / EDIT
+// ============================================================
+function getFormValues() {
+  return {
+    baandtype: document.getElementById('f_baandtype').value.trim(),
+    kategori: document.getElementById('f_kategori').value,
+    tempOver: document.getElementById('f_tempOver').value.trim(),
+    tempUnder: document.getElementById('f_tempUnder').value.trim(),
+    holdetid: document.getElementById('f_holdetid').value.trim(),
+    tryk: document.getElementById('f_tryk').value.trim(),
+    bemaerkning: document.getElementById('f_bemaerkning').value.trim(),
+  };
+}
+
+function clearForm() {
+  ['baandtype','tempOver','tempUnder','holdetid','tryk','bemaerkning'].forEach(f => document.getElementById('f_' + f).value = '');
+  document.getElementById('f_kategori').value = 'PU';
+}
+
+function saveEntry() {
+  const vals = getFormValues();
+  if (!vals.baandtype) { toast('Båndtype er påkrævet', true); return; }
+  const editId = document.getElementById('editId').value;
+  if (editId) {
+    const idx = db.findIndex(e => e.id == editId);
+    if (idx > -1) db[idx] = { ...db[idx], ...vals };
+  } else {
+    db.push({ id: nextId++, ...vals });
+  }
+  saveDB(db);
+  clearForm();
+  document.getElementById('editId').value = '';
+  document.getElementById('formTitle').textContent = 'TILFØJ NY POST';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  toast('Post gemt!');
+}
+
+function editEntry(id) {
+  const e = db.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('f_baandtype').value = e.baandtype;
+  document.getElementById('f_kategori').value = e.kategori;
+  document.getElementById('f_tempOver').value = e.tempOver || '';
+  document.getElementById('f_tempUnder').value = e.tempUnder || '';
+  document.getElementById('f_holdetid').value = e.holdetid || '';
+  document.getElementById('f_tryk').value = e.tryk || '';
+  document.getElementById('f_bemaerkning').value = e.bemaerkning || '';
+  document.getElementById('editId').value = id;
+  document.getElementById('formTitle').textContent = 'REDIGER POST: ' + e.baandtype;
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('header .nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-tilfoj').classList.add('active');
+  document.querySelector('header .nav-btn:nth-child(3)').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function cancelEdit() {
+  clearForm();
+  document.getElementById('editId').value = '';
+  document.getElementById('formTitle').textContent = 'TILFØJ NY POST';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+function deleteEntry(id) {
+  const e = db.find(x => x.id === id);
+  if (!e) return;
+  if (!confirm(`Slet "${e.baandtype}"?`)) return;
+  db = db.filter(x => x.id !== id);
+  saveDB(db);
+  renderAllTable();
+  renderOpslag();
+  toast('Post slettet');
+}
+
+// ============================================================
+// EXPORT / IMPORT (LOCAL)
+// ============================================================
+function exportDB() {
+  const json = JSON.stringify(db, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    toast('JSON kopieret til udklipsholder!');
+  }).catch(() => {
+    prompt('Kopiér JSON manuelt:', json);
+  });
+}
+
+function importDB() {
+  const json = prompt('Indsæt JSON her:');
+  if (!json) return;
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) throw new Error();
+    db = parsed;
+    nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+    saveDB(db);
+    toast(`${db.length} poster importeret!`);
+    renderOpslag();
+    renderAllTable();
+  } catch(e) {
+    toast('Ugyldig JSON – prøv igen', true);
+  }
+}
+
+// ============================================================
+// PRINT
+// ============================================================
+function doPrint(scope) {
+  const prevFilter = currentFilter;
+  const prevSearch = document.getElementById('searchInput').value;
+
+  // switch to opslag page + requested scope, clear search so nothing is hidden
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('header .nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-opslag').classList.add('active');
+  document.querySelector('header .nav-btn:nth-child(1)').classList.add('active');
+
+  document.getElementById('searchInput').value = '';
+  currentFilter = scope;
+  document.querySelectorAll('#filterTabs .filter-tab').forEach(b => b.classList.remove('active'));
+  const tabBtn = document.querySelector(`#filterTabs [data-cat="${scope}"]`);
+  if (tabBtn) tabBtn.classList.add('active');
+  renderOpslag();
+
+  const label = scope === 'ALLE' ? 'Samlet database (PU + PVC)' : scope + '-database';
+  document.getElementById('printMeta').textContent = `${label} · ${new Date().toLocaleDateString('da-DK')}`;
+
+  const restore = () => {
+    currentFilter = prevFilter;
+    document.getElementById('searchInput').value = prevSearch;
+    document.querySelectorAll('#filterTabs .filter-tab').forEach(b => b.classList.remove('active'));
+    const prevBtn = document.querySelector(`#filterTabs [data-cat="${prevFilter}"]`);
+    if (prevBtn) prevBtn.classList.add('active');
+    renderOpslag();
+    window.removeEventListener('afterprint', restore);
+  };
+  window.addEventListener('afterprint', restore);
+
+  setTimeout(() => window.print(), 50);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isErr ? ' err' : '');
+  setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderOpslag();
+</script>
+</body>
+</html>
