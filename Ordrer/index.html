@@ -318,7 +318,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v1.5 &middot; 06-07-2026</footer>
+  <footer>Byg til intern brug &middot; v1.6 &middot; 07-07-2026</footer>
 </div>
 
 <script>
@@ -715,10 +715,10 @@ downloadBtn.addEventListener('click', async () => {
     ws.addRow(resultHeaders.map(h => row[h] ?? ''));
   });
 
-  const thickBorder = { style: 'thick' };
+  const cellBorder = { style: 'thin' };
   ws.eachRow({ includeEmpty: true }, row => {
     row.eachCell({ includeEmpty: true }, cell => {
-      cell.border = { top: thickBorder, left: thickBorder, bottom: thickBorder, right: thickBorder };
+      cell.border = { top: cellBorder, left: cellBorder, bottom: cellBorder, right: cellBorder };
     });
   });
 
