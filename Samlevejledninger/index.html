@@ -237,7 +237,7 @@
             <th>Båndtype</th>
             <th>Temp. over</th>
             <th>Temp. under</th>
-            <th>Holdetid</th>
+            <th>Holdetid (min.)</th>
             <th>Tryk (bar)</th>
             <th>Bemærkning</th>
             <th>Handling</th>
@@ -256,7 +256,7 @@
     <div class="form-grid">
       <div class="form-group full">
         <label>Båndtype *</label>
-        <input type="text" id="f_baandtype" placeholder="f.eks. PU 2M24W">
+        <input type="text" id="f_baandtype">
       </div>
       <div class="form-group">
         <label>Kategori *</label>
@@ -267,19 +267,19 @@
       </div>
       <div class="form-group">
         <label>Tryk (bar)</label>
-        <input type="text" id="f_tryk" placeholder="f.eks. 4 bar">
+        <input type="text" id="f_tryk">
       </div>
       <div class="form-group">
         <label>Temperatur — over</label>
-        <input type="text" id="f_tempOver" placeholder="f.eks. 160°C">
+        <input type="text" id="f_tempOver">
       </div>
       <div class="form-group">
         <label>Temperatur — under</label>
-        <input type="text" id="f_tempUnder" placeholder="f.eks. 140°C">
+        <input type="text" id="f_tempUnder">
       </div>
       <div class="form-group full">
-        <label>Holdetid</label>
-        <input type="text" id="f_holdetid" placeholder="f.eks. 20 sek">
+        <label>Holdetid (min.)</label>
+        <input type="text" id="f_holdetid">
       </div>
       <div class="form-group full">
         <label>Bemærkning / kommentarer</label>
@@ -356,7 +356,7 @@
 
 <div class="toast" id="toast"></div>
 
-<footer>Induminati &middot; test / work in progress &middot; v1.0 &middot; 07-07-2026 &middot; <a href="../Test/index.html">Tilbage til test</a></footer>
+<footer>Induminati &middot; test / work in progress &middot; v1.1 &middot; 07-07-2026 &middot; <a href="../Test/index.html">Tilbage til test</a></footer>
 
 <script>
 // ============================================================
@@ -418,7 +418,7 @@ function entryCard(e) {
     <div class="entry-fields">
       ${fieldBlock('Temperatur over', e.tempOver)}
       ${fieldBlock('Temperatur under', e.tempUnder)}
-      ${fieldBlock('Holdetid', e.holdetid)}
+      ${fieldBlock('Holdetid (min.)', e.holdetid)}
       ${fieldBlock('Tryk (bar)', e.tryk)}
     </div>
     ${e.bemaerkning ? `<div class="entry-note">📝 ${escapeHtml(e.bemaerkning)}</div>` : ''}
