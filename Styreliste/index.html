@@ -10,16 +10,17 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:       #F0F6F8;
-    --surface:  #ffffff;
-    --surface2: #E6F4F7;
-    --border:   #C8DDE4;
-    --dark:     #005F7F;
-    --accent:   #00A0C0;
-    --text:     #1A3A4A;
-    --muted:    #5A7A88;
-    --red:      #cc2222;
-    --green:    #1a7a3a;
+    --bg:           #F3F7FA;
+    --surface:      #FFFFFF;
+    --surface2:     #E5F1FA;
+    --border:       #D7E3EC;
+    --dark:         #0B4F79;
+    --accent:       #E8791E;
+    --accent-hover: #C9640F;
+    --text:         #17324A;
+    --muted:        #5F7C90;
+    --red:          #D64545;
+    --green:        #2E9E52;
   }
 
   body {
@@ -189,7 +190,7 @@
 
   .diagram-wrap {
     width: 100%;
-    background: #f7fafb;
+    background: #F7FAFC;
     border: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -243,7 +244,7 @@
 
   .measurements-table td {
     padding: 8px 10px;
-    border-bottom: 1px solid #e8f0f3;
+    border-bottom: 1px solid #E9EFF5;
     font-weight: 500;
   }
 
@@ -254,7 +255,7 @@
   }
 
   .measurements-table tr.highlight td {
-    background: #E6F4F7;
+    background: var(--surface2);
     color: var(--dark);
   }
 
@@ -263,7 +264,7 @@
   }
 
   .measurements-table tr.warn td {
-    background: #fff3f3;
+    background: rgba(214,69,69,.08);
     color: var(--red);
   }
 
@@ -283,8 +284,8 @@
     margin-left: 8px;
     vertical-align: middle;
   }
-  .badge.ok   { background: rgba(26,122,58,.12); border: 1px solid rgba(26,122,58,.3); color: var(--green); }
-  .badge.warn { background: rgba(204,34,34,.1);  border: 1px solid rgba(204,34,34,.3); color: var(--red); }
+  .badge.ok   { background: rgba(46,158,82,.12);  border: 1px solid rgba(46,158,82,.3);  color: var(--green); }
+  .badge.warn { background: rgba(214,69,69,.1);   border: 1px solid rgba(214,69,69,.3);   color: var(--red); }
 
   @media print {
     body * { visibility: hidden; }
@@ -439,26 +440,26 @@ function renderDiagram(beltWidth, numGuides, guideWidth, ccVal, guideCenters, va
   const beltR    = beltX + drawW;
   const beltCx   = beltX + drawW / 2;
 
-  const C_DARK   = '#005F7F';
-  const C_ACC    = '#00A0C0';
-  const C_DIM    = '#1A3A4A';
-  const C_KTK    = '#C94F1E';   // kant-til-kant highlight colour
-  const C_CC     = '#005F7F';
-  const C_MUTED  = '#5A7A88';
-  const C_GUIDE  = valid && !overlap ? '#005F7F' : '#cc2222';
-  const C_GUIDE_TOP = valid && !overlap ? '#003D52' : '#991111';
+  const C_DARK   = '#0B4F79';
+  const C_ACC    = '#E8791E';
+  const C_DIM    = '#17324A';
+  const C_KTK    = '#E8791E';   // kant-til-kant highlight colour
+  const C_CC     = '#0B4F79';
+  const C_MUTED  = '#5F7C90';
+  const C_GUIDE  = valid && !overlap ? '#0B4F79' : '#D64545';
+  const C_GUIDE_TOP = valid && !overlap ? '#073B57' : '#963030';
 
   // ── Belt ──
   const beltParts = `
     <defs>
       <pattern id="bp" width="20" height="${beltH}" patternUnits="userSpaceOnUse">
-        <rect width="20" height="${beltH}" fill="#d8e8ec"/>
-        <line x1="0" y1="0" x2="20" y2="${beltH}" stroke="#c8dce2" stroke-width="1"/>
+        <rect width="20" height="${beltH}" fill="#DCE6EE"/>
+        <line x1="0" y1="0" x2="20" y2="${beltH}" stroke="#CBD9E3" stroke-width="1"/>
       </pattern>
     </defs>
     <rect x="${beltX}" y="${beltY}" width="${drawW}" height="${beltH}" fill="url(#bp)" rx="3"/>
-    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="4" fill="#b8ccd4" rx="2"/>
-    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="${beltH}" fill="none" stroke="#9ab8c4" stroke-width="1.5" rx="3"/>
+    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="4" fill="#AEC1CC" rx="2"/>
+    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="${beltH}" fill="none" stroke="#93A9B8" stroke-width="1.5" rx="3"/>
   `;
 
   // ── Guide rects ──
@@ -584,7 +585,7 @@ function renderDiagram(beltWidth, numGuides, guideWidth, ccVal, guideCenters, va
   // ── Center line of belt (subtle) ──
   const centerLine = `
     <line x1="${beltCx}" y1="${beltY}" x2="${beltCx}" y2="${beltY + beltH}"
-          stroke="#9ab8c4" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>
+          stroke="#93A9B8" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>
   `;
 
   // ── Legend ──
