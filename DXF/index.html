@@ -8,16 +8,24 @@
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 
   :root {
-    --bg: #0e0f11;
-    --surface: #161719;
-    --surface2: #1e2023;
-    --border: #2a2d32;
-    --accent: #00A0C0;
-    --accent2: #005F7F;
-    --success: #00e5a0;
-    --warn: #ffcc00;
-    --text: #e8eaed;
-    --muted: #6b7280;
+    --bg: #F3F7FA;
+    --surface: #FFFFFF;
+    --surface2: #E5F1FA;
+    --border: #D7E3EC;
+    --accent: #E8791E;
+    --accent-hover: #C9640F;
+    --accent2: #0B4F79;
+    --link: #1C7FBF;
+    --link-pale: #E5F1FA;
+    --accent-pale: #FCEADA;
+    --success: #2E9E52;
+    --success-pale: #E1F3E7;
+    --success-text: #1F7A3D;
+    --warn: #9A6B00;
+    --warn-pale: #FBF0D9;
+    --danger: #D64545;
+    --text: #17324A;
+    --muted: #5F7C90;
     --mono: 'IBM Plex Mono', monospace;
     --sans: 'IBM Plex Sans', sans-serif;
   }
@@ -34,12 +42,11 @@
   }
 
   header {
-    border-bottom: 1px solid var(--border);
     padding: 18px 32px;
     display: flex;
     align-items: center;
     gap: 16px;
-    background: var(--surface);
+    background: var(--accent2);
   }
 
   .logo {
@@ -51,12 +58,12 @@
     text-transform: uppercase;
   }
 
-  .logo span { color: var(--muted); }
+  .logo span { color: #B9D8EA; }
 
   header h1 {
     font-size: 14px;
     font-weight: 400;
-    color: var(--muted);
+    color: #CFE3EE;
     letter-spacing: 0.03em;
   }
 
@@ -103,7 +110,7 @@
 
   .drop-zone:hover, .drop-zone.drag-over {
     border-color: var(--accent);
-    background: rgba(0, 160, 192, 0.04);
+    background: rgba(232, 121, 30, 0.06);
   }
 
   .drop-zone input[type=file] {
@@ -129,8 +136,8 @@
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    background: rgba(0, 229, 160, 0.08);
-    border: 1px solid rgba(0, 229, 160, 0.25);
+    background: rgba(46, 158, 82, 0.10);
+    border: 1px solid rgba(46, 158, 82, 0.3);
     border-radius: 6px;
     font-family: var(--mono);
     font-size: 12px;
@@ -166,7 +173,7 @@
     border-color: var(--accent);
   }
 
-  select option { background: #1e2023; }
+  select option { background: #FFFFFF; }
 
   .row { display: flex; gap: 10px; }
   .row > * { flex: 1; }
@@ -195,9 +202,9 @@
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: #33ddff;
+    background: var(--accent-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0, 160, 192, 0.3);
+    box-shadow: 0 4px 16px rgba(232, 121, 30, 0.3);
   }
 
   .btn-primary:disabled {
@@ -212,7 +219,7 @@
   }
 
   .btn-secondary:hover:not(:disabled) {
-    background: rgba(255, 107, 53, 0.1);
+    background: rgba(11, 79, 121, 0.08);
   }
 
   .btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -222,7 +229,7 @@
     color: #000;
   }
 
-  .btn-success:hover { background: #33eeb3; transform: translateY(-1px); }
+  .btn-success:hover { background: #3DAE64; transform: translateY(-1px); }
 
   .log {
     font-family: var(--mono);
@@ -238,7 +245,7 @@
 
   .log .ok { color: var(--success); }
   .log .warn { color: var(--warn); }
-  .log .err { color: #ff4f4f; }
+  .log .err { color: var(--danger); }
   .log .info { color: var(--muted); }
   .log .accent { color: var(--accent); }
 
@@ -322,7 +329,7 @@
     flex: 1;
     overflow: hidden;
     position: relative;
-    background: #080809;
+    background: var(--bg);
   }
 
   canvas#preview {
@@ -336,7 +343,7 @@
     font-family: var(--mono);
     font-size: 10px;
     color: var(--muted);
-    background: rgba(14,15,17,0.85);
+    background: rgba(255,255,255,0.85);
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 6px 10px;
@@ -351,16 +358,16 @@
     line-height: 1.65;
     padding: 20px 24px;
     overflow-y: auto;
-    background: #080809;
+    background: var(--bg);
     white-space: pre;
-    color: #c9d1d9;
+    color: var(--text);
   }
 
-  .ncp-preview .cmd-move { color: #79c0ff; }
-  .ncp-preview .cmd-arc { color: #ffa657; }
-  .ncp-preview .cmd-fast { color: #56d364; }
+  .ncp-preview .cmd-move { color: var(--accent2); }
+  .ncp-preview .cmd-arc { color: var(--accent-hover); }
+  .ncp-preview .cmd-fast { color: var(--success); }
   .ncp-preview .cmd-comment { color: var(--muted); }
-  .ncp-preview .cmd-control { color: #d2a8ff; }
+  .ncp-preview .cmd-control { color: var(--link); }
   .ncp-preview .cmd-header { color: var(--warn); }
 
   .zoom-controls {
@@ -396,11 +403,11 @@
     letter-spacing: 0.05em;
   }
 
-  .badge-line { background: rgba(121,192,255,0.12); color: #79c0ff; }
-  .badge-arc { background: rgba(255,166,87,0.12); color: #ffa657; }
-  .badge-circle { background: rgba(210,168,255,0.12); color: #d2a8ff; }
-  .badge-poly { background: rgba(86,211,100,0.12); color: #56d364; }
-  .badge-spline { background: rgba(255,204,0,0.12); color: var(--warn); }
+  .badge-line { background: var(--link-pale); color: var(--accent2); }
+  .badge-arc { background: var(--accent-pale); color: #A3540E; }
+  .badge-circle { background: var(--link-pale); color: var(--link); }
+  .badge-poly { background: var(--success-pale); color: var(--success-text); }
+  .badge-spline { background: var(--warn-pale); color: var(--warn); }
 
   .entity-list {
     display: flex;
@@ -430,7 +437,7 @@
 
 <header>
   <div class="logo">IMF<span>_</span>PBL</div>
-  <div style="width:1px;height:20px;background:var(--border)"></div>
+  <div style="width:1px;height:20px;background:rgba(255,255,255,0.3)"></div>
   <h1>DXF / SVG → NCP Vandskærer Konverter</h1>
 </header>
 
@@ -1844,7 +1851,7 @@ function renderCanvas() {
   ctx.clearRect(0, 0, w, h);
 
   // Grid
-  ctx.strokeStyle = '#1a1d21';
+  ctx.strokeStyle = '#E3EAF0';
   ctx.lineWidth = 1;
   const gridStep = Math.round(10000 * scale) > 8 ? 10000 : 50000; // 10mm or 50mm
   const bbox = getBBox();
@@ -1863,7 +1870,7 @@ function renderCanvas() {
   }
 
   // Axes
-  ctx.strokeStyle = '#2a2d32';
+  ctx.strokeStyle = '#AABDCB';
   ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(tx, 0); ctx.lineTo(tx, h); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(w, ty); ctx.stroke();
@@ -1872,15 +1879,15 @@ function renderCanvas() {
   const toSY = y => y * scale + ty;
 
   const colors = {
-    LINE: '#79c0ff',
-    ARC: '#ffa657',
-    CIRCLE: '#d2a8ff',
-    POLYLINE: '#56d364',
-    SPLINE: '#ffcc00'
+    LINE: '#0B4F79',
+    ARC: '#C9640F',
+    CIRCLE: '#1C7FBF',
+    POLYLINE: '#2E9E52',
+    SPLINE: '#9A6B00'
   };
 
   parsedEntities.forEach(e => {
-    ctx.strokeStyle = colors[e.type] || '#79c0ff';
+    ctx.strokeStyle = colors[e.type] || '#0B4F79';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
 
@@ -1909,7 +1916,7 @@ function renderCanvas() {
   // Start points
   parsedEntities.forEach(e => {
     const s = entityStart(e);
-    ctx.fillStyle = '#00e5a0';
+    ctx.fillStyle = '#2E9E52';
     ctx.beginPath();
     ctx.arc(toSX(s.x), toSY(s.y), 3, 0, Math.PI*2);
     ctx.fill();
