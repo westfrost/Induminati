@@ -1393,5 +1393,23 @@
     "cylinder": "",
     "pres": "",
     "bemaerkning": "Styreliste I center på bagside"
+  },
+  {
+    "id": 93,
+    "maskine": "Lille HF",
+    "baandtype": "2M020G-SG-P8",
+    "baandbredde": 650,
+    "medbringertype": "R15 G",
+    "laengde": 175,
+    "antal": 1,
+    "kontakt": "2",
+    "current": "",
+    "welding": "0,7",
+    "prewelding": "5",
+    "cool": "0,8",
+    "squeeze": "",
+    "cylinder": "",
+    "pres": "",
+    "bemaerkning": "(Pølser) klippes af med skævbidder"
   }
 ]
