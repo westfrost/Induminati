@@ -1,6 +1,7 @@
 [
   {
     "id": 1,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T60AG",
     "laengde": 345,
@@ -16,6 +17,7 @@
   },
   {
     "id": 2,
+    "maskine": "Store HF",
     "baandtype": "2M8UOV5W-NA.3",
     "medbringertype": "T20W",
     "laengde": 100,
@@ -31,6 +33,7 @@
   },
   {
     "id": 3,
+    "maskine": "Store HF",
     "baandtype": "2EL016G",
     "medbringertype": "T20G",
     "laengde": 250,
@@ -46,6 +49,7 @@
   },
   {
     "id": 4,
+    "maskine": "Store HF",
     "baandtype": "2M24W-FDA",
     "medbringertype": "T20W",
     "laengde": 175,
@@ -61,6 +65,7 @@
   },
   {
     "id": 5,
+    "maskine": "Store HF",
     "baandtype": "2T24W-FDA",
     "medbringertype": "T20W",
     "laengde": 205,
@@ -76,6 +81,7 @@
   },
   {
     "id": 6,
+    "maskine": "Store HF",
     "baandtype": "2M24W-FDA-GLAT",
     "medbringertype": "T20W",
     "laengde": 500,
@@ -91,6 +97,7 @@
   },
   {
     "id": 7,
+    "maskine": "Store HF",
     "baandtype": "2M24W-FDA-GLAT",
     "medbringertype": "T20W",
     "laengde": 780,
@@ -106,6 +113,7 @@
   },
   {
     "id": 8,
+    "maskine": "Store HF",
     "baandtype": "2M24AG-S",
     "medbringertype": "T20AG",
     "laengde": 1000,
@@ -121,6 +129,7 @@
   },
   {
     "id": 9,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T20AG",
     "laengde": 1365,
@@ -136,6 +145,7 @@
   },
   {
     "id": 10,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T40AG",
     "laengde": 210,
@@ -151,6 +161,7 @@
   },
   {
     "id": 11,
+    "maskine": "Store HF",
     "baandtype": "2T024G",
     "medbringertype": "T40AG",
     "laengde": 165,
@@ -166,6 +177,7 @@
   },
   {
     "id": 12,
+    "maskine": "Store HF",
     "baandtype": "2M24BLÅ-FDA-NP",
     "medbringertype": "T40W",
     "laengde": 415,
@@ -181,6 +193,7 @@
   },
   {
     "id": 13,
+    "maskine": "Store HF",
     "baandtype": "2M24W-FDA-GLAT",
     "medbringertype": "T40W TIL 30",
     "laengde": 500,
@@ -196,6 +209,7 @@
   },
   {
     "id": 14,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T40AG",
     "laengde": 565,
@@ -211,6 +225,7 @@
   },
   {
     "id": 15,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T40AG",
     "laengde": 565,
@@ -226,6 +241,7 @@
   },
   {
     "id": 16,
+    "maskine": "Store HF",
     "baandtype": "2T024G",
     "medbringertype": "T40G",
     "laengde": 315,
@@ -241,6 +257,7 @@
   },
   {
     "id": 17,
+    "maskine": "Store HF",
     "baandtype": "2M024AG",
     "medbringertype": "T40AG",
     "laengde": 390,
@@ -256,6 +273,7 @@
   },
   {
     "id": 18,
+    "maskine": "Store HF",
     "baandtype": "2T12VSV10W-NA.20",
     "medbringertype": "T40W",
     "laengde": 800,
@@ -271,6 +289,7 @@
   },
   {
     "id": 19,
+    "maskine": "Store HF",
     "baandtype": "2T24AG",
     "medbringertype": "T40AG",
     "laengde": 270,
@@ -286,6 +305,7 @@
   },
   {
     "id": 20,
+    "maskine": "Store HF",
     "baandtype": "2M24B",
     "medbringertype": "TC40G",
     "laengde": 960,
@@ -301,6 +321,7 @@
   },
   {
     "id": 21,
+    "maskine": "Store HF",
     "baandtype": "2M024AG",
     "medbringertype": "T30AG",
     "laengde": 1000,
@@ -316,6 +337,7 @@
   },
   {
     "id": 22,
+    "maskine": "Store HF",
     "baandtype": "2EL016G",
     "medbringertype": "T40G",
     "laengde": 1250,
@@ -331,6 +353,7 @@
   },
   {
     "id": 23,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T50G",
     "laengde": 800,
@@ -346,6 +369,7 @@
   },
   {
     "id": 24,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T60AG",
     "laengde": 345,
@@ -361,6 +385,7 @@
   },
   {
     "id": 25,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T60AG",
     "laengde": 345,
@@ -376,6 +401,7 @@
   },
   {
     "id": 26,
+    "maskine": "Store HF",
     "baandtype": "3T36AG-MAT",
     "medbringertype": "T60AG",
     "laengde": 215,
@@ -391,6 +417,7 @@
   },
   {
     "id": 27,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T60AG",
     "laengde": 445,
@@ -406,6 +433,7 @@
   },
   {
     "id": 28,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T60AG",
     "laengde": 545,
@@ -421,6 +449,7 @@
   },
   {
     "id": 29,
+    "maskine": "Store HF",
     "baandtype": "2M020BLÅ FDA",
     "medbringertype": "T60W",
     "laengde": 550,
@@ -436,6 +465,7 @@
   },
   {
     "id": 30,
+    "maskine": "Store HF",
     "baandtype": "3M36W-FDA",
     "medbringertype": "T60W",
     "laengde": 605,
@@ -451,6 +481,7 @@
   },
   {
     "id": 31,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T60AG",
     "laengde": 665,
@@ -466,6 +497,7 @@
   },
   {
     "id": 32,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "UB-T-60AG",
     "laengde": 690,
@@ -481,6 +513,7 @@
   },
   {
     "id": 33,
+    "maskine": "Store HF",
     "baandtype": "2M24BLÅ-FDA-NP",
     "medbringertype": "T60W",
     "laengde": 575,
@@ -496,6 +529,7 @@
   },
   {
     "id": 34,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TC60AG",
     "laengde": 245,
@@ -511,6 +545,7 @@
   },
   {
     "id": 35,
+    "maskine": "Store HF",
     "baandtype": "3T18U0-V13-NA,42",
     "medbringertype": "TC60AG TIL 50MM",
     "laengde": 375,
@@ -526,6 +561,7 @@
   },
   {
     "id": 36,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TC60AG",
     "laengde": 465,
@@ -541,6 +577,7 @@
   },
   {
     "id": 37,
+    "maskine": "Store HF",
     "baandtype": "2M024AG",
     "medbringertype": "TC60AG TIL 50MM",
     "laengde": 500,
@@ -556,6 +593,7 @@
   },
   {
     "id": 38,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TC60AG",
     "laengde": 565,
@@ -571,6 +609,7 @@
   },
   {
     "id": 39,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T60AG",
     "laengde": 565,
@@ -586,6 +625,7 @@
   },
   {
     "id": 40,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "T60AG",
     "laengde": 545,
@@ -601,6 +641,7 @@
   },
   {
     "id": 41,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TC60AG",
     "laengde": 465,
@@ -616,6 +657,7 @@
   },
   {
     "id": 42,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TC60W",
     "laengde": 290,
@@ -631,6 +673,7 @@
   },
   {
     "id": 43,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TC60AG",
     "laengde": 465,
@@ -646,6 +689,7 @@
   },
   {
     "id": 44,
+    "maskine": "Store HF",
     "baandtype": "2M024AG-CT-S",
     "medbringertype": "TC60AG",
     "laengde": 660,
@@ -661,6 +705,7 @@
   },
   {
     "id": 45,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TC60AG",
     "laengde": 1165,
@@ -676,6 +721,7 @@
   },
   {
     "id": 46,
+    "maskine": "Store HF",
     "baandtype": "2M024W-FDA",
     "medbringertype": "TC100",
     "laengde": 500,
@@ -691,6 +737,7 @@
   },
   {
     "id": 47,
+    "maskine": "Store HF",
     "baandtype": "2M24W-FDA",
     "medbringertype": "TC80",
     "laengde": 510,
@@ -706,6 +753,7 @@
   },
   {
     "id": 48,
+    "maskine": "Store HF",
     "baandtype": "3L024W-FDA",
     "medbringertype": "T80W",
     "laengde": 595,
@@ -721,6 +769,7 @@
   },
   {
     "id": 49,
+    "maskine": "Store HF",
     "baandtype": "2M024W-FDA",
     "medbringertype": "T100W",
     "laengde": 680,
@@ -736,6 +785,7 @@
   },
   {
     "id": 50,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TW60AG",
     "laengde": 525,
@@ -751,6 +801,7 @@
   },
   {
     "id": 51,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TW80",
     "laengde": 795,
@@ -766,6 +817,7 @@
   },
   {
     "id": 52,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TC60AG",
     "laengde": 750,
@@ -781,6 +833,7 @@
   },
   {
     "id": 53,
+    "maskine": "Store HF",
     "baandtype": "2M024AG",
     "medbringertype": "T100AG TIL 40",
     "laengde": 140,
@@ -796,6 +849,7 @@
   },
   {
     "id": 54,
+    "maskine": "Store HF",
     "baandtype": "2M024-FDA",
     "medbringertype": "T100W",
     "laengde": 170,
@@ -811,6 +865,7 @@
   },
   {
     "id": 55,
+    "maskine": "Store HF",
     "baandtype": "3L024W-W-FDA",
     "medbringertype": "T100W-7S",
     "laengde": 270,
@@ -826,6 +881,7 @@
   },
   {
     "id": 56,
+    "maskine": "Store HF",
     "baandtype": "3M36W-FDA",
     "medbringertype": "T100W TIL 80",
     "laengde": 480,
@@ -841,6 +897,7 @@
   },
   {
     "id": 57,
+    "maskine": "Store HF",
     "baandtype": "3L024W-FDA",
     "medbringertype": "T80W",
     "laengde": 495,
@@ -856,6 +913,7 @@
   },
   {
     "id": 58,
+    "maskine": "Store HF",
     "baandtype": "2M024-FDA",
     "medbringertype": "T100W",
     "laengde": 690,
@@ -871,6 +929,7 @@
   },
   {
     "id": 59,
+    "maskine": "Store HF",
     "baandtype": "3T36W-FDA-SH-60",
     "medbringertype": "T100W TIL 70",
     "laengde": 770,
@@ -886,6 +945,7 @@
   },
   {
     "id": 60,
+    "maskine": "Store HF",
     "baandtype": "2M024AG",
     "medbringertype": "T100AG TIL 70",
     "laengde": 500,
@@ -901,6 +961,7 @@
   },
   {
     "id": 61,
+    "maskine": "Store HF",
     "baandtype": "2T024AG",
     "medbringertype": "TW60AG",
     "laengde": 95,
@@ -916,6 +977,7 @@
   },
   {
     "id": 62,
+    "maskine": "Store HF",
     "baandtype": "2T024W-FDA",
     "medbringertype": "TW60AG",
     "laengde": 320,
@@ -931,6 +993,7 @@
   },
   {
     "id": 63,
+    "maskine": "Store HF",
     "baandtype": "2T024G",
     "medbringertype": "TW40AG",
     "laengde": 125,
@@ -946,6 +1009,7 @@
   },
   {
     "id": 64,
+    "maskine": "Store HF",
     "baandtype": "2M024AG",
     "medbringertype": "TW60W",
     "laengde": 300,
@@ -961,6 +1025,7 @@
   },
   {
     "id": 65,
+    "maskine": "Store HF",
     "baandtype": "2M24AG",
     "medbringertype": "TW100W TIL 80",
     "laengde": 350,
@@ -976,6 +1041,7 @@
   },
   {
     "id": 66,
+    "maskine": "Store HF",
     "baandtype": "2T24AG",
     "medbringertype": "TW40AG",
     "laengde": 230,
@@ -991,6 +1057,7 @@
   },
   {
     "id": 67,
+    "maskine": "Store HF",
     "baandtype": "3M0361G-F0",
     "medbringertype": "TW40",
     "laengde": 300,
@@ -1006,6 +1073,7 @@
   },
   {
     "id": 68,
+    "maskine": "Store HF",
     "baandtype": "2M24W-FDA-GLAT",
     "medbringertype": "TW80",
     "laengde": 650,
@@ -1021,6 +1089,7 @@
   },
   {
     "id": 69,
+    "maskine": "Store HF",
     "baandtype": "FEMB 2 SPIKE",
     "medbringertype": "M6WPU",
     "laengde": 0,
@@ -1036,6 +1105,7 @@
   },
   {
     "id": 70,
+    "maskine": "Store HF",
     "baandtype": "2E016W-PU-CT-MAT",
     "medbringertype": "T50PU",
     "laengde": 500,
@@ -1051,6 +1121,7 @@
   },
   {
     "id": 71,
+    "maskine": "Store HF",
     "baandtype": "2E016W-PU-CT-MAT",
     "medbringertype": "T40W MIX",
     "laengde": 240,
@@ -1066,6 +1137,7 @@
   },
   {
     "id": 72,
+    "maskine": "Store HF",
     "baandtype": "2E016W-PU-S-CT-MAT",
     "medbringertype": "T20W MIX",
     "laengde": 500,
@@ -1081,6 +1153,7 @@
   },
   {
     "id": 73,
+    "maskine": "Store HF",
     "baandtype": "2E016BLÅ-PU-N1,4",
     "medbringertype": "T50BLÅ PU",
     "laengde": 170,
@@ -1096,6 +1169,7 @@
   },
   {
     "id": 74,
+    "maskine": "Store HF",
     "baandtype": "FEMB 3",
     "medbringertype": "T20WPU",
     "laengde": 600,
@@ -1111,6 +1185,7 @@
   },
   {
     "id": 75,
+    "maskine": "Store HF",
     "baandtype": "FEMB 3",
     "medbringertype": "FMB5",
     "laengde": 600,
@@ -1126,6 +1201,7 @@
   },
   {
     "id": 76,
+    "maskine": "Store HF",
     "baandtype": "FEMB 3",
     "medbringertype": "FMB5",
     "laengde": 500,
@@ -1141,6 +1217,7 @@
   },
   {
     "id": 77,
+    "maskine": "Store HF",
     "baandtype": "2M0242AG",
     "medbringertype": "UB 80 AG",
     "laengde": 300,
@@ -1156,6 +1233,7 @@
   },
   {
     "id": 78,
+    "maskine": "Store HF",
     "baandtype": "3M36BLÅ",
     "medbringertype": "R15W",
     "laengde": 590,
@@ -1171,6 +1249,7 @@
   },
   {
     "id": 79,
+    "maskine": "Store HF",
     "baandtype": "2M24B",
     "medbringertype": "R12AG",
     "laengde": 650,
@@ -1186,6 +1265,7 @@
   },
   {
     "id": 80,
+    "maskine": "Store HF",
     "baandtype": "2M024W-FDA",
     "medbringertype": "M7W",
     "laengde": 400,
@@ -1201,6 +1281,7 @@
   },
   {
     "id": 81,
+    "maskine": "Store HF",
     "baandtype": "2M024-FDA",
     "medbringertype": "M13W",
     "laengde": 340,
@@ -1216,6 +1297,7 @@
   },
   {
     "id": 82,
+    "maskine": "Store HF",
     "baandtype": "2M024AG",
     "medbringertype": "M17AG",
     "laengde": 250,
@@ -1231,6 +1313,7 @@
   },
   {
     "id": 83,
+    "maskine": "Store HF",
     "baandtype": "2EL016G-SG-P8",
     "medbringertype": "R15G",
     "laengde": 175,
@@ -1246,6 +1329,7 @@
   },
   {
     "id": 84,
+    "maskine": "Store HF",
     "baandtype": "KVERNLAND",
     "medbringertype": "-",
     "laengde": 0,
@@ -1261,6 +1345,7 @@
   },
   {
     "id": 85,
+    "maskine": "Store HF",
     "baandtype": "1M6BLÅ",
     "medbringertype": "LINCO",
     "laengde": 0,
@@ -1276,6 +1361,7 @@
   },
   {
     "id": 86,
+    "maskine": "Store HF",
     "baandtype": "SKÅLE",
     "medbringertype": "SKÅLE",
     "laengde": 0,
@@ -1291,6 +1377,7 @@
   },
   {
     "id": 87,
+    "maskine": "Store HF",
     "baandtype": "2M020G-SG-P8",
     "medbringertype": "Poly T20 AG",
     "laengde": 440,

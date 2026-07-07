@@ -169,6 +169,20 @@
   .match-badge.close { background: rgba(0,160,192,0.12); color: var(--accent); border: 1px solid rgba(0,160,192,0.3); }
   .match-badge.near { background: rgba(78,205,196,0.1); color: var(--accent2); border: 1px solid rgba(78,205,196,0.3); }
 
+  .machine-badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 9px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+  }
+  .machine-badge.store { background: rgba(255,140,0,0.15); color: #ff9d3f; border: 1px solid rgba(255,140,0,0.4); }
+  .machine-badge.lille { background: rgba(0,160,192,0.15); color: var(--accent); border: 1px solid rgba(0,160,192,0.4); }
+  td .machine-badge { margin-bottom: 0; }
+
   .card-title {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 1.05rem;
@@ -673,6 +687,7 @@
     <table>
       <thead>
         <tr>
+          <th>Maskine</th>
           <th>Båndtype</th>
           <th>Medbringertype</th>
           <th>Længde</th>
@@ -706,10 +721,19 @@
   <div class="section-title" id="formTitle">TILFØJ NY POST</div>
   <input type="hidden" id="editId" value="">
 
+  <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)">
+    <button type="button" class="mode-tab active" id="machine-tab-store" onclick="switchMachine('Store HF')">STORE HF</button>
+    <button type="button" class="mode-tab" id="machine-tab-lille" onclick="switchMachine('Lille HF')">LILLE HF</button>
+  </div>
+
   <div class="form-grid">
     <div class="form-group">
       <label>Båndtype *</label>
       <input type="text" id="f_baandtype" placeholder="f.eks. 2M24AG">
+    </div>
+    <div class="form-group" data-machine="lille">
+      <label>Båndbredde (mm)</label>
+      <input type="number" id="f_baandbredde" placeholder="480">
     </div>
     <div class="form-group">
       <label>Medbringertype</label>
@@ -720,14 +744,14 @@
       <input type="number" id="f_laengde" placeholder="345">
     </div>
     <div class="form-group">
-      <label>Antal værktøj</label>
+      <label id="lbl_antal">Antal værktøj</label>
       <input type="number" id="f_antal" placeholder="1">
     </div>
     <div class="form-group">
       <label>Kontakt</label>
       <input type="text" id="f_kontakt" placeholder="Y1">
     </div>
-    <div class="form-group">
+    <div class="form-group" data-machine="store">
       <label>Current (A)</label>
       <input type="text" id="f_current" placeholder="40A">
     </div>
@@ -735,19 +759,23 @@
       <label>Welding (s)</label>
       <input type="text" id="f_welding" placeholder="45,0s">
     </div>
-    <div class="form-group">
-      <label>Cool (s)</label>
-      <input type="text" id="f_cool" placeholder="150,s">
+    <div class="form-group" data-machine="lille">
+      <label>Prewelding (s)</label>
+      <input type="text" id="f_prewelding" placeholder="4">
     </div>
     <div class="form-group">
+      <label id="lbl_cool">Cool (s)</label>
+      <input type="text" id="f_cool" placeholder="150,s">
+    </div>
+    <div class="form-group" data-machine="store">
       <label>Squeeze (s)</label>
       <input type="text" id="f_squeeze" placeholder="6,0s">
     </div>
-    <div class="form-group">
+    <div class="form-group" data-machine="store">
       <label>Cylinder</label>
       <input type="text" id="f_cylinder" placeholder="1">
     </div>
-    <div class="form-group">
+    <div class="form-group" data-machine="store">
       <label>Pres (%)</label>
       <input type="text" id="f_pres" placeholder="30%">
     </div>
@@ -822,7 +850,8 @@
   <div id="mode-bulk" style="display:none">
     <div class="section-title">HURTIG-TAST — MANGE POSTER PÅ ÉN GANG</div>
     <p style="color:var(--muted);font-size:0.85rem;margin-bottom:18px;line-height:1.6">
-      Tab/Enter springer til næste felt. Når en række er udfyldt springer Enter automatisk til næste række. Tryk <strong style="color:var(--text)">Gem alle rækker</strong> når du er færdig.
+      Tab/Enter springer til næste felt. Når en række er udfyldt springer Enter automatisk til næste række. Tryk <strong style="color:var(--text)">Gem alle rækker</strong> når du er færdig.<br>
+      <span class="machine-badge store">STORE HF</span> Denne tabel er kun til Store HF-poster. Brug "Én ad gangen" for Lille HF.
     </p>
     <div class="bulk-actions">
       <button class="btn-secondary" onclick="addBulkRows(5)" style="font-size:0.75rem;padding:8px 14px">+ 5 RÆKKER</button>
@@ -885,6 +914,7 @@ const DB_KEY = 'baanddb_v1';
 const SEED = [
   {
     id: 1,
+    maskine: 'Store HF',
     baandtype: '2M24AG',
     medbringertype: 'T60AG',
     laengde: 345,
@@ -1003,19 +1033,21 @@ function doSearch() {
     const e = item.entry;
     const r = item.result;
     const isBest = i === 0;
+    const isLille = e.maskine === 'Lille HF';
     return `
     <div class="result-card ${isBest?'best-match':''}">
       <span class="match-badge ${r.badge}">${r.label}</span>
+      ${machineBadge(e)}
       <div class="card-title">${e.baandtype}</div>
       <div class="card-sub">${e.medbringertype} — ${e.laengde} mm</div>
       <div class="card-grid">
         ${fieldBlock('Kontakt', e.kontakt)}
-        ${fieldBlock('Current', e.current)}
+        ${isLille ? fieldBlock('Båndbredde', e.baandbredde) : fieldBlock('Current', e.current)}
         ${fieldBlock('Welding', e.welding)}
+        ${isLille ? fieldBlock('Prewelding', e.prewelding) : fieldBlock('Squeeze', e.squeeze)}
         ${fieldBlock('Cool', e.cool)}
-        ${fieldBlock('Squeeze', e.squeeze)}
-        ${fieldBlock('Cylinder', e.cylinder)}
-        ${fieldBlock('Pres', e.pres)}
+        ${isLille ? '' : fieldBlock('Cylinder', e.cylinder)}
+        ${isLille ? '' : fieldBlock('Pres', e.pres)}
         ${fieldBlock('Antal', e.antal)}
       </div>
       ${e.bemaerkning ? `<div style="margin-top:10px;font-size:0.8rem;color:var(--muted)">📝 ${e.bemaerkning}</div>` : ''}
@@ -1039,13 +1071,14 @@ function renderPreview() {
   }
   c.innerHTML = db.slice(0,5).map(e => `
     <div class="result-card">
+      ${machineBadge(e)}
       <div class="card-title">${e.baandtype}</div>
       <div class="card-sub">${e.medbringertype} — ${e.laengde} mm</div>
       <div class="card-grid">
-        ${fieldBlock('Current', e.current)}
+        ${e.maskine === 'Lille HF' ? fieldBlock('Båndbredde', e.baandbredde) : fieldBlock('Current', e.current)}
         ${fieldBlock('Welding', e.welding)}
         ${fieldBlock('Cool', e.cool)}
-        ${fieldBlock('Pres', e.pres)}
+        ${e.maskine === 'Lille HF' ? fieldBlock('Prewelding', e.prewelding) : fieldBlock('Pres', e.pres)}
       </div>
     </div>
   `).join('') + (db.length > 5 ? `<div style="text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:0.75rem;margin-top:8px">+ ${db.length-5} flere poster — se "Alle Poster"</div>` : '');
@@ -1064,22 +1097,23 @@ function renderAllTable() {
 
   const tbody = document.getElementById('allTableBody');
   if (db.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:32px">Ingen poster</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:32px">Ingen poster</td></tr>';
     return;
   }
   tbody.innerHTML = db.map(e => `
     <tr>
+      <td>${machineBadge(e)}</td>
       <td style="color:var(--accent);font-weight:600">${e.baandtype}</td>
-      <td>${e.medbringertype}</td>
+      <td>${e.medbringertype || '—'}</td>
       <td>${e.laengde} mm</td>
       <td>${e.antal}</td>
-      <td>${e.kontakt}</td>
-      <td>${e.current}</td>
-      <td>${e.welding}</td>
-      <td>${e.cool}</td>
-      <td>${e.squeeze}</td>
-      <td>${e.cylinder}</td>
-      <td>${e.pres}</td>
+      <td>${e.kontakt || '—'}</td>
+      <td>${e.current || '—'}</td>
+      <td>${e.welding || '—'}</td>
+      <td>${e.cool || '—'}</td>
+      <td>${e.squeeze || '—'}</td>
+      <td>${e.cylinder || '—'}</td>
+      <td>${e.pres || '—'}</td>
       <td>
         <button class="action-btn" onclick="editEntry(${e.id})">Rediger</button>
         <button class="action-btn del" onclick="deleteEntry(${e.id})">Slet</button>
@@ -1091,15 +1125,41 @@ function renderAllTable() {
 // ============================================================
 // ADD / EDIT
 // ============================================================
+let currentMachine = 'Store HF';
+
+function switchMachine(type) {
+  currentMachine = type;
+  document.getElementById('machine-tab-store').classList.toggle('active', type === 'Store HF');
+  document.getElementById('machine-tab-lille').classList.toggle('active', type === 'Lille HF');
+  document.querySelectorAll('[data-machine="store"]').forEach(el => el.style.display = type === 'Store HF' ? '' : 'none');
+  document.querySelectorAll('[data-machine="lille"]').forEach(el => el.style.display = type === 'Lille HF' ? '' : 'none');
+  document.getElementById('lbl_antal').textContent = type === 'Lille HF' ? 'Antal forme' : 'Antal værktøj';
+  document.getElementById('lbl_cool').textContent = type === 'Lille HF' ? 'Cooling time (s)' : 'Cool (s)';
+  if (type === 'Lille HF') {
+    ['f_current','f_squeeze','f_cylinder','f_pres'].forEach(id => document.getElementById(id).value = '');
+  } else {
+    ['f_baandbredde','f_prewelding'].forEach(id => document.getElementById(id).value = '');
+  }
+}
+
+function machineBadge(e) {
+  const m = e.maskine || 'Store HF';
+  const cls = m === 'Lille HF' ? 'lille' : 'store';
+  return `<span class="machine-badge ${cls}">${m.toUpperCase()}</span>`;
+}
+
 function getFormValues() {
   return {
+    maskine: currentMachine,
     baandtype: document.getElementById('f_baandtype').value.trim(),
+    baandbredde: parseFloat(document.getElementById('f_baandbredde').value) || 0,
     medbringertype: document.getElementById('f_medbringertype').value.trim(),
     laengde: parseFloat(document.getElementById('f_laengde').value) || 0,
     antal: parseInt(document.getElementById('f_antal').value) || 1,
     kontakt: document.getElementById('f_kontakt').value.trim(),
     current: document.getElementById('f_current').value.trim(),
     welding: document.getElementById('f_welding').value.trim(),
+    prewelding: document.getElementById('f_prewelding').value.trim(),
     cool: document.getElementById('f_cool').value.trim(),
     squeeze: document.getElementById('f_squeeze').value.trim(),
     cylinder: document.getElementById('f_cylinder').value.trim(),
@@ -1109,7 +1169,7 @@ function getFormValues() {
 }
 
 function clearForm() {
-  ['baandtype','medbringertype','laengde','antal','kontakt','current','welding','cool','squeeze','cylinder','pres','bemaerkning']
+  ['baandtype','baandbredde','medbringertype','laengde','antal','kontakt','current','welding','prewelding','cool','squeeze','cylinder','pres','bemaerkning']
     .forEach(f => document.getElementById('f_' + f).value = '');
 }
 
@@ -1125,6 +1185,7 @@ function saveEntry() {
   }
   saveDB(db);
   clearForm();
+  switchMachine('Store HF');
   document.getElementById('editId').value = '';
   document.getElementById('formTitle').textContent = 'TILFØJ NY POST';
   document.getElementById('cancelEditBtn').style.display = 'none';
@@ -1135,13 +1196,16 @@ function saveEntry() {
 function editEntry(id) {
   const e = db.find(x => x.id === id);
   if (!e) return;
+  switchMachine(e.maskine || 'Store HF');
   document.getElementById('f_baandtype').value = e.baandtype;
+  document.getElementById('f_baandbredde').value = e.baandbredde || '';
   document.getElementById('f_medbringertype').value = e.medbringertype;
   document.getElementById('f_laengde').value = e.laengde;
   document.getElementById('f_antal').value = e.antal;
   document.getElementById('f_kontakt').value = e.kontakt;
   document.getElementById('f_current').value = e.current;
   document.getElementById('f_welding').value = e.welding;
+  document.getElementById('f_prewelding').value = e.prewelding || '';
   document.getElementById('f_cool').value = e.cool;
   document.getElementById('f_squeeze').value = e.squeeze;
   document.getElementById('f_cylinder').value = e.cylinder;
@@ -1160,6 +1224,7 @@ function editEntry(id) {
 
 function cancelEdit() {
   clearForm();
+  switchMachine('Store HF');
   document.getElementById('editId').value = '';
   document.getElementById('formTitle').textContent = 'TILFØJ NY POST';
   document.getElementById('cancelEditBtn').style.display = 'none';
@@ -1570,6 +1635,7 @@ function saveBulk() {
 
     db.push({
       id: nextId++,
+      maskine: 'Store HF',
       baandtype: vals.baandtype,
       medbringertype: vals.medbringertype || '',
       laengde: parseFloat(vals.laengde) || 0,
@@ -1742,7 +1808,8 @@ async function githubPull() {
 renderPreview();
 applyGhSettings();
 autoLoadFromGithub();
+switchMachine('Store HF');
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.1 &middot; 06-07-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.2 &middot; 07-07-2026</div>
 </body>
 </html>
