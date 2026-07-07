@@ -1339,5 +1339,23 @@
     "cylinder": "",
     "pres": "",
     "bemaerkning": "(Pølser) klippes af med skævbidder"
+  },
+  {
+    "id": 90,
+    "maskine": "Lille HF",
+    "baandtype": "Linco Gardiner",
+    "baandbredde": 0,
+    "medbringertype": "",
+    "laengde": 0,
+    "antal": 1,
+    "kontakt": "1",
+    "current": "",
+    "welding": "0,6",
+    "prewelding": "",
+    "cool": "0,8",
+    "squeeze": "",
+    "cylinder": "",
+    "pres": "",
+    "bemaerkning": "Side lommerne med fladjern i"
   }
 ]
