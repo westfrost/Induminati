@@ -235,6 +235,12 @@
     color:#888;
     display:block;
   }
+  .week-options .week-num{
+    font-family:var(--mono);
+    font-size:11px;
+    color:#aaa;
+    display:block;
+  }
   footer{
     margin-top:30px;
     font-size:12px;
@@ -279,9 +285,12 @@
   <div class="panel">
     <h2>2. Vælg uge(r)</h2>
     <div class="week-options" id="weekOptions">
-      <label><input type="checkbox" class="week-cb" data-offset="0" checked><span>Denne uge<span class="week-range" id="weekRange0"></span></span></label>
-      <label><input type="checkbox" class="week-cb" data-offset="1"><span>Uge +1<span class="week-range" id="weekRange1"></span></span></label>
-      <label><input type="checkbox" class="week-cb" data-offset="2"><span>Uge +2<span class="week-range" id="weekRange2"></span></span></label>
+      <label><input type="checkbox" class="week-cb" data-offset="0" checked><span>Denne uge<span class="week-range" id="weekRange0"></span><span class="week-num" id="weekNum0"></span></span></label>
+      <label><input type="checkbox" class="week-cb" data-offset="1"><span>Uge +1<span class="week-range" id="weekRange1"></span><span class="week-num" id="weekNum1"></span></span></label>
+      <label><input type="checkbox" class="week-cb" data-offset="2"><span>Uge +2<span class="week-range" id="weekRange2"></span><span class="week-num" id="weekNum2"></span></span></label>
+      <label><input type="checkbox" class="week-cb" data-offset="3"><span>Uge +3<span class="week-range" id="weekRange3"></span><span class="week-num" id="weekNum3"></span></span></label>
+      <label><input type="checkbox" class="week-cb" data-offset="4"><span>Uge +4<span class="week-range" id="weekRange4"></span><span class="week-num" id="weekNum4"></span></span></label>
+      <label><input type="checkbox" class="week-cb" data-offset="5"><span>Uge +5<span class="week-range" id="weekRange5"></span><span class="week-num" id="weekNum5"></span></span></label>
     </div>
     <div class="rules" style="margin-top:12px;">
       Filtrerer "i dag"-arket på <code>Bekræftet leveringsdato</code> – ordrer til og med den seneste valgte uge tages med, inklusiv alt bagudrettet/overskredet.<br>
@@ -318,7 +327,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v1.6 &middot; 07-07-2026</footer>
+  <footer>Byg til intern brug &middot; v1.7 &middot; 07-07-2026</footer>
 </div>
 
 <script>
@@ -414,6 +423,14 @@ function formatShortDate(d) {
   return `${dd}/${mm}`;
 }
 
+function getISOWeekNumber(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
 function isDateInRanges(date, ranges) {
   // No lower bound: alt bagudrettet (overskredet) tages altid med.
   // Kun en øvre grænse — slutningen af den seneste valgte uge.
@@ -427,10 +444,12 @@ function selectedWeekRanges() {
     .map(cb => getWeekRange(parseInt(cb.dataset.offset, 10)));
 }
 
-[0, 1, 2].forEach(offset => {
+[0, 1, 2, 3, 4, 5].forEach(offset => {
   const r = getWeekRange(offset);
-  const el = document.getElementById('weekRange' + offset);
-  if (el) el.textContent = `${formatShortDate(r.start)} – ${formatShortDate(r.end)}`;
+  const rangeEl = document.getElementById('weekRange' + offset);
+  if (rangeEl) rangeEl.textContent = `${formatShortDate(r.start)} – ${formatShortDate(r.end)}`;
+  const numEl = document.getElementById('weekNum' + offset);
+  if (numEl) numEl.textContent = `Uge ${getISOWeekNumber(r.start)}`;
 });
 
 let todayRawRows = null;
