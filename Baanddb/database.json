@@ -1357,5 +1357,23 @@
     "cylinder": "",
     "pres": "",
     "bemaerkning": "Side lommerne med fladjern i"
+  },
+  {
+    "id": 91,
+    "maskine": "Lille HF",
+    "baandtype": "2E016G-PU-CT",
+    "baandbredde": 245,
+    "medbringertype": "T30 G PU lille fod",
+    "laengde": 225,
+    "antal": 1,
+    "kontakt": "1",
+    "current": "",
+    "welding": "0,5",
+    "prewelding": "5",
+    "cool": "0,7",
+    "squeeze": "",
+    "cylinder": "",
+    "pres": "",
+    "bemaerkning": ""
   }
 ]
