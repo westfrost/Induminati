@@ -7,28 +7,28 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   :root {
-    --dark:#005F7F; --accent:#00A0C0; --text:#1A3A4A;
-    --smoke:#F0F6F8; --light:#FAFCFD; --border:#C8DDE4; --muted:#5A7A88;
+    --dark:#0B4F79; --accent:#E8791E; --accent-hover:#C9640F; --text:#17324A;
+    --smoke:#F3F7FA; --light:#FFFFFF; --border:#D7E3EC; --muted:#5F7C90;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Inter',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh}
   header{background:var(--dark);padding:24px 36px;display:flex;align-items:center;gap:18px}
   .logo-mark{width:42px;height:42px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;transition:background .15s}
-  .logo-mark:hover{background:#007a9a}
+  .logo-mark:hover{background:var(--accent-hover)}
   .logo-mark svg{width:26px;height:26px}
   .logo-text .brand{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.01em}
   .logo-text .brand span{color:var(--accent)}
-  .logo-text .sub{font-size:11px;color:#7ABCCC;letter-spacing:.04em}
+  .logo-text .sub{font-size:11px;color:#B9D8EA;letter-spacing:.04em}
   main{max-width:960px;margin:0 auto;padding:44px 22px 64px}
   .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
   .section-note{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
   .app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
   .app-card{background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:22px;text-decoration:none;color:var(--text);display:flex;flex-direction:column;gap:10px;transition:border-color .15s,box-shadow .15s,transform .1s}
-  .app-card:hover{border-color:var(--accent);box-shadow:0 4px 18px rgba(0,160,192,.12);transform:translateY(-2px)}
+  .app-card:hover{border-color:var(--accent);box-shadow:0 4px 18px rgba(232,121,30,.14);transform:translateY(-2px)}
   .app-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .app-icon svg{width:22px;height:22px}
   .app-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
-  .app-badge{font-family:monospace;font-size:10px;font-weight:700;letter-spacing:.04em;color:#a3722c;background:#f3e9d8;padding:2px 7px;border-radius:3px;}
+  .app-badge{font-family:monospace;font-size:10px;font-weight:700;letter-spacing:.04em;color:#A3540E;background:#FCEADA;padding:2px 7px;border-radius:3px;}
   .app-desc{font-size:13px;color:var(--muted);line-height:1.55;flex:1}
   .app-arrow{font-size:12px;font-weight:600;color:var(--accent)}
   footer{text-align:center;font-size:11px;color:var(--muted);padding:28px 20px;border-top:1px solid var(--border)}
@@ -42,7 +42,7 @@
       <rect x="2" y="10" width="22" height="7" rx="3.5" fill="white" opacity=".9"/>
       <circle cx="6" cy="13.5" r="3" fill="white"/>
       <circle cx="20" cy="13.5" r="3" fill="white"/>
-      <rect x="5" y="12.5" width="16" height="2" fill="#00A0C0"/>
+      <rect x="5" y="12.5" width="16" height="2" fill="#0B4F79"/>
     </svg>
   </a>
   <div class="logo-text">
@@ -56,12 +56,12 @@
   <div class="app-grid">
 
     <a class="app-card" href="../Ordrer/index.html">
-      <div class="app-icon" style="background:#E6F4F7;">
+      <div class="app-icon" style="background:#E5F1FA;">
         <svg viewBox="0 0 26 26" fill="none">
-          <rect x="2" y="10" width="22" height="7" rx="3.5" fill="#005F7F" opacity=".9"/>
-          <circle cx="6" cy="13.5" r="3" fill="#005F7F"/>
-          <circle cx="20" cy="13.5" r="3" fill="#005F7F"/>
-          <rect x="5" y="12.5" width="16" height="2" fill="#00A0C0"/>
+          <rect x="2" y="10" width="22" height="7" rx="3.5" fill="#0B4F79" opacity=".9"/>
+          <circle cx="6" cy="13.5" r="3" fill="#0B4F79"/>
+          <circle cx="20" cy="13.5" r="3" fill="#0B4F79"/>
+          <rect x="5" y="12.5" width="16" height="2" fill="#E8791E"/>
         </svg>
       </div>
       <div class="app-name">Ordreliste-værktøj <span class="app-badge">TEST</span></div>
@@ -70,8 +70,8 @@
     </a>
 
     <a class="app-card" href="../Kapacitet/index.html">
-      <div class="app-icon" style="background:#E6F4F7;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#005F7F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <div class="app-icon" style="background:#E5F1FA;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0B4F79" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <line x1="4" y1="21" x2="20" y2="21"/>
           <rect x="6" y="14" width="3.5" height="7"/>
           <rect x="11.5" y="9" width="3.5" height="12"/>
@@ -85,8 +85,8 @@
     </a>
 
     <a class="app-card" href="../Samlevejledninger/index.html">
-      <div class="app-icon" style="background:#E6F4F7;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#005F7F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <div class="app-icon" style="background:#E5F1FA;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0B4F79" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="9" width="9" height="6" rx="1.5"/>
           <rect x="13" y="9" width="9" height="6" rx="1.5"/>
           <line x1="11" y1="12" x2="13" y2="12"/>

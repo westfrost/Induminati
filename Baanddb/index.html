@@ -8,16 +8,16 @@
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
 
   :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #22263a;
-    --accent: #00A0C0;
-    --accent2: #005F7F;
-    --text: #e8eaf0;
-    --muted: #6b7080;
-    --border: #2e3347;
-    --danger: #ff6b6b;
-    --success: #51cf66;
+    --bg: #F3F7FA;
+    --surface: #FFFFFF;
+    --surface2: #E5F1FA;
+    --accent: #E8791E;
+    --accent2: #0B4F79;
+    --text: #17324A;
+    --muted: #5F7C90;
+    --border: #D7E3EC;
+    --danger: #D64545;
+    --success: #2E9E52;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,7 +66,7 @@
   .nav-btn:hover, .nav-btn.active {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(0,160,192,0.07);
+    background: rgba(232,121,30,0.07);
   }
 
   /* === PAGES === */
@@ -154,7 +154,7 @@
   .result-card:hover { border-color: var(--accent2); transform: translateX(2px); }
   .result-card:hover::before { background: var(--accent2); }
   .result-card.best-match::before { background: var(--accent); }
-  .result-card.best-match { border-color: rgba(0,160,192,0.3); }
+  .result-card.best-match { border-color: rgba(232,121,30,0.3); }
 
   .match-badge {
     position: absolute;
@@ -165,9 +165,9 @@
     border-radius: 2px;
     letter-spacing: 1px;
   }
-  .match-badge.exact { background: rgba(81,207,102,0.15); color: var(--success); border: 1px solid rgba(81,207,102,0.3); }
-  .match-badge.close { background: rgba(0,160,192,0.12); color: var(--accent); border: 1px solid rgba(0,160,192,0.3); }
-  .match-badge.near { background: rgba(78,205,196,0.1); color: var(--accent2); border: 1px solid rgba(78,205,196,0.3); }
+  .match-badge.exact { background: rgba(46,158,82,0.15); color: var(--success); border: 1px solid rgba(46,158,82,0.3); }
+  .match-badge.close { background: rgba(232,121,30,0.12); color: var(--accent); border: 1px solid rgba(232,121,30,0.3); }
+  .match-badge.near { background: rgba(11,79,121,0.1); color: var(--accent2); border: 1px solid rgba(11,79,121,0.3); }
 
   .machine-badge {
     display: inline-block;
@@ -179,8 +179,8 @@
     border-radius: 3px;
     margin-bottom: 8px;
   }
-  .machine-badge.store { background: rgba(255,140,0,0.15); color: #ff9d3f; border: 1px solid rgba(255,140,0,0.4); }
-  .machine-badge.lille { background: rgba(0,160,192,0.15); color: var(--accent); border: 1px solid rgba(0,160,192,0.4); }
+  .machine-badge.store { background: #FCEADA; color: #E8791E; border: 1px solid rgba(232,121,30,0.4); }
+  .machine-badge.lille { background: #E5F1FA; color: #1C7FBF; border: 1px solid rgba(28,127,191,0.4); }
   td .machine-badge { margin-bottom: 0; }
 
   .card-title {
@@ -315,7 +315,7 @@
 
   .btn-primary {
     background: var(--accent);
-    color: #0f1117;
+    color: #fff;
     border: none;
     font-family: 'IBM Plex Mono', monospace;
     font-weight: 700;
@@ -346,7 +346,7 @@
     bottom: 24px;
     right: 24px;
     background: var(--success);
-    color: #0f1117;
+    color: #fff;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.8rem;
     font-weight: 700;
@@ -383,18 +383,18 @@
   /* === GITHUB SYNC === */
   .github-section {
     margin-top: 32px;
-    border: 1px solid rgba(78,205,196,0.3);
+    border: 1px solid rgba(11,79,121,0.3);
     border-radius: 6px;
     overflow: hidden;
   }
   .github-header {
-    background: rgba(78,205,196,0.08);
+    background: rgba(11,79,121,0.06);
     padding: 14px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    border-bottom: 1px solid rgba(78,205,196,0.2);
+    border-bottom: 1px solid rgba(11,79,121,0.2);
   }
   .github-header-title {
     font-family: 'IBM Plex Mono', monospace;
@@ -444,7 +444,7 @@
   .sync-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
   .btn-github {
     background: var(--accent2);
-    color: #0f1117;
+    color: #fff;
     border: none;
     font-family: 'IBM Plex Mono', monospace;
     font-weight: 700;
@@ -472,7 +472,7 @@
     letter-spacing: 1px;
     transition: all 0.15s;
   }
-  .btn-github-pull:hover { background: rgba(78,205,196,0.1); }
+  .btn-github-pull:hover { background: rgba(11,79,121,0.08); }
   .btn-github-pull:disabled { opacity: 0.4; cursor: not-allowed; }
   .sync-log {
     margin-top: 14px;
@@ -497,8 +497,8 @@
   .gh-note {
     margin-top: 12px;
     padding: 10px 14px;
-    background: rgba(232,197,71,0.06);
-    border: 1px solid rgba(232,197,71,0.2);
+    background: rgba(232,121,30,0.06);
+    border: 1px solid rgba(232,121,30,0.2);
     border-radius: 4px;
     font-size: 0.78rem;
     color: var(--muted);
@@ -554,7 +554,7 @@
     min-width: 70px;
   }
   .bulk-cell:focus { border-color: var(--accent); background: var(--surface2); }
-  .bulk-cell.filled { background: rgba(232,197,71,0.05); }
+  .bulk-cell.filled { background: rgba(232,121,30,0.05); }
   .bulk-cell.error { border-color: var(--danger) !important; }
   .row-num {
     font-family: 'IBM Plex Mono', monospace;
