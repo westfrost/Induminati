@@ -284,7 +284,7 @@
       <label><input type="checkbox" class="week-cb" data-offset="2"><span>Uge +2<span class="week-range" id="weekRange2"></span></span></label>
     </div>
     <div class="rules" style="margin-top:12px;">
-      Filtrerer "i dag"-arket på <code>Bekræftet leveringsdato</code> – kun ordrer i de valgte uger tages med.<br>
+      Filtrerer "i dag"-arket på <code>Bekræftet leveringsdato</code> – ordrer til og med den seneste valgte uge tages med, inklusiv alt bagudrettet/overskredet.<br>
       Gælder ikke for rækker som allerede er bevaret fra "i går"; de beholdes uanset ugevalg.
     </div>
   </div>
@@ -318,7 +318,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v1.4 &middot; 06-07-2026</footer>
+  <footer>Byg til intern brug &middot; v1.5 &middot; 06-07-2026</footer>
 </div>
 
 <script>
@@ -415,7 +415,10 @@ function formatShortDate(d) {
 }
 
 function isDateInRanges(date, ranges) {
-  return ranges.some(r => date.getTime() >= r.start.getTime() && date.getTime() <= r.end.getTime());
+  // No lower bound: alt bagudrettet (overskredet) tages altid med.
+  // Kun en øvre grænse — slutningen af den seneste valgte uge.
+  const cutoff = Math.max(...ranges.map(r => r.end.getTime()));
+  return date.getTime() <= cutoff;
 }
 
 function selectedWeekRanges() {
