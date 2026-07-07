@@ -1288,5 +1288,20 @@
     "cylinder": "1",
     "pres": "30",
     "bemaerkning": "VÆRKTØJ 2-3"
+  },
+  {
+    "id": 87,
+    "baandtype": "2M020G-SG-P8",
+    "medbringertype": "Poly T20 AG",
+    "laengde": 440,
+    "antal": 3,
+    "kontakt": "Y2",
+    "current": "",
+    "welding": "100",
+    "cool": "150",
+    "squeeze": "2,5",
+    "cylinder": "3",
+    "pres": "55",
+    "bemaerkning": "3 stk. medbringer på 440 mm"
   }
 ]
