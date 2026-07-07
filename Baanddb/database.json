@@ -1375,5 +1375,23 @@
     "cylinder": "",
     "pres": "",
     "bemaerkning": ""
+  },
+  {
+    "id": 92,
+    "maskine": "Lille HF",
+    "baandtype": "2E016BLÅ-PU-N1,4",
+    "baandbredde": 480,
+    "medbringertype": "T50 W PU",
+    "laengde": 480,
+    "antal": 1,
+    "kontakt": "1",
+    "current": "",
+    "welding": "0,6",
+    "prewelding": "4",
+    "cool": "0,8",
+    "squeeze": "",
+    "cylinder": "",
+    "pres": "",
+    "bemaerkning": "Styreliste I center på bagside"
   }
 ]
