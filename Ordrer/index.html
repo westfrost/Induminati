@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
   :root{
+    --dark:#0B4F79;
     --ink:#17324A;
     --paper:#F3F7FA;
     --surface:#FFFFFF;
@@ -32,34 +33,22 @@
     font-family:var(--sans);
     background:var(--paper);
     color:var(--ink);
-    padding:32px 24px 64px;
   }
-  .wrap{max-width:1080px;margin:0 auto;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 64px;}
   header{
-    border-bottom:2px solid var(--ink);
-    padding-bottom:16px;
-    margin-bottom:28px;
+    background:var(--dark);
+    padding:18px 28px;
     display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
+    align-items:center;
+    gap:14px;
     flex-wrap:wrap;
-    gap:8px;
   }
-  h1{
-    font-size:22px;
-    letter-spacing:0.02em;
-    margin:0;
-    font-weight:700;
-  }
-  .step-tag{
-    font-family:var(--mono);
-    font-size:12px;
-    color:var(--blue);
-    background:var(--blue-soft);
-    padding:4px 10px;
-    border-radius:3px;
-    letter-spacing:0.03em;
-  }
+  header .logo{width:34px;height:34px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  header .logo svg{width:20px;height:20px}
+  header h1{font-size:16px;font-weight:600;color:#fff;flex:1;margin:0}
+  header span.step-tag{font-size:12px;color:#B9D8EA;font-family:var(--mono);margin-left:4px;background:none;padding:0}
+  .btn-home{color:#CFE3EE;text-decoration:none;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:5px;transition:color .15s,border-color .15s}
+  .btn-home:hover{color:#fff;border-color:var(--accent)}
   .panel{
     background:var(--surface);
     border:1px solid var(--line);
@@ -269,12 +258,19 @@
 </style>
 </head>
 <body>
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 20 20" fill="none">
+      <rect x="1" y="7" width="18" height="6" rx="3" fill="white" opacity="0.9"/>
+      <circle cx="4" cy="10" r="2.5" fill="white"/>
+      <circle cx="16" cy="10" r="2.5" fill="white"/>
+      <rect x="3" y="9" width="14" height="2" fill="#0B4F79"/>
+    </svg>
+  </div>
+  <h1>Ordreliste-værktøj <span class="step-tag">Trin 2 · Sammenligning</span></h1>
+  <a class="btn-home" href="../Test/index.html">← Test-oversigt</a>
+</header>
 <div class="wrap">
-  <header>
-    <h1>Ordreliste-værktøj</h1>
-    <span class="step-tag">Trin 2 · Sammenligning</span>
-  </header>
-
   <div class="panel">
     <h2>1. Upload ark</h2>
     <div class="upload-grid">
@@ -346,7 +342,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v1.8 &middot; 07-07-2026</footer>
+  <footer>Byg til intern brug &middot; v1.9 &middot; 07-07-2026</footer>
 </div>
 
 <script>
