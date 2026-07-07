@@ -1321,5 +1321,23 @@
     "cylinder": "",
     "pres": "",
     "bemaerkning": ""
+  },
+  {
+    "id": 89,
+    "maskine": "Lille HF",
+    "baandtype": "2M24B (Dronningborg)",
+    "baandbredde": 0,
+    "medbringertype": "K13 AG Styreliste",
+    "laengde": 0,
+    "antal": 2,
+    "kontakt": "1",
+    "current": "",
+    "welding": "0,6",
+    "prewelding": "",
+    "cool": "0,8",
+    "squeeze": "",
+    "cylinder": "",
+    "pres": "",
+    "bemaerkning": "(Pølser) klippes af med skævbidder"
   }
 ]
