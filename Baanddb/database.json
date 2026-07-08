@@ -1421,13 +1421,31 @@
     "laengde": 1080,
     "antal": 4,
     "kontakt": "Y1",
-    "current": "0,50",
+    "current": "0,60A",
     "welding": "300",
     "prewelding": "",
     "cool": "150",
     "squeeze": "2,5",
     "cylinder": "3",
-    "pres": "50",
+    "pres": "60%",
     "bemaerkning": "Lynlås skæres til glat med båndkanten"
+  },
+  {
+    "id": 95,
+    "maskine": "Store HF",
+    "baandtype": "Droningborg",
+    "baandbredde": 0,
+    "medbringertype": "styreliste",
+    "laengde": 0,
+    "antal": 2,
+    "kontakt": "Y1",
+    "current": "0,50A",
+    "welding": "50",
+    "prewelding": "",
+    "cool": "80",
+    "squeeze": "2,5",
+    "cylinder": "3",
+    "pres": "50%",
+    "bemaerkning": "(Pølser) klippes af med skævbidder"
   }
 ]
