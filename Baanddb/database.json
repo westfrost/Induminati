@@ -1447,5 +1447,23 @@
     "cylinder": "3",
     "pres": "50%",
     "bemaerkning": "(Pølser) klippes af med skævbidder"
+  },
+  {
+    "id": 96,
+    "maskine": "Store HF",
+    "baandtype": "3M0361G-FO",
+    "baandbredde": 0,
+    "medbringertype": "Store Skåle",
+    "laengde": 0,
+    "antal": 2,
+    "kontakt": "Trekant 2",
+    "current": "1,0A",
+    "welding": "150",
+    "prewelding": "",
+    "cool": "300",
+    "squeeze": "2,5",
+    "cylinder": "3",
+    "pres": "60%",
+    "bemaerkning": "Forvarmes på 150 grader"
   }
 ]
