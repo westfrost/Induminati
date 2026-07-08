@@ -342,7 +342,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v1.9 &middot; 07-07-2026</footer>
+  <footer>Byg til intern brug &middot; v2.0 &middot; 08-07-2026</footer>
 </div>
 
 <script>
@@ -742,7 +742,7 @@ downloadBtn.addEventListener('click', async () => {
 
   ws.columns = resultHeaders.map(h => {
     const maxLen = Math.max(h.length, ...resultRows.map(r => String(r[h] ?? '').length));
-    return { header: h, key: h, width: Math.min(Math.max(maxLen + 2, 10), 40) };
+    return { header: h, key: h, width: Math.min(Math.max(maxLen + 1, 8), 22) };
   });
 
   resultRows.forEach(row => {
@@ -753,6 +753,7 @@ downloadBtn.addEventListener('click', async () => {
   ws.eachRow({ includeEmpty: true }, row => {
     row.eachCell({ includeEmpty: true }, cell => {
       cell.border = { top: cellBorder, left: cellBorder, bottom: cellBorder, right: cellBorder };
+      cell.font = { size: 10 };
     });
   });
 
@@ -761,11 +762,20 @@ downloadBtn.addEventListener('click', async () => {
     to: { row: resultRows.length + 1, column: resultHeaders.length }
   };
 
+  ws.pageSetup = {
+    orientation: 'landscape',
+    paperSize: 9, // A4
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 }
+  };
+
   const buf = await wb.xlsx.writeBuffer();
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `Frigivne produktionsordrer ${todayDK()}.xlsx`;
+  a.download = `Frigivne Produktionsordrer - ${todayDK()}.xlsx`;
   a.click();
   URL.revokeObjectURL(a.href);
 });
