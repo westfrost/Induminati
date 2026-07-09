@@ -342,7 +342,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v2.2 &middot; 09-07-2026</footer>
+  <footer>Byg til intern brug &middot; v2.3 &middot; 09-07-2026</footer>
 </div>
 
 <script>
@@ -757,14 +757,24 @@ downloadBtn.addEventListener('click', async () => {
   });
 
   resultRows.forEach(row => {
-    ws.addRow(resultHeaders.map(h => row[h] ?? ''));
+    ws.addRow(resultHeaders.map(h => {
+      if (DATE_LIKE_COLUMNS.includes(h)) {
+        const d = parseDateValue(row[h]);
+        if (d) return d;
+      }
+      return row[h] ?? '';
+    }));
   });
+
+  const dateColNumbers = new Set(
+    resultHeaders.map((h, i) => DATE_LIKE_COLUMNS.includes(h) ? i + 1 : null).filter(n => n !== null)
+  );
 
   const cellBorder = { style: 'thin' };
   const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } };
   const stripeFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
   ws.eachRow({ includeEmpty: true }, (row, rowNumber) => {
-    row.eachCell({ includeEmpty: true }, cell => {
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
       cell.border = { top: cellBorder, left: cellBorder, bottom: cellBorder, right: cellBorder };
       if (rowNumber === 1) {
         cell.font = { size: 10, bold: true };
@@ -772,6 +782,9 @@ downloadBtn.addEventListener('click', async () => {
       } else {
         cell.font = { size: 10 };
         if (rowNumber % 2 === 0) cell.fill = stripeFill;
+        if (dateColNumbers.has(colNumber) && cell.value instanceof Date) {
+          cell.numFmt = 'dd-mm-yyyy';
+        }
       }
     });
   });
