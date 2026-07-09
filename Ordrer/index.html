@@ -65,8 +65,11 @@
   }
   .upload-grid{
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:1fr 1fr 1fr;
     gap:16px;
+  }
+  @media (max-width:900px){
+    .upload-grid{grid-template-columns:1fr 1fr;}
   }
   @media (max-width:640px){
     .upload-grid{grid-template-columns:1fr;}
@@ -293,6 +296,15 @@
         <input type="file" id="fileInputYesterday" accept=".xlsx,.xls">
         <span class="clear-link" id="clearYesterday" style="display:none;">Fjern "i går"-fil</span>
       </div>
+      <div class="upload-col">
+        <label class="col-title">Salgsordrer <span class="req">· påkrævet</span></label>
+        <div class="drop" id="dropSales">
+          <p><strong>Klik her</strong> eller træk filen ind</p>
+          <p>Salgsordre-eksport med kolonnerne "Nummer" og "Intern sælger"</p>
+          <div class="filename" id="filenameSales"></div>
+        </div>
+        <input type="file" id="fileInputSales" accept=".xlsx,.xls">
+      </div>
     </div>
     <div class="status" id="status"></div>
   </div>
@@ -326,6 +338,7 @@
       <strong>Hvis kun "i dag" er uploadet:</strong> resultatet er blot det rensede "i dag"-ark – brug det som "i går" i morgen.<br>
       <strong>Hvis "i går" også er uploadet:</strong> rækker fra "i går" bevares (så dine udfyldte felter i <code>Rykket</code>/<code>Grund</code>/<code>Ny leveringsdato</code> ikke overskrives) – de fjernes kun hvis ordren enten er helt væk fra "i dag" eller nu har status <code>6. SFE</code>/<code>3. FÆRDIG</code>. En ordre der bare er rykket udenfor dit ugevalg, bliver <u>ikke</u> fjernet. Nye ordrenumre i "i dag" (indenfor dit ugevalg) tilføjes nederst, markeret med gult.<br>
       For ordrer der findes i både "i går" og "i dag" opdateres <code>Status</code> og <code>Bekræftet leveringsdato</code> altid til dagens værdi. <code>Kildenr.</code> opdateres kun hvis feltet var tomt i går og er blevet udfyldt i dag – ellers rører værktøjet ikke ved den.<br>
+      <strong>Salgsordrer (påkrævet):</strong> kolonnen <code>Intern sælger</code> hentes fra salgsordre-arket og indsættes ved siden af <code>Kildenr.</code> – parret ved at matche salgsordrens <code>Nummer</code> mod produktionsordrens <code>Kildenr.</code>. Har en ordre ikke noget <code>Kildenr.</code>, eller findes der ikke et match, står <code>Intern sælger</code> tom for den række.<br>
       Output-filen får kolonneoverskrifter med filtre (autofilter).
     </div>
     <div class="actions">
@@ -342,7 +355,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v2.3 &middot; 09-07-2026</footer>
+  <footer>Byg til intern brug &middot; v2.4 &middot; 09-07-2026</footer>
 </div>
 
 <script>
@@ -354,6 +367,10 @@ const dropYesterday = document.getElementById('dropYesterday');
 const fileInputYesterday = document.getElementById('fileInputYesterday');
 const filenameYesterdayEl = document.getElementById('filenameYesterday');
 const clearYesterdayEl = document.getElementById('clearYesterday');
+
+const dropSales = document.getElementById('dropSales');
+const fileInputSales = document.getElementById('fileInputSales');
+const filenameSalesEl = document.getElementById('filenameSales');
 
 const statusEl = document.getElementById('status');
 const processBtn = document.getElementById('processBtn');
@@ -469,6 +486,7 @@ function selectedWeekRanges() {
 
 let todayRawRows = null;
 let yesterdayRawRows = null;
+let salesRawRows = null;
 let resultRows = null;
 let resultHeaders = null;
 let newRowKeys = new Set();
@@ -509,18 +527,23 @@ function readWorkbookRows(file, callback, errCallback) {
   reader.readAsArrayBuffer(file);
 }
 
+function updateProcessBtnState() {
+  processBtn.disabled = !(todayRawRows && salesRawRows);
+}
+
 setupDrop(dropToday, fileInputToday, (file) => {
   filenameTodayEl.textContent = file.name;
   readWorkbookRows(file, (rows, sheetName) => {
-    if (!rows.length) { showStatus('"I dag"-arket ser tomt ud.', 'err'); processBtn.disabled = true; return; }
+    if (!rows.length) { showStatus('"I dag"-arket ser tomt ud.', 'err'); todayRawRows = null; updateProcessBtnState(); return; }
     todayRawRows = rows;
-    processBtn.disabled = false;
+    updateProcessBtnState();
     downloadBtn.disabled = true;
     previewPanel.style.display = 'none';
     showStatus(`"I dag" indlæst: ark "${sheetName}", ${rows.length} rækker.`, 'ok');
   }, (err) => {
     showStatus('Kunne ikke læse "i dag"-filen: ' + err.message, 'err');
-    processBtn.disabled = true;
+    todayRawRows = null;
+    updateProcessBtnState();
   });
 });
 
@@ -543,6 +566,22 @@ clearYesterdayEl.addEventListener('click', () => {
   filenameYesterdayEl.textContent = '';
   clearYesterdayEl.style.display = 'none';
   fileInputYesterday.value = '';
+});
+
+setupDrop(dropSales, fileInputSales, (file) => {
+  filenameSalesEl.textContent = file.name;
+  readWorkbookRows(file, (rows, sheetName) => {
+    if (!rows.length) { showStatus('Salgsordre-arket ser tomt ud.', 'err'); salesRawRows = null; updateProcessBtnState(); return; }
+    salesRawRows = rows;
+    updateProcessBtnState();
+    downloadBtn.disabled = true;
+    previewPanel.style.display = 'none';
+    showStatus(`Salgsordrer indlæst: ark "${sheetName}", ${rows.length} rækker.`, 'ok');
+  }, (err) => {
+    showStatus('Kunne ikke læse salgsordre-filen: ' + err.message, 'err');
+    salesRawRows = null;
+    updateProcessBtnState();
+  });
 });
 
 function buildCleanedTodayRows() {
@@ -571,6 +610,13 @@ function buildCleanedTodayRows() {
     headers.splice(idx + 1, 0, ...NEW_COLUMNS);
   } else {
     headers.push(...NEW_COLUMNS);
+  }
+
+  if (headers.includes('Kildenr.')) {
+    const idx = headers.indexOf('Kildenr.');
+    headers.splice(idx + 1, 0, 'Intern sælger');
+  } else {
+    headers.push('Intern sælger');
   }
 
   let mappedRows = todayRawRows.map(row => {
@@ -607,6 +653,28 @@ function buildCleanedTodayRows() {
   return { headers, rows: mappedRows, missing, weekExcluded };
 }
 
+function buildSalesMap() {
+  const m = new Map();
+  (salesRawRows || []).forEach(r => {
+    const key = String(r['Nummer'] ?? '').trim();
+    if (key && !m.has(key)) m.set(key, r['Intern sælger'] ?? '');
+  });
+  return m;
+}
+
+function applySalesLookup(rows, headers) {
+  if (!headers.includes('Kildenr.') || !headers.includes('Intern sælger')) return 0;
+  const salesMap = buildSalesMap();
+  let matched = 0;
+  rows.forEach(row => {
+    const key = String(row['Kildenr.'] ?? '').trim();
+    const val = key ? (salesMap.get(key) || '') : '';
+    if (val) matched++;
+    row['Intern sælger'] = val;
+  });
+  return matched;
+}
+
 processBtn.addEventListener('click', () => {
   if (!todayRawRows) return;
   if (!document.querySelectorAll('.week-cb:checked').length) {
@@ -623,9 +691,11 @@ processBtn.addEventListener('click', () => {
 
   if (!yesterdayRawRows) {
     resultRows = cleanedToday;
+    const salesMatched = applySalesLookup(resultRows, headers);
     renderPreview();
     downloadBtn.disabled = false;
-    showStatus(`${missingMsg}Behandlede "i dag". ${resultRows.length} rækker${weekMsg}, ${headers.length} kolonner. Gem resultatet og brug det som "i går" i morgen.`, missing.length ? 'info' : 'ok');
+    const salesMsg = ` ${salesMatched} Intern sælger parret fra salgsordrer.`;
+    showStatus(`${missingMsg}Behandlede "i dag". ${resultRows.length} rækker${weekMsg}, ${headers.length} kolonner.${salesMsg} Gem resultatet og brug det som "i går" i morgen.`, missing.length ? 'info' : 'ok');
     return;
   }
 
@@ -706,6 +776,7 @@ processBtn.addEventListener('click', () => {
   const removedCount = beforeRemoval - yesterdayAligned.length;
 
   resultRows = yesterdayAligned.concat(newOrders);
+  const salesMatched = applySalesLookup(resultRows, headers);
   renderPreview();
   downloadBtn.disabled = false;
   const movedMsg = movedToRykket ? ` ${movedToRykket} dato(er) flyttet fra "Ny leveringsdato" til "Rykket".` : '';
@@ -713,7 +784,8 @@ processBtn.addEventListener('click', () => {
   const statusMsg = statusUpdated ? ` ${statusUpdated} status(ser) opdateret.` : '';
   const dateMsg = dateUpdated ? ` ${dateUpdated} leveringsdato(er) opdateret.` : '';
   const kildenrMsg = kildenrFilled ? ` ${kildenrFilled} Kildenr. udfyldt fra "i dag".` : '';
-  showStatus(`${missingMsg}Sammenlignet. ${yesterdayAligned.length} rækker bevaret fra "i går", ${newOrders.length} nye ordre(r) tilføjet${weekMsg}.${movedMsg}${removedMsg}${statusMsg}${dateMsg}${kildenrMsg} I alt ${resultRows.length} rækker.`, missing.length ? 'info' : 'ok');
+  const salesMsg = ` ${salesMatched} Intern sælger parret fra salgsordrer.`;
+  showStatus(`${missingMsg}Sammenlignet. ${yesterdayAligned.length} rækker bevaret fra "i går", ${newOrders.length} nye ordre(r) tilføjet${weekMsg}.${movedMsg}${removedMsg}${statusMsg}${dateMsg}${kildenrMsg}${salesMsg} I alt ${resultRows.length} rækker.`, missing.length ? 'info' : 'ok');
 });
 
 function renderPreview() {
