@@ -355,7 +355,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v2.4 &middot; 09-07-2026</footer>
+  <footer>Byg til intern brug &middot; v2.5 &middot; 09-07-2026</footer>
 </div>
 
 <script>
@@ -825,17 +825,31 @@ downloadBtn.addEventListener('click', async () => {
 
   ws.columns = resultHeaders.map(h => {
     const maxLen = Math.max(h.length, ...resultRows.map(r => String(r[h] ?? '').length));
-    return { header: h, key: h, width: Math.min(Math.max(maxLen + 1, 8), 22) };
+    return { width: Math.min(Math.max(maxLen + 1, 8), 22) };
   });
 
-  resultRows.forEach(row => {
-    ws.addRow(resultHeaders.map(h => {
-      if (DATE_LIKE_COLUMNS.includes(h)) {
-        const d = parseDateValue(row[h]);
-        if (d) return d;
-      }
-      return row[h] ?? '';
-    }));
+  const tableRows = resultRows.map(row => resultHeaders.map(h => {
+    if (DATE_LIKE_COLUMNS.includes(h)) {
+      const d = parseDateValue(row[h]);
+      if (d) return d;
+    }
+    return row[h] ?? '';
+  }));
+
+  // Rigtig Excel-tabel: skiftevis grå/hvide rækker er en tabelegenskab
+  // knyttet til rækkens position, så båndringen ikke flytter sig med
+  // dataene når brugeren sorterer i Excel (i modsætning til manuel cellefarve).
+  ws.addTable({
+    name: 'FrigivneProduktionsordrer',
+    ref: 'A1',
+    headerRow: true,
+    totalsRow: false,
+    style: {
+      theme: 'TableStyleMedium2',
+      showRowStripes: true
+    },
+    columns: resultHeaders.map(h => ({ name: h, filterButton: true })),
+    rows: tableRows
   });
 
   const dateColNumbers = new Set(
@@ -843,29 +857,16 @@ downloadBtn.addEventListener('click', async () => {
   );
 
   const cellBorder = { style: 'thin' };
-  const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } };
-  const stripeFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
   ws.eachRow({ includeEmpty: true }, (row, rowNumber) => {
     row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
       cell.border = { top: cellBorder, left: cellBorder, bottom: cellBorder, right: cellBorder };
-      if (rowNumber === 1) {
-        cell.font = { size: 10, bold: true };
-        cell.fill = headerFill;
-      } else {
-        cell.font = { size: 10 };
-        if (rowNumber % 2 === 0) cell.fill = stripeFill;
-        if (dateColNumbers.has(colNumber) && cell.value instanceof Date) {
-          cell.numFmt = 'dd-mm-yyyy';
-        }
+      cell.font = { size: 10, bold: rowNumber === 1 };
+      if (rowNumber > 1 && dateColNumbers.has(colNumber) && cell.value instanceof Date) {
+        cell.numFmt = 'dd-mm-yyyy';
       }
     });
   });
   ws.views = [{ state: 'frozen', ySplit: 1 }];
-
-  ws.autoFilter = {
-    from: { row: 1, column: 1 },
-    to: { row: resultRows.length + 1, column: resultHeaders.length }
-  };
 
   ws.pageSetup = {
     orientation: 'landscape',
