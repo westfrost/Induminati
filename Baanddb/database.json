@@ -1465,5 +1465,23 @@
     "cylinder": "3",
     "pres": "60%",
     "bemaerkning": "Forvarmes på 150 grader"
+  },
+  {
+    "id": 97,
+    "maskine": "Lille HF",
+    "baandtype": "2M024AG CT",
+    "baandbredde": 500,
+    "medbringertype": "Poly T60AG (nedskæres til 50 mm i højden)",
+    "laengde": 440,
+    "antal": 1,
+    "kontakt": "2",
+    "current": "",
+    "welding": "1,0",
+    "prewelding": "8",
+    "cool": "1,1",
+    "squeeze": "",
+    "cylinder": "",
+    "pres": "",
+    "bemaerkning": "8 bars tryk på manometer"
   }
 ]
