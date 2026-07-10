@@ -328,7 +328,7 @@
   <div class="panel">
     <h2>3. Hvad værktøjet gør</h2>
     <div class="rules">
-      Renser "i dag"-arket: fjerner <code>Rettet den</code>, <code>Forfaldsdato</code>, <code>Rutenr.</code>, <code>Søgebeskrivelse</code> og <code>Status1</code> (kolonnerne <code>Beskrivelse 2</code> og <code>Kildenr.</code> beholdes).<br>
+      Renser "i dag"-arket: beholder kun kolonnerne <code>Nummer</code>, <code>Varekategori</code>, <code>Beskrivelse</code>, <code>Kildenr.</code>, <code>Bekræftet leveringsdato</code>, <code>Status</code> og <code>Beskrivelse 2</code> – alle andre kolonner fjernes, uanset navn (arket kan have forskellige kolonner alt efter hvilken pc det er eksporteret fra).<br>
       Flytter <code>Varekategori</code> til at stå mellem <code>Nummer</code> og <code>Beskrivelse</code>, og <code>Beskrivelse 2</code> til at stå ved siden af <code>Status</code>.<br>
       Formaterer <code>Bekræftet leveringsdato</code> korrekt som dato (dd-mm-åååå).<br>
       Tilføjer de tomme kolonner <code>Rykket</code>, <code>Grund</code> og <code>Ny leveringsdato</code> efter <code>Beskrivelse 2</code>.<br>
@@ -355,7 +355,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v2.6 &middot; 10-07-2026</footer>
+  <footer>Byg til intern brug &middot; v2.7 &middot; 10-07-2026</footer>
 </div>
 
 <script>
@@ -379,7 +379,7 @@ const previewPanel = document.getElementById('previewPanel');
 const previewTable = document.getElementById('previewTable');
 const rowCountEl = document.getElementById('rowCount');
 
-const COLUMNS_TO_REMOVE = ['Rettet den', 'Forfaldsdato', 'Rutenr.', 'Søgebeskrivelse', 'Status1'];
+const COLUMNS_TO_KEEP = ['Nummer', 'Varekategori', 'Beskrivelse', 'Kildenr.', 'Bekræftet leveringsdato', 'Status', 'Beskrivelse 2'];
 const MOVE_COLUMN = 'Varekategori';
 const MOVE_AFTER = 'Nummer';
 const STATUS_COLUMN = 'Status';
@@ -587,9 +587,9 @@ setupDrop(dropSales, fileInputSales, (file) => {
 function buildCleanedTodayRows() {
   const weekRanges = selectedWeekRanges();
   const originalHeaders = Object.keys(todayRawRows[0]);
-  const missing = COLUMNS_TO_REMOVE.filter(c => !originalHeaders.includes(c));
+  const missing = COLUMNS_TO_KEEP.filter(c => !originalHeaders.includes(c));
 
-  let headers = originalHeaders.filter(h => !COLUMNS_TO_REMOVE.includes(h));
+  let headers = originalHeaders.filter(h => COLUMNS_TO_KEEP.includes(h));
 
   if (headers.includes(MOVE_COLUMN) && headers.includes(MOVE_AFTER)) {
     headers = headers.filter(h => h !== MOVE_COLUMN);
