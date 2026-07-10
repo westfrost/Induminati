@@ -74,6 +74,10 @@
   @media (max-width:640px){
     .upload-grid{grid-template-columns:1fr;}
   }
+  .upload-col{
+    display:flex;
+    flex-direction:column;
+  }
   .upload-col label.col-title{
     display:block;
     font-family:var(--mono);
@@ -92,7 +96,7 @@
     text-align:center;
     cursor:pointer;
     transition:border-color .15s, background .15s;
-    height:100%;
+    flex:1;
   }
   .drop:hover, .drop.drag{
     border-color:var(--accent);
@@ -355,7 +359,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v2.7 &middot; 10-07-2026</footer>
+  <footer>Byg til intern brug &middot; v2.8 &middot; 10-07-2026</footer>
 </div>
 
 <script>
