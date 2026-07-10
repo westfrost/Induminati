@@ -157,7 +157,7 @@
   .btn:hover { background: var(--accent); }
   .btn:active { transform: scale(0.98); }
 
-  .btn-print {
+  .btn-outline {
     width: 100%;
     background: var(--surface);
     color: var(--dark);
@@ -169,10 +169,10 @@
     padding: 8px 14px;
     cursor: pointer;
     margin-top: 10px;
-    display: none;
     transition: background 0.15s, border-color 0.15s;
   }
-  .btn-print:hover { background: var(--surface2); border-color: var(--dark); }
+  .btn-outline:hover { background: var(--surface2); border-color: var(--dark); }
+  .btn-print { display: none; }
 
   .error-msg {
     font-size: 0.7rem;
@@ -290,9 +290,13 @@
   .badge.warn { background: rgba(214,69,69,.1);   border: 1px solid rgba(214,69,69,.3);   color: var(--red); }
 
   @media print {
-    body * { visibility: hidden; }
-    #printArea, #printArea * { visibility: visible; }
-    #printArea { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    @page { size: A4 landscape; margin: 12mm; }
+    body { padding-bottom: 0; }
+    header, .panel, .btn-print, .version-footer { display: none !important; }
+    .layout { display: block; max-width: 100%; margin: 0; padding: 0; }
+    .output-panel { border: none; padding: 0; }
+    .diagram-wrap { border: none; padding: 0 0 10px; min-height: 0; margin-bottom: 14px; overflow: visible; background: none; }
+    svg { max-width: 100%; height: auto; }
   }
 </style>
 </head>
@@ -338,18 +342,25 @@
       <div class="field-hint" id="ccHint">Center-til-center afstand mellem styrelisterne</div>
     </div>
 
+    <div class="field" id="edgeField" style="display:none">
+      <label>Mål fra</label>
+      <select id="edgeSide" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:0.85rem;font-weight:600;padding:9px 11px;">
+        <option value="left">Venstre kant</option>
+        <option value="right">Højre kant</option>
+      </select>
+    </div>
+
     <button class="btn" onclick="calculate()">Beregn</button>
-    <button class="btn-print" id="printBtn" onclick="doPrint()">⎙ Udskriv diagram</button>
+    <button class="btn-outline" id="resetBtn" onclick="resetForm()">↺ Nulstil</button>
+    <button class="btn-outline btn-print" id="printBtn" onclick="doPrint()">⎙ Udskriv</button>
 
     <div class="error-msg" id="errorMsg"></div>
   </div>
 
   <!-- Output -->
   <div class="output-panel">
-    <div id="printArea">
-      <div class="diagram-wrap" id="diagramWrap">
-        <div class="placeholder">Indtast parametre og tryk beregn</div>
-      </div>
+    <div class="diagram-wrap" id="diagramWrap">
+      <div class="placeholder">Indtast parametre og tryk beregn</div>
     </div>
     <div id="tableWrap"></div>
   </div>
@@ -364,14 +375,18 @@ function updateCCLabel() {
   const n = parseInt(document.getElementById('numGuides').value) || 0;
   const lbl  = document.getElementById('ccLabel');
   const hint = document.getElementById('ccHint');
+  const edgeField = document.getElementById('edgeField');
   if (n <= 1) {
-    lbl.innerHTML  = 'Kant til båndkant <span style="color:var(--dark)">mm</span>';
-    hint.textContent = 'Afstand fra båndkant til styrelistekant — lad stå tomt for at centrere';
+    lbl.innerHTML  = 'Afstand til kant <span style="color:var(--dark)">mm</span>';
+    hint.textContent = 'Afstand fra valgt båndkant til styrelistekant — lad stå tomt for at centrere';
+    edgeField.style.display = 'block';
   } else {
     lbl.innerHTML  = 'C/C afstand <span style="color:var(--dark)">mm</span>';
     hint.textContent = 'Center-til-center afstand mellem styrelisterne';
+    edgeField.style.display = 'none';
   }
 }
+updateCCLabel();
 
 // ── Main calculation ─────────────────────────────────────────────────────────
 function calculate() {
@@ -379,11 +394,13 @@ function calculate() {
   const numGuides  = parseInt(document.getElementById('numGuides').value);
   const guideWidth = parseFloat(document.getElementById('guideWidth').value);
   const ccVal      = parseFloat(document.getElementById('cc').value);
+  const edgeSide   = document.getElementById('edgeSide').value;
   const errEl      = document.getElementById('errorMsg');
   errEl.textContent = '';
 
   if (isNaN(beltWidth)  || beltWidth  <= 0) { errEl.textContent = 'Ugyldig båndbredde.';        return; }
   if (isNaN(numGuides)  || numGuides  <  1) { errEl.textContent = 'Ugyldigt antal styrelister.'; return; }
+  if (numGuides > 20)                       { errEl.textContent = 'Max 20 styrelister.';         return; }
   if (isNaN(guideWidth) || guideWidth <= 0) { errEl.textContent = 'Ugyldig styrelistebredde.';   return; }
   if (numGuides > 1 && (isNaN(ccVal) || ccVal <= 0)) { errEl.textContent = 'Ugyldig C/C afstand.'; return; }
 
@@ -396,8 +413,10 @@ function calculate() {
       const center = beltWidth / 2;
       guideCenters = [center];
     } else {
-      // ccVal = distance from belt edge to guide EDGE → convert to center
-      const center = ccVal + guideWidth / 2;
+      // ccVal = distance from chosen belt edge to guide EDGE → convert to center
+      const center = edgeSide === 'right'
+        ? beltWidth - ccVal - guideWidth / 2
+        : ccVal + guideWidth / 2;
       guideCenters = [center];
     }
   } else {
@@ -421,8 +440,10 @@ function calculate() {
     if (gap < 0) overlap = true;
   }
 
-  if (!valid) errEl.textContent = 'Advarsel: en eller flere styrelister rager uden for båndet.';
-  if (overlap) errEl.textContent = 'Advarsel: styrelister overlapper hinanden.';
+  const problems = [];
+  if (!valid)  problems.push('rager uden for båndet');
+  if (overlap) problems.push('overlapper hinanden');
+  if (problems.length) errEl.textContent = 'Advarsel: styrelister ' + problems.join(' og ') + '.';
 
   renderDiagram(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap);
   renderTable(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap);
@@ -687,11 +708,22 @@ function renderTable(beltWidth, numGuides, guideWidth, ccVal, guideCenters, vali
 // ── Print ────────────────────────────────────────────────────────────────────
 function doPrint() { window.print(); }
 
+// ── Reset ────────────────────────────────────────────────────────────────────
+function resetForm() {
+  document.querySelectorAll('input[type=number]').forEach(el => el.value = '');
+  document.getElementById('edgeSide').value = 'left';
+  document.getElementById('errorMsg').textContent = '';
+  document.getElementById('diagramWrap').innerHTML = '<div class="placeholder">Indtast parametre og tryk beregn</div>';
+  document.getElementById('tableWrap').innerHTML = '';
+  document.getElementById('printBtn').style.display = 'none';
+  updateCCLabel();
+  document.getElementById('beltWidth').focus();
+}
+
 // ── Format ───────────────────────────────────────────────────────────────────
 function fmt(n) {
   if (isNaN(n)) return '—';
-  const r = parseFloat(n.toFixed(3));
-  return r % 1 === 0 ? r.toString() : r.toString();
+  return parseFloat(n.toFixed(3)).toString();
 }
 
 // ── Enter key ────────────────────────────────────────────────────────────────
@@ -699,6 +731,6 @@ document.querySelectorAll('input').forEach(el =>
   el.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); })
 );
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v1.2 &middot; 07-07-2026</div>
+<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v1.3 &middot; 10-07-2026</div>
 </body>
 </html>
