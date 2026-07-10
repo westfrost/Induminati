@@ -21,7 +21,9 @@
   .logo-text .sub{font-size:11px;color:#B9D8EA;letter-spacing:.04em}
   main{max-width:960px;margin:0 auto;padding:44px 22px 64px}
   .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:20px}
-  .app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+  .app-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:820px){.app-grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:520px){.app-grid{grid-template-columns:1fr}}
   .app-card{background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:22px;text-decoration:none;color:var(--text);display:flex;flex-direction:column;gap:10px;transition:border-color .15s,box-shadow .15s,transform .1s}
   .app-card:hover{border-color:var(--accent);box-shadow:0 4px 18px rgba(232,121,30,.14);transform:translateY(-2px)}
   .app-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -29,6 +31,9 @@
   .app-name{font-size:15px;font-weight:600}
   .app-desc{font-size:13px;color:var(--muted);line-height:1.55;flex:1}
   .app-arrow{font-size:12px;font-weight:600;color:var(--accent)}
+  .app-card.placeholder{cursor:default;border-style:dashed}
+  .app-card.placeholder:hover{border-color:var(--border);box-shadow:none;transform:none}
+  .app-card.placeholder .app-name{color:var(--muted)}
   footer{text-align:center;font-size:11px;color:var(--muted);padding:28px 20px;border-top:1px solid var(--border)}
 </style>
 </head>
@@ -51,20 +56,6 @@
   <div class="section-label">Værktøjer</div>
   <div class="app-grid">
 
-    <a class="app-card" href="Opskæring/index.html">
-      <div class="app-icon" style="background:#E5F1FA;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#0B4F79" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="8" width="20" height="8" rx="3"/>
-          <circle cx="6" cy="12" r="2"/><circle cx="18" cy="12" r="2"/>
-          <line x1="8" y1="12" x2="16" y2="12"/>
-          <line x1="12" y1="5" x2="12" y2="2"/><line x1="12" y1="19" x2="12" y2="22"/>
-        </svg>
-      </div>
-      <div class="app-name">Opskæringsberegner</div>
-      <div class="app-desc">Optimal opskæring af transportbånd fra moderrulle. Minimerer spild.</div>
-      <div class="app-arrow">Åbn →</div>
-    </a>
-
     <a class="app-card" href="Styreliste/index.html">
       <div class="app-icon" style="background:#E5F1FA;">
         <svg viewBox="0 0 24 24" fill="none" stroke="#0B4F79" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -78,16 +69,17 @@
       <div class="app-arrow">Åbn →</div>
     </a>
 
-    <a class="app-card" href="DXF/index.html">
+    <a class="app-card" href="Opskæring/index.html">
       <div class="app-icon" style="background:#E5F1FA;">
         <svg viewBox="0 0 24 24" fill="none" stroke="#0B4F79" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="14 2 14 8 20 8"/>
-          <path d="M20 8L14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/>
+          <rect x="2" y="8" width="20" height="8" rx="3"/>
+          <circle cx="6" cy="12" r="2"/><circle cx="18" cy="12" r="2"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+          <line x1="12" y1="5" x2="12" y2="2"/><line x1="12" y1="19" x2="12" y2="22"/>
         </svg>
       </div>
-      <div class="app-name">DXF → NCP Konverter</div>
-      <div class="app-desc">Konverter DXF-filer til NCP-format til vandskæring og CNC.</div>
+      <div class="app-name">Opskæringsberegner</div>
+      <div class="app-desc">Optimal opskæring af transportbånd fra moderrulle. Minimerer spild.</div>
       <div class="app-arrow">Åbn →</div>
     </a>
 
@@ -104,8 +96,45 @@
       <div class="app-arrow">Åbn →</div>
     </a>
 
+    <a class="app-card" href="Ordrer/index.html">
+      <div class="app-icon" style="background:#E5F1FA;">
+        <svg viewBox="0 0 26 26" fill="none">
+          <rect x="2" y="10" width="22" height="7" rx="3.5" fill="#0B4F79" opacity=".9"/>
+          <circle cx="6" cy="13.5" r="3" fill="#0B4F79"/>
+          <circle cx="20" cy="13.5" r="3" fill="#0B4F79"/>
+          <rect x="5" y="12.5" width="16" height="2" fill="#E8791E"/>
+        </svg>
+      </div>
+      <div class="app-name">Ordreliste-værktøj</div>
+      <div class="app-desc">Renser og sammenligner "Frigivne produktionsordrer"-eksporter fra BC dag for dag.</div>
+      <div class="app-arrow">Åbn →</div>
+    </a>
+
+    <div class="app-card placeholder">
+      <div class="app-icon" style="background:#EEF2F5;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#5F7C90" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+      <div class="app-name">Kommer snart</div>
+      <div class="app-desc">Nyt værktøj på vej.</div>
+    </div>
+
+    <a class="app-card" href="DXF/index.html">
+      <div class="app-icon" style="background:#E5F1FA;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0B4F79" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="14 2 14 8 20 8"/>
+          <path d="M20 8L14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/>
+        </svg>
+      </div>
+      <div class="app-name">DXF → NCP Konverter</div>
+      <div class="app-desc">Konverter DXF-filer til NCP-format til vandskæring og CNC.</div>
+      <div class="app-arrow">Åbn →</div>
+    </a>
+
   </div>
 </main>
-<footer>Induminati &middot; v1.1 &middot; 07-07-2026</footer>
+<footer>Induminati &middot; v1.2 &middot; 10-07-2026</footer>
 </body>
 </html>
