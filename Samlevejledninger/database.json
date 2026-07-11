@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": 1,
+    "baandtype": "2e016blå-n1,4-pu",
+    "kategori": "PU",
+    "tempOver": "145",
+    "tempUnder": "145",
+    "holdetid": "1",
+    "tryk": "1",
+    "bemaerkning": "Husk bagepapir over samling"
+  }
+]
