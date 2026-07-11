@@ -158,7 +158,8 @@
   /* === PRINT === */
   #printArea{display:none}
   @media print {
-    header, .toolbar, footer, .page:not(#page-opslag), .entry-actions { display:none !important; }
+    header, .toolbar, footer, .page:not(#page-opslag), .entry-actions,
+    .print-group, .page-title, .page-sub { display:none !important; }
     body{background:#fff;color:#000}
     main{max-width:100%;padding:0;margin:0}
     #page-opslag{display:block !important}
@@ -189,9 +190,9 @@
   <div class="header-right">
     <div id="syncStatus"></div>
     <nav>
-      <button class="nav-btn active" onclick="showPage('opslag')">OPSLAG</button>
-      <button class="nav-btn" onclick="showPage('alle')">ALLE POSTER</button>
-      <button class="nav-btn" onclick="showPage('tilfoj')">TILFØJ / REDIGER</button>
+      <button class="nav-btn active" data-page="opslag" onclick="showPage('opslag', this)">OPSLAG</button>
+      <button class="nav-btn" data-page="alle" onclick="showPage('alle', this)">ALLE POSTER</button>
+      <button class="nav-btn" data-page="tilfoj" onclick="showPage('tilfoj', this)">TILFØJ / REDIGER</button>
     </nav>
   </div>
 </header>
@@ -356,7 +357,7 @@
 
 <div class="toast" id="toast"></div>
 
-<footer>Induminati &middot; test / work in progress &middot; v1.1 &middot; 07-07-2026 &middot; <a href="../Test/index.html">Tilbage til test</a></footer>
+<footer>Induminati &middot; test / work in progress &middot; v1.2 &middot; 11-07-2026 &middot; <a href="../Test/index.html">Tilbage til test</a></footer>
 
 <script>
 // ============================================================
@@ -380,11 +381,11 @@ let currentFilter = 'ALLE';
 // ============================================================
 // NAVIGATION
 // ============================================================
-function showPage(name) {
+function showPage(name, btnEl) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('header .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  event.target.classList.add('active');
+  (btnEl || document.querySelector(`header .nav-btn[data-page="${name}"]`)).classList.add('active');
   if (name === 'opslag') renderOpslag();
   if (name === 'alle') renderAllTable();
   if (name === 'tilfoj') cancelEdit();
@@ -538,6 +539,8 @@ function saveEntry() {
 function editEntry(id) {
   const e = db.find(x => x.id === id);
   if (!e) return;
+  showPage('tilfoj'); // switches page + clears the form via cancelEdit()
+
   document.getElementById('f_baandtype').value = e.baandtype;
   document.getElementById('f_kategori').value = e.kategori;
   document.getElementById('f_tempOver').value = e.tempOver || '';
@@ -548,11 +551,6 @@ function editEntry(id) {
   document.getElementById('editId').value = id;
   document.getElementById('formTitle').textContent = 'REDIGER POST: ' + e.baandtype;
   document.getElementById('cancelEditBtn').style.display = 'inline-block';
-
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('header .nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-tilfoj').classList.add('active');
-  document.querySelector('header .nav-btn:nth-child(3)').classList.add('active');
   window.scrollTo(0,0);
 }
 
@@ -634,7 +632,8 @@ function applyGhSettings() {
 }
 
 function updateGhDot() {
-  document.getElementById('ghDot').className = 'github-status-dot connected';
+  const s = loadGhSettings();
+  document.getElementById('ghDot').className = 'github-status-dot' + (s.token ? ' connected' : '');
 }
 
 function toggleGithubPanel() {
@@ -841,17 +840,12 @@ function doPrint(scope) {
   const prevSearch = document.getElementById('searchInput').value;
 
   // switch to opslag page + requested scope, clear search so nothing is hidden
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('header .nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-opslag').classList.add('active');
-  document.querySelector('header .nav-btn:nth-child(1)').classList.add('active');
-
   document.getElementById('searchInput').value = '';
   currentFilter = scope;
+  showPage('opslag');
   document.querySelectorAll('#filterTabs .filter-tab').forEach(b => b.classList.remove('active'));
   const tabBtn = document.querySelector(`#filterTabs [data-cat="${scope}"]`);
   if (tabBtn) tabBtn.classList.add('active');
-  renderOpslag();
 
   const label = scope === 'ALLE' ? 'Samlet database (PU + PVC)' : scope + '-database';
   document.getElementById('printMeta').textContent = `${label} · ${new Date().toLocaleDateString('da-DK')}`;
