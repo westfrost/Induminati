@@ -142,6 +142,12 @@
   .gh-note{margin-top:12px;padding:10px 14px;background:var(--pvc-bg);border:1px solid #F0C79A;border-radius:6px;font-size:12px;color:var(--text);line-height:1.6}
   .gh-note a{color:var(--dark);text-decoration:none}
   .gh-note a:hover{text-decoration:underline}
+  .gh-setup{margin-top:14px}
+  .gh-setup summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--dark);letter-spacing:.04em;list-style:none}
+  .gh-setup summary::-webkit-details-marker{display:none}
+  .gh-setup summary::before{content:'▸ ';color:var(--muted)}
+  .gh-setup[open] summary::before{content:'▾ '}
+  .gh-setup-body{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
 
   .toast{position:fixed;bottom:24px;right:24px;background:var(--success);color:#fff;font-size:13px;font-weight:700;padding:12px 20px;border-radius:7px;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;z-index:999}
   .toast.show{opacity:1;transform:translateY(0)}
@@ -312,13 +318,13 @@
       <div class="github-body" id="githubBody">
         <div class="github-fields">
           <div class="github-field" style="grid-column:1/-1">
-            <label>GitHub Personal Access Token — kun nødvendigt for at skrive/pushe (gemmes i din browser)</label>
-            <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveGhSettings()">
+            <label>Adgangskode — låser det delte GitHub-token op for at kunne pushe</label>
+            <input type="password" id="gh_password" placeholder="Jeres fælles adgangskode" oninput="saveGhPassword()">
           </div>
         </div>
         <p style="color:var(--muted);font-size:12.5px;margin-bottom:12px">
           Database: <span style="color:var(--dark);font-weight:600">westfrost/Induminati → Samlevejledninger/database.json</span>
-          &nbsp;·&nbsp; Databasen pulles automatisk når siden åbnes. Pull/push virker uden token hvis repo er public.
+          &nbsp;·&nbsp; Databasen pulles automatisk når siden åbnes. Pull virker uden adgangskode.
         </p>
 
         <div class="sync-actions">
@@ -330,12 +336,36 @@
         <div class="sync-log" id="syncLog"></div>
 
         <div class="gh-note">
-          <strong style="color:var(--dark)">Sådan opretter du et token:</strong><br>
-          1. Gå til <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
-          2. Sæt navn (f.eks. "samlevejledninger"), vælg <strong>Contents: Read &amp; Write</strong> under repository permissions<br>
-          3. Generer token og indsæt det ovenfor<br><br>
-          <strong style="color:var(--dark)">Workflow:</strong> Siden pusher <code style="background:var(--light);padding:2px 5px;border-radius:3px;color:var(--dark)">database.json</code> direkte til repo'et. Alle der åbner siden får automatisk den nyeste data ved næste sideload.
+          <strong style="color:var(--dark)">Sådan virker det:</strong> Alle der kender jeres fælles adgangskode kan pushe — I skal ikke oprette et nyt GitHub-token på hver ny pc. Adgangskoden låser et delt, krypteret token op, som ligger i selve repo'et.<br><br>
+          ⚠️ Repo'et er offentligt, så den krypterede fil kan ses af alle — sikkerheden afhænger derfor alene af hvor svær adgangskoden er at gætte. Vælg en lang adgangskode og del den kun med dem der skal kunne pushe.
         </div>
+
+        <details class="gh-setup">
+          <summary>OPSÆT ELLER SKIFT DELT TOKEN</summary>
+          <div class="gh-setup-body">
+            <p style="color:var(--muted);font-size:12px;margin-bottom:10px">Kør dette én gang, eller når adgangskoden skal skiftes. Kræver et rigtigt GitHub-token denne ene gang — herefter kan alle bruge adgangskoden i stedet.</p>
+            <div class="github-fields">
+              <div class="github-field" style="grid-column:1/-1">
+                <label>GitHub Personal Access Token (bruges kun til denne opsætning, gemmes ikke)</label>
+                <input type="password" id="gh_setup_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+              </div>
+              <div class="github-field">
+                <label>Ny adgangskode</label>
+                <input type="password" id="gh_setup_password" placeholder="Vælg en lang adgangskode">
+              </div>
+              <div class="github-field">
+                <label>Gentag adgangskode</label>
+                <input type="password" id="gh_setup_password2" placeholder="Gentag">
+              </div>
+            </div>
+            <button class="btn-github" onclick="setupSharedToken()">GEM KRYPTERET TOKEN</button>
+            <div class="gh-note" style="margin-top:12px">
+              1. Gå til <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
+              2. Sæt navn (f.eks. "samlevejledninger"), vælg <strong>Contents: Read &amp; Write</strong> under repository permissions<br>
+              3. Generer token og indsæt det ovenfor sammen med den nye adgangskode
+            </div>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -357,7 +387,7 @@
 
 <div class="toast" id="toast"></div>
 
-<footer>Induminati &middot; test / work in progress &middot; v1.2 &middot; 11-07-2026 &middot; <a href="../Test/index.html">Tilbage til test</a></footer>
+<footer>Induminati &middot; test / work in progress &middot; v1.3 &middot; 11-07-2026 &middot; <a href="../Test/index.html">Tilbage til test</a></footer>
 
 <script>
 // ============================================================
@@ -604,36 +634,35 @@ function importDB() {
 // ============================================================
 // GITHUB SYNC
 // ============================================================
-const GH_SETTINGS_KEY = 'samlevejledninger_gh_settings';
+// Push requires a GitHub token, but instead of asking everyone to create
+// their own on every new pc, one real token is encrypted (AES-GCM, key
+// derived from a shared password via PBKDF2) and stored in the repo
+// itself as AUTH_PATH. Anyone who knows the password can decrypt it in
+// the browser and push — see "OPSÆT ELLER SKIFT DELT TOKEN" for the
+// one-time setup. Pull never needs any of this; it just reads the public
+// raw URL.
+const AUTH_PATH = 'Samlevejledninger/gh-auth.json';
+const GH_PASSWORD_KEY = 'samlevejledninger_gh_password';
+const KDF_ITERATIONS = 300000;
 
-function saveGhSettings() {
-  const s = {
-    token: document.getElementById('gh_token').value,
-    user:  'westfrost',
-    repo:  'Induminati',
-    path:  'Samlevejledninger/database.json',
-  };
-  localStorage.setItem(GH_SETTINGS_KEY, JSON.stringify(s));
+function saveGhPassword() {
+  localStorage.setItem(GH_PASSWORD_KEY, document.getElementById('gh_password').value);
   updateGhDot();
 }
 
-function loadGhSettings() {
-  try {
-    const raw = localStorage.getItem(GH_SETTINGS_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw);
-  } catch(e) { return {}; }
+function loadGhPassword() {
+  return localStorage.getItem(GH_PASSWORD_KEY) || '';
 }
 
-function applyGhSettings() {
-  const s = loadGhSettings();
-  if (s.token) document.getElementById('gh_token').value = s.token;
+function applyGhPassword() {
+  const pw = loadGhPassword();
+  if (pw) document.getElementById('gh_password').value = pw;
   updateGhDot();
 }
 
 function updateGhDot() {
-  const s = loadGhSettings();
-  document.getElementById('ghDot').className = 'github-status-dot' + (s.token ? ' connected' : '');
+  const pw = document.getElementById('gh_password').value;
+  document.getElementById('ghDot').className = 'github-status-dot' + (pw ? ' connected' : '');
 }
 
 function toggleGithubPanel() {
@@ -644,11 +673,7 @@ function toggleGithubPanel() {
 }
 
 function ghSettings() {
-  const s = loadGhSettings();
-  s.user = 'westfrost';
-  s.repo = 'Induminati';
-  s.path = 'Samlevejledninger/database.json';
-  return s;
+  return { user: 'westfrost', repo: 'Induminati', path: 'Samlevejledninger/database.json' };
 }
 
 function syncLog(msg, type) {
@@ -662,16 +687,16 @@ function setBtnsDisabled(disabled) {
   document.getElementById('btnPull').disabled = disabled;
 }
 
-function rawGithubUrl(s) {
+function rawGithubUrl(s, path) {
   // raw.githubusercontent.com — no token needed for public repos
-  return `https://raw.githubusercontent.com/${s.user}/${s.repo}/main/${s.path}`;
+  return `https://raw.githubusercontent.com/${s.user}/${s.repo}/main/${path || s.path}`;
 }
 
-async function getFileSha(s) {
+async function getFileSha(s, token) {
   const url = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${s.path}`;
   const res = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${s.token}`,
+      'Authorization': `Bearer ${token}`,
       'Accept': 'application/vnd.github+json',
     }
   });
@@ -684,18 +709,56 @@ async function getFileSha(s) {
   return data.sha;
 }
 
-async function githubPush() {
+// ---- Password-based shared-token encryption (Web Crypto API) ----
+function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function b64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
+
+async function deriveAesKey(password, saltB64, iterations) {
+  const salt = saltB64 ? b64ToBuf(saltB64) : crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+    keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+  return { key, salt };
+}
+
+async function encryptToken(token, password) {
+  const { key, salt } = await deriveAesKey(password, null, KDF_ITERATIONS);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(token));
+  return { salt: bufToB64(salt), iv: bufToB64(iv), iterations: KDF_ITERATIONS, ciphertext: bufToB64(ciphertext) };
+}
+
+async function decryptToken(blob, password) {
+  const { key } = await deriveAesKey(password, blob.salt, blob.iterations);
+  const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBuf(blob.iv) }, key, b64ToBuf(blob.ciphertext));
+  return new TextDecoder().decode(plainBuf);
+}
+
+async function resolveToken(password) {
+  if (!password) throw new Error('Indtast adgangskoden først.');
   const s = ghSettings();
-  if (!s.token) {
-    syncLog('⚠ Udfyld token først for at kunne pushe.', 'err');
-    document.getElementById('githubBody').classList.add('open');
-    document.getElementById('ghToggleLabel').textContent = 'LUK ▴';
-    return;
-  }
-  setBtnsDisabled(true);
-  syncLog('⟳ Henter fil-SHA fra GitHub...', '');
+  const url = rawGithubUrl(s, AUTH_PATH) + '?t=' + Date.now();
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Intet delt token fundet i repo\'et endnu — opsæt det først under "Opsæt eller skift delt token".');
+  const blob = await res.json();
   try {
-    const sha = await getFileSha(s);
+    return await decryptToken(blob, password);
+  } catch (e) {
+    throw new Error('Forkert adgangskode.');
+  }
+}
+
+async function githubPush() {
+  const password = document.getElementById('gh_password').value;
+  setBtnsDisabled(true);
+  syncLog('⟳ Låser delt token op...', '');
+  try {
+    const token = await resolveToken(password);
+    const s = ghSettings();
+    syncLog('⟳ Henter fil-SHA fra GitHub...', '');
+    const sha = await getFileSha(s, token);
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2))));
     const body = {
       message: `Opdateret database – ${db.length} poster (${new Date().toLocaleString('da-DK')})`,
@@ -707,7 +770,7 @@ async function githubPush() {
     const res = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${s.token}`,
+        'Authorization': `Bearer ${token}`,
         'Accept': 'application/vnd.github+json',
         'Content-Type': 'application/json',
       },
@@ -725,13 +788,13 @@ async function githubPush() {
 }
 
 async function githubPull() {
-  const s = ghSettings();
   if (!confirm('Erstat lokal database med data fra GitHub?')) return;
   setBtnsDisabled(true);
   syncLog('⟳ Henter database fra GitHub...', '');
 
   try {
-    // Try public raw URL first — works without a token
+    const s = ghSettings();
+    // Try public raw URL first — works without a password
     const rawUrl = rawGithubUrl(s);
     const rawRes = await fetch(rawUrl + '?t=' + Date.now());
 
@@ -741,7 +804,7 @@ async function githubPull() {
       db = parsed;
       nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
       saveDB(db);
-      syncLog(`✓ Pull lykkedes! ${db.length} poster hentet (offentlig URL, ingen token).`, 'ok');
+      syncLog(`✓ Pull lykkedes! ${db.length} poster hentet (offentlig URL).`, 'ok');
       toast(`${db.length} poster hentet fra GitHub!`);
       renderOpslag();
       renderAllTable();
@@ -749,11 +812,13 @@ async function githubPull() {
       return;
     }
 
-    // Fall back to API with token (private repo or 404 without cache)
-    if (!s.token) throw new Error('Kunne ikke hente offentligt – tilføj et token og prøv igen.');
+    // Fall back to authenticated API via the shared token (private repo or cache miss)
+    const password = document.getElementById('gh_password').value;
+    if (!password) throw new Error('Kunne ikke hente offentligt – indtast adgangskoden og prøv igen.');
+    const token = await resolveToken(password);
     const url = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${s.path}`;
     const res = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${s.token}`, 'Accept': 'application/vnd.github+json' }
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
@@ -775,20 +840,69 @@ async function githubPull() {
 }
 
 async function testGithubConnection() {
-  const s = ghSettings();
+  const password = document.getElementById('gh_password').value;
   syncLog('⟳ Tester forbindelse...', '');
   try {
-    const headers = { 'Accept': 'application/vnd.github+json' };
-    if (s.token) headers['Authorization'] = `Bearer ${s.token}`;
-    const res = await fetch(`https://api.github.com/repos/${s.user}/${s.repo}`, { headers });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message);
-    syncLog(`✓ Forbundet til ${data.full_name} (${data.visibility})`, 'ok');
-    document.getElementById('ghDot').className = 'github-status-dot connected';
+    const s = ghSettings();
+    if (password) {
+      const token = await resolveToken(password);
+      const res = await fetch(`https://api.github.com/repos/${s.user}/${s.repo}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      syncLog(`✓ Forbundet til ${data.full_name} (${data.visibility}) — adgangskoden virker.`, 'ok');
+      document.getElementById('ghDot').className = 'github-status-dot connected';
+    } else {
+      const res = await fetch(`https://api.github.com/repos/${s.user}/${s.repo}`, { headers: { 'Accept': 'application/vnd.github+json' } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      syncLog(`✓ Repo tilgængeligt: ${data.full_name} (${data.visibility}). Indtast adgangskoden for at teste push-adgang.`, 'ok');
+    }
   } catch(err) {
     syncLog(`✗ Fejl: ${err.message}`, 'err');
     document.getElementById('ghDot').className = 'github-status-dot error';
   }
+}
+
+async function setupSharedToken() {
+  const token = document.getElementById('gh_setup_token').value.trim();
+  const password = document.getElementById('gh_setup_password').value;
+  const password2 = document.getElementById('gh_setup_password2').value;
+  if (!token) { syncLog('⚠ Indsæt et GitHub-token.', 'err'); return; }
+  if (!password) { syncLog('⚠ Vælg en adgangskode.', 'err'); return; }
+  if (password !== password2) { syncLog('⚠ Adgangskoderne matcher ikke.', 'err'); return; }
+  setBtnsDisabled(true);
+  syncLog('⟳ Krypterer og gemmer delt token...', '');
+  try {
+    const s = ghSettings();
+    const blob = await encryptToken(token, password);
+    const sha = await getFileSha({ ...s, path: AUTH_PATH }, token);
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(blob, null, 2))));
+    const body = {
+      message: `Opdateret delt GitHub-adgang (${new Date().toLocaleString('da-DK')})`,
+      content,
+      ...(sha ? { sha } : {})
+    };
+    const url = `https://api.github.com/repos/${s.user}/${s.repo}/contents/${AUTH_PATH}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+    document.getElementById('gh_setup_token').value = '';
+    document.getElementById('gh_setup_password').value = '';
+    document.getElementById('gh_setup_password2').value = '';
+    document.getElementById('gh_password').value = password;
+    saveGhPassword();
+    syncLog('✓ Delt token gemt og krypteret! Alle med adgangskoden kan nu pushe.', 'ok');
+    toast('Delt GitHub-adgang opsat!');
+  } catch(err) {
+    syncLog(`✗ Fejl: ${err.message}`, 'err');
+  }
+  setBtnsDisabled(false);
 }
 
 // ============================================================
@@ -878,7 +992,7 @@ function toast(msg, isErr) {
 // INIT
 // ============================================================
 renderOpslag();
-applyGhSettings();
+applyGhPassword();
 autoPullOnOpen();
 </script>
 </body>

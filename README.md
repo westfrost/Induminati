@@ -52,8 +52,8 @@ Farverne defineres som CSS custom properties i hver sides `:root`-blok. Semantis
 
 Disse to sider har en simpel "database" gemt i browserens `localStorage`, med mulighed for at synkronisere til/fra GitHub:
 
-- **Push**: kræver et GitHub Personal Access Token (gemmes kun lokalt i browseren, aldrig i repo'et), skriver til `<Mappe>/database.json` via GitHub Contents API.
-- **Pull**: virker uden token for et offentligt repo (henter direkte fra `raw.githubusercontent.com`), falder tilbage til Contents API + token hvis det fejler.
+- **Push**: kræver et GitHub Personal Access Token, men i stedet for at alle skal oprette deres eget, er ét delt token krypteret (AES-GCM, nøgle udledt af en fælles adgangskode via PBKDF2) og gemt i repo'et selv, som `<Mappe>/gh-auth.json`. Alle der kender adgangskoden kan låse tokenet op i browseren og pushe — se "Opsæt eller skift delt token" i hvert værktøjs GitHub-sync-panel for engangs-opsætning. Da repo'et er offentligt, kan den krypterede fil ses af alle; sikkerheden afhænger derfor alene af adgangskodens styrke.
+- **Pull**: virker altid uden adgangskode for et offentligt repo (henter direkte fra `raw.githubusercontent.com`), falder tilbage til Contents API + det delte token hvis det fejler.
 - **Samlevejledninger** pull'er automatisk og stille i baggrunden, når siden åbnes, så alle altid ser den nyeste data uden manuelt at skulle trykke "Pull".
 
 ## Deployment
