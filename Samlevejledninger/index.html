@@ -242,6 +242,7 @@
           <tr>
             <th>Kategori</th>
             <th>Båndtype</th>
+            <th>Vare nr.</th>
             <th>Temp. over</th>
             <th>Temp. under</th>
             <th>Holdetid (min.)</th>
@@ -271,6 +272,10 @@
           <option value="PU">PU</option>
           <option value="PVC">PVC</option>
         </select>
+      </div>
+      <div class="form-group">
+        <label>Vare nr.</label>
+        <input type="text" id="f_vareNr">
       </div>
       <div class="form-group">
         <label>Tryk (bar)</label>
@@ -387,7 +392,7 @@
 
 <div class="toast" id="toast"></div>
 
-<footer>Induminati &middot; test / work in progress &middot; v1.3 &middot; 11-07-2026 &middot; <a href="../Test/index.html">Tilbage til test</a></footer>
+<footer>Induminati &middot; test / work in progress &middot; v1.4 &middot; 11-07-2026 &middot; <a href="../Test/index.html">Tilbage til test</a></footer>
 
 <script>
 // ============================================================
@@ -447,6 +452,7 @@ function entryCard(e) {
       ${escapeHtml(e.baandtype)}
     </div>
     <div class="entry-fields">
+      ${fieldBlock('Vare nr.', e.vareNr)}
       ${fieldBlock('Temperatur over', e.tempOver)}
       ${fieldBlock('Temperatur under', e.tempUnder)}
       ${fieldBlock('Holdetid (min.)', e.holdetid)}
@@ -471,7 +477,7 @@ function renderOpslag() {
   cats.forEach(cat => {
     const entries = db
       .filter(e => e.kategori === cat)
-      .filter(e => !q || e.baandtype.toLowerCase().includes(q))
+      .filter(e => !q || e.baandtype.toLowerCase().includes(q) || (e.vareNr || '').toLowerCase().includes(q))
       .sort((a,b) => a.baandtype.localeCompare(b.baandtype, 'da'));
     if (entries.length === 0) return;
     totalShown += entries.length;
@@ -507,7 +513,7 @@ function renderAllTable() {
 
   const tbody = document.getElementById('allTableBody');
   if (db.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Ingen poster endnu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px">Ingen poster endnu</td></tr>';
     return;
   }
   const sorted = [...db].sort((a,b) => a.baandtype.localeCompare(b.baandtype, 'da'));
@@ -515,6 +521,7 @@ function renderAllTable() {
     <tr>
       <td><span class="cat-pill ${e.kategori}">${e.kategori}</span></td>
       <td style="font-weight:600">${escapeHtml(e.baandtype)}</td>
+      <td>${escapeHtml(e.vareNr) || '—'}</td>
       <td>${escapeHtml(e.tempOver) || '—'}</td>
       <td>${escapeHtml(e.tempUnder) || '—'}</td>
       <td>${escapeHtml(e.holdetid) || '—'}</td>
@@ -535,6 +542,7 @@ function getFormValues() {
   return {
     baandtype: document.getElementById('f_baandtype').value.trim(),
     kategori: document.getElementById('f_kategori').value,
+    vareNr: document.getElementById('f_vareNr').value.trim(),
     tempOver: document.getElementById('f_tempOver').value.trim(),
     tempUnder: document.getElementById('f_tempUnder').value.trim(),
     holdetid: document.getElementById('f_holdetid').value.trim(),
@@ -544,7 +552,7 @@ function getFormValues() {
 }
 
 function clearForm() {
-  ['baandtype','tempOver','tempUnder','holdetid','tryk','bemaerkning'].forEach(f => document.getElementById('f_' + f).value = '');
+  ['baandtype','vareNr','tempOver','tempUnder','holdetid','tryk','bemaerkning'].forEach(f => document.getElementById('f_' + f).value = '');
   document.getElementById('f_kategori').value = 'PU';
 }
 
@@ -573,6 +581,7 @@ function editEntry(id) {
 
   document.getElementById('f_baandtype').value = e.baandtype;
   document.getElementById('f_kategori').value = e.kategori;
+  document.getElementById('f_vareNr').value = e.vareNr || '';
   document.getElementById('f_tempOver').value = e.tempOver || '';
   document.getElementById('f_tempUnder').value = e.tempUnder || '';
   document.getElementById('f_holdetid').value = e.holdetid || '';
