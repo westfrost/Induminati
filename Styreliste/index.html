@@ -342,14 +342,6 @@
       <div class="field-hint" id="ccHint">Center-til-center afstand mellem styrelisterne</div>
     </div>
 
-    <div class="field" id="edgeField" style="display:none">
-      <label>Mål fra</label>
-      <select id="edgeSide" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:0.85rem;font-weight:600;padding:9px 11px;">
-        <option value="left">Venstre kant</option>
-        <option value="right">Højre kant</option>
-      </select>
-    </div>
-
     <button class="btn" onclick="calculate()">Beregn</button>
     <button class="btn-outline" id="resetBtn" onclick="resetForm()">↺ Nulstil</button>
     <button class="btn-outline btn-print" id="printBtn" onclick="doPrint()">⎙ Udskriv</button>
@@ -375,15 +367,12 @@ function updateCCLabel() {
   const n = parseInt(document.getElementById('numGuides').value) || 0;
   const lbl  = document.getElementById('ccLabel');
   const hint = document.getElementById('ccHint');
-  const edgeField = document.getElementById('edgeField');
   if (n <= 1) {
     lbl.innerHTML  = 'Afstand til kant <span style="color:var(--dark)">mm</span>';
-    hint.textContent = 'Afstand fra valgt båndkant til styrelistekant — lad stå tomt for at centrere';
-    edgeField.style.display = 'block';
+    hint.textContent = 'Afstand fra venstre båndkant til styrelistekant — lad stå tomt for at centrere';
   } else {
     lbl.innerHTML  = 'C/C afstand <span style="color:var(--dark)">mm</span>';
     hint.textContent = 'Center-til-center afstand mellem styrelisterne';
-    edgeField.style.display = 'none';
   }
 }
 updateCCLabel();
@@ -394,7 +383,6 @@ function calculate() {
   const numGuides  = parseInt(document.getElementById('numGuides').value);
   const guideWidth = parseFloat(document.getElementById('guideWidth').value);
   const ccVal      = parseFloat(document.getElementById('cc').value);
-  const edgeSide   = document.getElementById('edgeSide').value;
   const errEl      = document.getElementById('errorMsg');
   errEl.textContent = '';
 
@@ -413,10 +401,8 @@ function calculate() {
       const center = beltWidth / 2;
       guideCenters = [center];
     } else {
-      // ccVal = distance from chosen belt edge to guide EDGE → convert to center
-      const center = edgeSide === 'right'
-        ? beltWidth - ccVal - guideWidth / 2
-        : ccVal + guideWidth / 2;
+      // ccVal = distance from left belt edge to guide EDGE → convert to center
+      const center = ccVal + guideWidth / 2;
       guideCenters = [center];
     }
   } else {
@@ -711,7 +697,6 @@ function doPrint() { window.print(); }
 // ── Reset ────────────────────────────────────────────────────────────────────
 function resetForm() {
   document.querySelectorAll('input[type=number]').forEach(el => el.value = '');
-  document.getElementById('edgeSide').value = 'left';
   document.getElementById('errorMsg').textContent = '';
   document.getElementById('diagramWrap').innerHTML = '<div class="placeholder">Indtast parametre og tryk beregn</div>';
   document.getElementById('tableWrap').innerHTML = '';
@@ -731,6 +716,6 @@ document.querySelectorAll('input').forEach(el =>
   el.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); })
 );
 </script>
-<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v1.3 &middot; 10-07-2026</div>
+<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v1.4 &middot; 19-07-2026</div>
 </body>
 </html>
