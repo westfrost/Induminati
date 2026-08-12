@@ -338,7 +338,7 @@
       Tilføjer de tomme kolonner <code>Rykket</code>, <code>Grund</code> og <code>Ny leveringsdato</code> efter <code>Beskrivelse 2</code>.<br>
       Sletter alle rækker hvor <code>Status</code> er <code>6. SFE</code> eller <code>3. FÆRDIG</code>, samt helt tomme rækker.<br>
       Formaterer også manuelt indtastede datoer i <code>Rykket</code> og <code>Ny leveringsdato</code> korrekt.<br>
-      <strong>Ved sammenligning:</strong> hvis en række i "i går" har en værdi i <code>Ny leveringsdato</code>, flyttes værdien over i <code>Rykket</code>, og <code>Ny leveringsdato</code> tømmes.<br>
+      <strong>Ved sammenligning:</strong> hvis en række i "i går" har en værdi i <code>Ny leveringsdato</code>, og <code>Rykket</code> endnu er tom, sættes dags dato ind i <code>Rykket</code> som markering af hvornår den blev rykket – <code>Ny leveringsdato</code> ændres ikke. Har <code>Rykket</code> allerede en værdi, rører værktøjet ikke ved nogen af felterne igen.<br>
       <strong>Hvis kun "i dag" er uploadet:</strong> resultatet er blot det rensede "i dag"-ark – brug det som "i går" i morgen.<br>
       <strong>Hvis "i går" også er uploadet:</strong> rækker fra "i går" bevares (så dine udfyldte felter i <code>Rykket</code>/<code>Grund</code>/<code>Ny leveringsdato</code> ikke overskrives) – de fjernes kun hvis ordren enten er helt væk fra "i dag" eller nu har status <code>6. SFE</code>/<code>3. FÆRDIG</code>. En ordre der bare er rykket udenfor dit ugevalg, bliver <u>ikke</u> fjernet. Nye ordrenumre i "i dag" (indenfor dit ugevalg) tilføjes nederst, markeret med gult.<br>
       For ordrer der findes i både "i går" og "i dag" opdateres <code>Status</code> og <code>Bekræftet leveringsdato</code> altid til dagens værdi. <code>Kildenr.</code> opdateres kun hvis feltet var tomt i går og er blevet udfyldt i dag – ellers rører værktøjet ikke ved den.<br>
@@ -359,7 +359,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v2.8 &middot; 10-07-2026</footer>
+  <footer>Byg til intern brug &middot; v2.9 &middot; 12-08-2026</footer>
 </div>
 
 <script>
@@ -714,13 +714,12 @@ processBtn.addEventListener('click', () => {
   });
   yesterdayAligned = yesterdayAligned.filter(row => !isRowEmpty(row, headers));
 
-  let movedToRykket = 0;
+  let rykketStamped = 0;
   if (headers.includes('Ny leveringsdato') && headers.includes('Rykket')) {
     yesterdayAligned = yesterdayAligned.map(row => {
-      if (row['Ny leveringsdato']) {
-        row['Rykket'] = row['Ny leveringsdato'];
-        row['Ny leveringsdato'] = '';
-        movedToRykket++;
+      if (row['Ny leveringsdato'] && !row['Rykket']) {
+        row['Rykket'] = todayDK();
+        rykketStamped++;
       }
       return row;
     });
@@ -783,7 +782,7 @@ processBtn.addEventListener('click', () => {
   const salesMatched = applySalesLookup(resultRows, headers);
   renderPreview();
   downloadBtn.disabled = false;
-  const movedMsg = movedToRykket ? ` ${movedToRykket} dato(er) flyttet fra "Ny leveringsdato" til "Rykket".` : '';
+  const movedMsg = rykketStamped ? ` ${rykketStamped} ordre(r) markeret som rykket (dags dato sat i "Rykket").` : '';
   const removedMsg = removedCount ? ` ${removedCount} ordre(r) fjernet (ikke længere i "i dag").` : '';
   const statusMsg = statusUpdated ? ` ${statusUpdated} status(ser) opdateret.` : '';
   const dateMsg = dateUpdated ? ` ${dateUpdated} leveringsdato(er) opdateret.` : '';
