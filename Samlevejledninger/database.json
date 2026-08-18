@@ -1,12 +1,156 @@
 [
   {
     "id": 1,
-    "baandtype": "2e016blå-n1,4-pu",
+    "baandtype": "Polymax 2E016BLÅ-PU-N1,4",
     "kategori": "PU",
     "tempOver": "145",
     "tempUnder": "145",
     "holdetid": "1",
     "tryk": "1",
-    "bemaerkning": "Husk bagepapir over samling"
+    "bemaerkning": "Husk bagepapir over samling",
+    "vareNr": "36394"
+  },
+  {
+    "id": 2,
+    "baandtype": "Polymax 1E08W-PU-MAT-CT",
+    "kategori": "PU",
+    "vareNr": "36414",
+    "tempOver": "150",
+    "tempUnder": "150",
+    "holdetid": "5",
+    "tryk": "1",
+    "bemaerkning": "Husk hvid pu film over samling."
+  },
+  {
+    "id": 3,
+    "baandtype": "Polymax 1E08W-PU U/CT",
+    "kategori": "PU",
+    "vareNr": "36810",
+    "tempOver": "148",
+    "tempUnder": "148",
+    "holdetid": "5",
+    "tryk": "1,3",
+    "bemaerkning": ""
+  },
+  {
+    "id": 4,
+    "baandtype": "Polymax 1E12W-PU-P2-P26",
+    "kategori": "PU",
+    "vareNr": "60151",
+    "tempOver": "165",
+    "tempUnder": "165",
+    "holdetid": "4",
+    "tryk": "1,5",
+    "bemaerkning": "Husk prægemåtter."
+  },
+  {
+    "id": 5,
+    "baandtype": "Polymax 1E08G-PU-CT-Mat",
+    "kategori": "PU",
+    "vareNr": "36440",
+    "tempOver": "165",
+    "tempUnder": "165",
+    "holdetid": "5",
+    "tryk": "1,5",
+    "bemaerkning": ""
+  },
+  {
+    "id": 6,
+    "baandtype": "Polymax 2E015B MAT PU CT SKIM",
+    "kategori": "PU",
+    "vareNr": "37984",
+    "tempOver": "160",
+    "tempUnder": "160",
+    "holdetid": "5",
+    "tryk": "1,3",
+    "bemaerkning": ""
+  },
+  {
+    "id": 7,
+    "baandtype": "Polymax 2M0241W-PU-CT-FDA",
+    "kategori": "PU",
+    "vareNr": "36656",
+    "tempOver": "165",
+    "tempUnder": "140",
+    "holdetid": "5",
+    "tryk": "1,5",
+    "bemaerkning": ""
+  },
+  {
+    "id": 8,
+    "baandtype": "Polymax 2E016W-PU-S-FDA-CT-MAT",
+    "kategori": "PU",
+    "vareNr": "36401",
+    "tempOver": "162",
+    "tempUnder": "162",
+    "holdetid": "5",
+    "tryk": "1,5",
+    "bemaerkning": ""
+  },
+  {
+    "id": 9,
+    "baandtype": "Polymax 2E016W-PU-S-U/CT MAT",
+    "kategori": "PU",
+    "vareNr": "36627",
+    "tempOver": "175",
+    "tempUnder": "175",
+    "holdetid": "5",
+    "tryk": "1,5",
+    "bemaerkning": ""
+  },
+  {
+    "id": 10,
+    "baandtype": "Polymax 2E016G-PU-CT-MAT",
+    "kategori": "PU",
+    "vareNr": "36416",
+    "tempOver": "155",
+    "tempUnder": "155",
+    "holdetid": "5",
+    "tryk": "1,5",
+    "bemaerkning": ""
+  },
+  {
+    "id": 11,
+    "baandtype": "Polymax 2E010 TRI PU CT",
+    "kategori": "PU",
+    "vareNr": "37842",
+    "tempOver": "145",
+    "tempUnder": "145",
+    "holdetid": "3",
+    "tryk": "1",
+    "bemaerkning": ""
+  },
+  {
+    "id": 12,
+    "baandtype": "Polymax 2M026 TRI-PU",
+    "kategori": "PU",
+    "vareNr": "37761",
+    "tempOver": "160",
+    "tempUnder": "160",
+    "holdetid": "5",
+    "tryk": "1,2",
+    "bemaerkning": ""
+  },
+  {
+    "id": 13,
+    "baandtype": "Polymax 2M20PU Blå P22",
+    "kategori": "PU",
+    "vareNr": "12468",
+    "tempOver": "175",
+    "tempUnder": "175",
+    "holdetid": "5",
+    "tryk": "1,2",
+    "bemaerkning": ""
+  },
+  {
+    "id": 14,
+    "baandtype": "Polymax 2M018 Blå - PU - TS",
+    "kategori": "PU",
+    "vareNr": "42374",
+    "tempOver": "175",
+    "tempUnder": "175",
+    "holdetid": "5",
+    "tryk": "1,5",
+    "bemaerkning": ""
   }
 ]
