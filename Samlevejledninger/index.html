@@ -161,19 +161,32 @@
   footer{text-align:center;font-size:11px;color:var(--muted);padding:28px 20px;border-top:1px solid var(--border)}
   footer a{color:var(--muted)}
 
-  /* === PRINT === */
+  /* === PRINT ===
+     Udskriften bruger en kompakt tabel (én række pr. båndtype) i stedet for
+     skærmens kort-visning, så der kan være mange bånd pr. A4-ark. */
   #printArea{display:none}
   @media print {
-    header, .toolbar, footer, .page:not(#page-opslag), .entry-actions,
-    .print-group, .page-title, .page-sub { display:none !important; }
+    @page{size:A4 portrait;margin:12mm 10mm}
+    header, .toolbar, footer, .page, .print-group,
+    .page-title, .page-sub { display:none !important; }
     body{background:#fff;color:#000}
     main{max-width:100%;padding:0;margin:0}
-    #page-opslag{display:block !important}
-    .entry-card{border:1px solid #ccc;border-left:4px solid #888;break-inside:avoid;box-shadow:none}
-    .category-tag.PU{color:#000;background:#eee}
-    .category-tag.PVC{color:#000;background:#eee}
-    #printTitle{display:block !important;text-align:center;font-size:20px;font-weight:700;margin-bottom:6px}
-    #printMeta{display:block !important;text-align:center;font-size:11px;color:#555;margin-bottom:24px}
+    #printArea{display:block !important}
+    #printTitle{display:block !important;text-align:center;font-size:15px;font-weight:700;margin:0 0 2px}
+    #printMeta{display:block !important;text-align:center;font-size:9px;color:#444;margin:0 0 10px}
+    .print-cat{font-size:11px;font-weight:700;margin:12px 0 3px;padding-bottom:2px;border-bottom:1.5px solid #000;break-after:avoid}
+    .print-cat:first-child{margin-top:0}
+    table.print-table{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed}
+    table.print-table thead{display:table-header-group}
+    table.print-table th{background:#eee;color:#000;border:1px solid #999;padding:3px 4px;text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:.03em}
+    table.print-table td{border:1px solid #bbb;padding:2.5px 4px;vertical-align:top;word-wrap:break-word}
+    table.print-table tr{break-inside:avoid}
+    table.print-table .c-type{font-weight:700}
+    table.print-table .c-num{text-align:center}
+    table.print-table col.w-type{width:22%}
+    table.print-table col.w-varenr{width:12%}
+    table.print-table col.w-val{width:9%}
+    table.print-table col.w-note{width:21%}
   }
   #printTitle,#printMeta{display:none}
 </style>
@@ -207,6 +220,7 @@
 
   <div id="printTitle">Samlevejledninger</div>
   <div id="printMeta"></div>
+  <div id="printArea"></div>
 
   <!-- OPSLAG PAGE -->
   <div class="page active" id="page-opslag">
@@ -392,7 +406,7 @@
 
 <div class="toast" id="toast"></div>
 
-<footer>Induminati &middot; v1.5 &middot; 18-08-2026 &middot; <a href="../index.html">Tilbage til forsiden</a></footer>
+<footer>Induminati &middot; v1.6 &middot; 18-08-2026 &middot; <a href="../index.html">Tilbage til forsiden</a></footer>
 
 <script>
 // ============================================================
@@ -958,32 +972,59 @@ async function autoPullOnOpen() {
 // ============================================================
 // PRINT
 // ============================================================
+function printCell(value, cls) {
+  return `<td class="${cls}">${value ? escapeHtml(value) : '—'}</td>`;
+}
+
+function printRow(e) {
+  return `<tr>
+    ${printCell(e.baandtype, 'c-type')}
+    ${printCell(e.vareNr, 'c-num')}
+    ${printCell(e.tempOver, 'c-num')}
+    ${printCell(e.tempUnder, 'c-num')}
+    ${printCell(e.holdetid, 'c-num')}
+    ${printCell(e.tryk, 'c-num')}
+    <td class="c-note">${e.bemaerkning ? escapeHtml(e.bemaerkning) : ''}</td>
+  </tr>`;
+}
+
+function buildPrintArea(scope) {
+  const cats = scope === 'ALLE' ? ['PU', 'PVC'] : [scope];
+  let html = '';
+
+  cats.forEach(cat => {
+    const entries = db
+      .filter(e => e.kategori === cat)
+      .sort((a, b) => a.baandtype.localeCompare(b.baandtype, 'da'));
+    if (!entries.length) return;
+    html += `
+      <div class="print-cat">${cat} — ${entries.length} båndtype${entries.length === 1 ? '' : 'r'}</div>
+      <table class="print-table">
+        <colgroup>
+          <col class="w-type"><col class="w-varenr">
+          <col class="w-val"><col class="w-val"><col class="w-val"><col class="w-val">
+          <col class="w-note">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Båndtype</th><th>Vare nr.</th>
+            <th>Temp. over</th><th>Temp. under</th>
+            <th>Holdetid (min.)</th><th>Tryk (bar)</th>
+            <th>Bemærkning</th>
+          </tr>
+        </thead>
+        <tbody>${entries.map(printRow).join('')}</tbody>
+      </table>`;
+  });
+
+  document.getElementById('printArea').innerHTML =
+    html || '<p style="text-align:center">Ingen poster at printe.</p>';
+}
+
 function doPrint(scope) {
-  const prevFilter = currentFilter;
-  const prevSearch = document.getElementById('searchInput').value;
-
-  // switch to opslag page + requested scope, clear search so nothing is hidden
-  document.getElementById('searchInput').value = '';
-  currentFilter = scope;
-  showPage('opslag');
-  document.querySelectorAll('#filterTabs .filter-tab').forEach(b => b.classList.remove('active'));
-  const tabBtn = document.querySelector(`#filterTabs [data-cat="${scope}"]`);
-  if (tabBtn) tabBtn.classList.add('active');
-
   const label = scope === 'ALLE' ? 'Samlet database (PU + PVC)' : scope + '-database';
   document.getElementById('printMeta').textContent = `${label} · ${new Date().toLocaleDateString('da-DK')}`;
-
-  const restore = () => {
-    currentFilter = prevFilter;
-    document.getElementById('searchInput').value = prevSearch;
-    document.querySelectorAll('#filterTabs .filter-tab').forEach(b => b.classList.remove('active'));
-    const prevBtn = document.querySelector(`#filterTabs [data-cat="${prevFilter}"]`);
-    if (prevBtn) prevBtn.classList.add('active');
-    renderOpslag();
-    window.removeEventListener('afterprint', restore);
-  };
-  window.addEventListener('afterprint', restore);
-
+  buildPrintArea(scope);
   setTimeout(() => window.print(), 50);
 }
 
