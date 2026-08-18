@@ -21,13 +21,13 @@ Ingen build-step, ingen framework, ingen backend. Hvert værktøj er én selvst�
 | `DXF/` | DXF → NCP Konverter | Konverter DXF-filer til NCP-format til vandskæring og CNC. |
 | `Baanddb/` | Bånd & Medbringer DB | Opslagsdatabase over bånd- og medbringertyper med søgning og GitHub-sync. |
 | `Ordrer/` | Ordreliste-værktøj | Renser og sammenligner "Frigivne produktionsordrer"-eksporter fra BC dag for dag. |
+| `Samlevejledninger/` | Samlevejledninger | Opslagsværk over samlevejledninger for PU- og PVC-bånd — temperatur, holdetid, tryk og bemærkninger. |
 
 ### Test / work in progress (linket fra `Test/index.html`)
 
 | Mappe | Værktøj | Beskrivelse |
 |---|---|---|
 | `Kapacitet/` | Kapacitetsoverblik | Visualiser ordremængde vs. reel kapacitet pr. afdeling og uge. |
-| `Samlevejledninger/` | Samlevejledninger | Opslagsværk over samlevejledninger for PU- og PVC-bånd — temperatur, holdetid, tryk og bemærkninger. |
 
 Når et test-værktøj er klar til drift, flyttes det fra `Test/index.html` til forsidens `index.html`.
 
