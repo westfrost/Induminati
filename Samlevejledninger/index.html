@@ -406,7 +406,7 @@
 
 <div class="toast" id="toast"></div>
 
-<footer>Induminati &middot; v1.6 &middot; 18-08-2026 &middot; <a href="../index.html">Tilbage til forsiden</a></footer>
+<footer>Induminati &middot; v1.7 &middot; 20-08-2026 &middot; <a href="../index.html">Tilbage til forsiden</a></footer>
 
 <script>
 // ============================================================
@@ -426,6 +426,9 @@ function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 let db = loadDB();
 let nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
 let currentFilter = 'ALLE';
+let localDirty = false; // true once the user has changed something locally —
+                         // guards against the background auto-pull silently
+                         // overwriting unsaved/unsynced local edits (race condition)
 
 // ============================================================
 // NAVIGATION
@@ -581,6 +584,7 @@ function saveEntry() {
     db.push({ id: nextId++, ...vals });
   }
   saveDB(db);
+  localDirty = true;
   clearForm();
   document.getElementById('editId').value = '';
   document.getElementById('formTitle').textContent = 'TILFØJ NY POST';
@@ -620,6 +624,7 @@ function deleteEntry(id) {
   if (!confirm(`Slet "${e.baandtype}"?`)) return;
   db = db.filter(x => x.id !== id);
   saveDB(db);
+  localDirty = true;
   renderAllTable();
   renderOpslag();
   toast('Post slettet');
@@ -646,6 +651,7 @@ function importDB() {
     db = parsed;
     nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
     saveDB(db);
+    localDirty = true;
     toast(`${db.length} poster importeret!`);
     renderOpslag();
     renderAllTable();
@@ -953,6 +959,13 @@ async function autoPullOnOpen() {
     if (res.ok) {
       const parsed = await res.json();
       if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
+      if (localDirty) {
+        // User already added/edited/deleted something locally while this
+        // fetch was in flight — do NOT clobber their unsynced changes.
+        setSyncStatus('⚠ Lokale ændringer bevaret (ikke overskrevet)', '#F6C89A');
+        clearSyncStatus(4000);
+        return;
+      }
       db = parsed;
       nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
       saveDB(db);

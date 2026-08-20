@@ -984,6 +984,9 @@ function saveDB(db) {
 
 let db = loadDB();
 let nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+let localDirty = false; // true once the user has changed something locally —
+                         // guards against the background auto-load silently
+                         // overwriting unsaved/unsynced local edits (race condition)
 
 // ============================================================
 // NAVIGATION
@@ -1224,6 +1227,7 @@ function saveEntry() {
     db.push({ id: nextId++, ...vals });
   }
   saveDB(db);
+  localDirty = true;
   clearForm();
   switchMachine('Store HF');
   document.getElementById('editId').value = '';
@@ -1276,6 +1280,7 @@ function deleteEntry(id) {
   if (!confirm(`Slet "${e.baandtype}"?`)) return;
   db = db.filter(x => x.id !== id);
   saveDB(db);
+  localDirty = true;
   renderAllTable();
   toast('Post slettet');
 }
@@ -1301,6 +1306,7 @@ function importDB() {
     db = parsed;
     nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
     saveDB(db);
+    localDirty = true;
     toast(`${db.length} poster importeret!`);
     renderPreview();
   } catch(e) {
@@ -1730,6 +1736,7 @@ function saveBulk() {
   });
 
   saveDB(db);
+  localDirty = true;
   renderPreview();
   updateBulkCount();
 
@@ -1781,6 +1788,13 @@ async function autoLoadFromGithub() {
     if (res.ok) {
       const parsed = await res.json();
       if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
+      if (localDirty) {
+        // User already added/edited/deleted something locally while this
+        // fetch was in flight — do NOT clobber their unsynced changes.
+        setSyncStatus('⚠ Lokale ændringer bevaret (ikke overskrevet)', 'var(--accent)');
+        clearSyncStatus(4000);
+        return;
+      }
       db = parsed;
       nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
       saveDB(db);
@@ -1803,6 +1817,11 @@ async function autoLoadFromGithub() {
       const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
       const parsed = JSON.parse(decoded);
       if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
+      if (localDirty) {
+        setSyncStatus('⚠ Lokale ændringer bevaret (ikke overskrevet)', 'var(--accent)');
+        clearSyncStatus(4000);
+        return;
+      }
       db = parsed;
       nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
       saveDB(db);
@@ -1881,6 +1900,6 @@ applyGhPassword();
 autoLoadFromGithub();
 switchMachine('Store HF');
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.5 &middot; 11-07-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.6 &middot; 20-08-2026</div>
 </body>
 </html>
