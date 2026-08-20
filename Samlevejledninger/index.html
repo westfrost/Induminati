@@ -406,7 +406,7 @@
 
 <div class="toast" id="toast"></div>
 
-<footer>Induminati &middot; v1.7 &middot; 20-08-2026 &middot; <a href="../index.html">Tilbage til forsiden</a></footer>
+<footer>Induminati &middot; v1.8 &middot; 20-08-2026 &middot; <a href="../index.html">Tilbage til forsiden</a></footer>
 
 <script>
 // ============================================================
@@ -423,9 +423,34 @@ function loadDB() {
 }
 function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
+// Tombstones: ids the user has deleted locally. A pull (auto or manual) may
+// fetch a stale/cached remote copy that still contains them — without this,
+// the deleted post would just silently reappear on the next pull. We drop a
+// tombstone once the remote itself no longer contains that id (i.e. the
+// deletion has actually propagated), so this list doesn't grow forever.
+const DELETED_IDS_KEY = 'samlevejledninger_deleted_ids';
+
+function loadDeletedIds() {
+  try {
+    const raw = localStorage.getItem(DELETED_IDS_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch(e) {}
+  return new Set();
+}
+function saveDeletedIds() { localStorage.setItem(DELETED_IDS_KEY, JSON.stringify([...deletedIds])); }
+
+// Filter tombstoned entries out of a freshly-pulled remote snapshot, and
+// prune tombstones the remote has already caught up with.
+function applyTombstones(parsed) {
+  deletedIds = new Set([...deletedIds].filter(id => parsed.some(e => e.id === id)));
+  saveDeletedIds();
+  return parsed.filter(e => !deletedIds.has(e.id));
+}
+
 let db = loadDB();
 let nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
 let currentFilter = 'ALLE';
+let deletedIds = loadDeletedIds();
 let localDirty = false; // true once the user has changed something locally —
                          // guards against the background auto-pull silently
                          // overwriting unsaved/unsynced local edits (race condition)
@@ -624,6 +649,8 @@ function deleteEntry(id) {
   if (!confirm(`Slet "${e.baandtype}"?`)) return;
   db = db.filter(x => x.id !== id);
   saveDB(db);
+  deletedIds.add(id);
+  saveDeletedIds();
   localDirty = true;
   renderAllTable();
   renderOpslag();
@@ -830,8 +857,8 @@ async function githubPull() {
     if (rawRes.ok) {
       const parsed = await rawRes.json();
       if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
-      db = parsed;
-      nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+      nextId = parsed.length ? Math.max(...parsed.map(e=>e.id)) + 1 : 1;
+      db = applyTombstones(parsed);
       saveDB(db);
       syncLog(`✓ Pull lykkedes! ${db.length} poster hentet (offentlig URL).`, 'ok');
       toast(`${db.length} poster hentet fra GitHub!`);
@@ -854,8 +881,8 @@ async function githubPull() {
     const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
     const parsed = JSON.parse(decoded);
     if (!Array.isArray(parsed)) throw new Error('Ugyldigt format');
-    db = parsed;
-    nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+    nextId = parsed.length ? Math.max(...parsed.map(e=>e.id)) + 1 : 1;
+    db = applyTombstones(parsed);
     saveDB(db);
     syncLog(`✓ Pull lykkedes! ${db.length} poster hentet fra GitHub.`, 'ok');
     toast(`${db.length} poster hentet fra GitHub!`);
@@ -966,8 +993,8 @@ async function autoPullOnOpen() {
         clearSyncStatus(4000);
         return;
       }
-      db = parsed;
-      nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
+      nextId = parsed.length ? Math.max(...parsed.map(e=>e.id)) + 1 : 1;
+      db = applyTombstones(parsed);
       saveDB(db);
       renderOpslag();
       setSyncStatus(`✓ ${db.length} poster hentet fra GitHub`, '#8FE0AE');
