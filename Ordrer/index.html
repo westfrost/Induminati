@@ -340,9 +340,10 @@
       Formaterer også manuelt indtastede datoer i <code>Rykket</code> og <code>Ny leveringsdato</code> korrekt.<br>
       <strong>Ved sammenligning:</strong> hvis en række i "i går" har en værdi i <code>Ny leveringsdato</code>, og <code>Rykket</code> endnu er tom, sættes dags dato ind i <code>Rykket</code> som markering af hvornår den blev rykket – <code>Ny leveringsdato</code> ændres ikke. Har <code>Rykket</code> allerede en værdi, rører værktøjet ikke ved nogen af felterne igen.<br>
       <strong>Hvis kun "i dag" er uploadet:</strong> resultatet er blot det rensede "i dag"-ark – brug det som "i går" i morgen.<br>
-      <strong>Hvis "i går" også er uploadet:</strong> rækker fra "i går" bevares (så dine udfyldte felter i <code>Rykket</code>/<code>Grund</code>/<code>Ny leveringsdato</code> ikke overskrives) – de fjernes kun hvis ordren enten er helt væk fra "i dag" eller nu har status <code>6. SFE</code>/<code>3. FÆRDIG</code>. En ordre der bare er rykket udenfor dit ugevalg, bliver <u>ikke</u> fjernet. Nye ordrenumre i "i dag" (indenfor dit ugevalg) tilføjes nederst, markeret med gult.<br>
+      <strong>Hvis "i går" også er uploadet:</strong> rækker fra "i går" bevares (så dine udfyldte felter i <code>Rykket</code>/<code>Grund</code>/<code>Ny leveringsdato</code> ikke overskrives) – de fjernes kun hvis ordren enten er helt væk fra "i dag" eller nu har status <code>6. SFE</code>/<code>3. FÆRDIG</code>. En ordre der bare er rykket udenfor dit ugevalg, bliver <u>ikke</u> fjernet. Nye ordrenumre i "i dag" (indenfor dit ugevalg) tilføjes og markeres med gult.<br>
       For ordrer der findes i både "i går" og "i dag" opdateres <code>Status</code> og <code>Bekræftet leveringsdato</code> altid til dagens værdi. <code>Kildenr.</code> opdateres kun hvis feltet var tomt i går og er blevet udfyldt i dag – ellers rører værktøjet ikke ved den.<br>
       <strong>Salgsordrer (påkrævet):</strong> kolonnen <code>Intern sælger</code> hentes fra salgsordre-arket og indsættes ved siden af <code>Kildenr.</code> – parret ved at matche salgsordrens <code>Nummer</code> mod produktionsordrens <code>Kildenr.</code>. Har en ordre ikke noget <code>Kildenr.</code>, eller findes der ikke et match, står <code>Intern sælger</code> tom for den række.<br>
+      Sorterer til sidst hele resultatet på <code>Bekræftet leveringsdato</code> med den ældste øverst – rækker uden dato lægges nederst.<br>
       Output-filen får kolonneoverskrifter med filtre (autofilter).
     </div>
     <div class="actions">
@@ -359,7 +360,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v2.9 &middot; 12-08-2026</footer>
+  <footer>Byg til intern brug &middot; v3.0 &middot; 18-08-2026</footer>
 </div>
 
 <script>
@@ -679,6 +680,25 @@ function applySalesLookup(rows, headers) {
   return matched;
 }
 
+// Sorterer resultatet på Bekræftet leveringsdato med ældste øverst.
+// Rækker uden brugbar dato lægges nederst, og den oprindelige rækkefølge
+// bruges som tiebreaker, så resultatet er forudsigeligt ved ens datoer.
+function sortByDeliveryDate(rows, headers) {
+  if (!headers.includes(DATE_COLUMN)) return rows;
+  return rows
+    .map((row, i) => {
+      const d = parseDateValue(row[DATE_COLUMN]);
+      return { row, i, t: d ? d.getTime() : null };
+    })
+    .sort((a, b) => {
+      if (a.t === null && b.t === null) return a.i - b.i;
+      if (a.t === null) return 1;
+      if (b.t === null) return -1;
+      return a.t !== b.t ? a.t - b.t : a.i - b.i;
+    })
+    .map(x => x.row);
+}
+
 processBtn.addEventListener('click', () => {
   if (!todayRawRows) return;
   if (!document.querySelectorAll('.week-cb:checked').length) {
@@ -694,7 +714,7 @@ processBtn.addEventListener('click', () => {
   const weekMsg = weekExcluded ? ` (${weekExcluded} ordre(r) sorteret fra pga. ugevalg)` : '';
 
   if (!yesterdayRawRows) {
-    resultRows = cleanedToday;
+    resultRows = sortByDeliveryDate(cleanedToday, headers);
     const salesMatched = applySalesLookup(resultRows, headers);
     renderPreview();
     downloadBtn.disabled = false;
@@ -778,7 +798,7 @@ processBtn.addEventListener('click', () => {
   });
   const removedCount = beforeRemoval - yesterdayAligned.length;
 
-  resultRows = yesterdayAligned.concat(newOrders);
+  resultRows = sortByDeliveryDate(yesterdayAligned.concat(newOrders), headers);
   const salesMatched = applySalesLookup(resultRows, headers);
   renderPreview();
   downloadBtn.disabled = false;
