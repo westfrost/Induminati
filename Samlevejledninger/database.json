@@ -152,16 +152,5 @@
     "holdetid": "5",
     "tryk": "1,5",
     "bemaerkning": ""
-  },
-  {
-    "id": 15,
-    "baandtype": "test",
-    "kategori": "PU",
-    "vareNr": "",
-    "tempOver": "",
-    "tempUnder": "",
-    "holdetid": "",
-    "tryk": "",
-    "bemaerkning": ""
   }
 ]
