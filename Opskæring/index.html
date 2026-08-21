@@ -3,13 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Opskæringskalkulator — Induminati</title>
+<title>Opskæringsberegner — Induminati</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
   :root {
-    --steel:#0B4F79; --rust:#E8791E; --smoke:#F3F7FA; --light:#FFFFFF;
+    --steel:#0B4F79; --rust:#E8791E; --rust-dark:#C9640F; --sky:#1C7FBF;
+    --smoke:#F3F7FA; --light:#FFFFFF;
     --border:#D7E3EC; --text:#17324A; --muted:#5F7C90;
-    --green:#2E9E52; --green-bg:#E6F7EC;
+    --green:#2E9E52; --green-bg:#E6F7EC; --green-border:#A8DFB8;
+    --danger:#D64545; --danger-bg:#FBEAEA; --danger-border:#F0C7C7;
+    --warn:#7A5A18; --warn-bg:#FFF8ED; --warn-border:#E0C8A0;
+    --dorn-bg:#FCEADA; --dorn-border:#E8791E;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Inter',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh}
@@ -20,7 +26,7 @@
   header span{font-size:12px;color:#B9D8EA;font-family:'DM Mono',monospace;margin-left:4px}
   .btn-home{color:#CFE3EE;text-decoration:none;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:5px;transition:color .15s,border-color .15s}
   .btn-home:hover{color:#fff;border-color:var(--rust)}
-  main{max-width:820px;margin:0 auto;padding:28px 18px 60px;display:flex;flex-direction:column;gap:22px}
+  main{max-width:900px;margin:0 auto;padding:28px 18px 60px;display:flex;flex-direction:column;gap:22px}
   .card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:22px}
   .card h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
   .input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
@@ -28,58 +34,69 @@
   .field label{font-size:11px;font-weight:500;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
   .field input{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;padding:9px 11px;border:1.5px solid var(--border);border-radius:5px;background:var(--smoke);color:var(--text);outline:none;transition:border-color .15s,background .15s;width:100%}
   .field input:focus{border-color:var(--rust);background:#fff}
-  .hint{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
+  .field input[type=text]{font-family:'DM Mono',monospace;font-size:13px;font-weight:400}
+  .hint{font-size:11px;color:var(--muted);line-height:1.55;margin-top:10px}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;user-select:none;margin-bottom:14px}
+  .toggle input{width:16px;height:16px;accent-color:var(--rust);cursor:pointer}
   .col-labels{display:flex;gap:8px;margin-bottom:6px}
   .col-labels span{font-size:10px;font-weight:600;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;flex:1}
-  .col-labels span.col-qty{max-width:68px}
+  .col-labels span.col-qty{max-width:74px;flex:none;width:74px}
   .col-labels span.col-del{width:34px;flex:none}
   .band-list{display:flex;flex-direction:column;gap:7px}
   .band-row{display:flex;gap:8px;align-items:center;animation:fadeIn .15s ease}
   @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
   .band-row .field{flex:1}
-  .band-row .field.f-qty{max-width:68px}
+  .band-row .field.f-qty{max-width:74px;flex:none;width:74px}
   .band-row .field label{display:none}
   .btn-del{width:34px;height:38px;flex-shrink:0;border:1.5px solid var(--border);border-radius:5px;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s,background .15s}
-  .btn-del:hover{border-color:var(--rust);color:var(--rust);background:#FDEEE0}
+  .btn-del:hover{border-color:var(--rust);color:var(--rust);background:var(--dorn-bg)}
   .btn-add{margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:1.5px dashed var(--border);border-radius:5px;padding:9px 14px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s}
   .btn-add:hover{border-color:var(--rust);color:var(--rust)}
   .btn-calc{background:var(--rust);color:#fff;border:none;border-radius:6px;padding:13px 28px;font-size:15px;font-weight:600;cursor:pointer;align-self:flex-start;transition:background .15s,transform .1s}
-  .btn-calc:hover{background:#C9640F}
+  .btn-calc:hover{background:var(--rust-dark)}
   .btn-calc:active{transform:scale(.98)}
-  .error-box{background:#FDEEE0;border:1.5px solid var(--rust);border-radius:6px;padding:12px 16px;font-size:14px;color:var(--rust);font-weight:500;display:none}
+  .btn-print{background:var(--steel);color:#fff;border:none;border-radius:6px;padding:13px 28px;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s;align-self:flex-start}
+  .btn-print:hover{background:#083f61}
+  .msg-box{border-radius:6px;padding:12px 16px;font-size:13px;font-weight:500;display:none;line-height:1.6}
+  .msg-box ul{margin:0;padding-left:18px}
+  #error-box{background:var(--danger-bg);border:1.5px solid var(--danger);color:var(--danger)}
+  #warn-box{background:var(--warn-bg);border:1.5px solid var(--warn-border);color:var(--warn)}
   #result{display:none;flex-direction:column;gap:22px}
-  .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
   .sum-card{background:var(--smoke);border:1px solid var(--border);border-radius:6px;padding:13px 15px}
-  .sum-card.green{background:var(--green-bg);border-color:#A8DFB8}
+  .sum-card.green{background:var(--green-bg);border-color:var(--green-border)}
   .sum-card .sc-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px}
   .sum-card.green .sc-lbl{color:var(--green)}
   .sum-card .sc-val{font-family:'DM Mono',monospace;font-size:17px;font-weight:500}
   .sum-card.green .sc-val{color:var(--green)}
-  .steps{display:flex;flex-direction:column;gap:9px}
-  .step{display:flex;gap:13px;align-items:flex-start;background:var(--smoke);border:1px solid var(--border);border-radius:6px;padding:13px 15px}
-  .step-num{background:var(--steel);color:#fff;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;border-radius:4px;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .step-body{flex:1}
-  .step-title{font-size:14px;font-weight:600;margin-bottom:3px}
-  .step-detail{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);line-height:1.6}
-  .step-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-  .tag{background:#fff;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:12px}
-  .tag.rest{background:#FFF8ED;border-color:#E0C8A0;color:#7A5A18}
-  .tag.dorn-action{background:#FCEADA;border-color:var(--rust);color:var(--steel);font-weight:600}
-  .step-dorn{border-color:var(--rust);background:#FCEADA}
-  .step-dorn .step-num{background:var(--rust)}
+
+  .section{border:1px solid var(--border);border-radius:6px;margin-bottom:12px;overflow:hidden}
+  .sec-head{background:#E5F1FA;padding:9px 14px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .sec-num{background:var(--steel);color:#fff;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;border-radius:4px;padding:3px 8px;flex-shrink:0}
+  .sec-title{font-size:14px;font-weight:600;color:var(--steel)}
+  .sec-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-left:auto}
+  table.cut{width:100%;border-collapse:collapse}
+  table.cut th{text-align:left;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-family:'DM Mono',monospace;padding:7px 12px;border-bottom:1px solid var(--border);background:var(--light)}
+  table.cut td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top;font-family:'DM Mono',monospace}
+  table.cut tr:last-child td{border-bottom:none}
+  table.cut tr.dorn td{background:var(--dorn-bg)}
+  table.cut tr.siderest td{background:#FAFAF8;color:var(--muted);font-style:italic}
+  .strip-no{font-weight:600;font-size:13px}
+  .badge{display:inline-block;background:var(--rust);color:#fff;font-size:9px;font-weight:700;letter-spacing:.08em;border-radius:3px;padding:2px 6px;font-family:'Inter',sans-serif;margin-right:6px;vertical-align:1px}
+  .piece{line-height:1.65}
+  .piece b{font-weight:600}
+  .piece .pos{color:var(--muted)}
+  .action{margin-top:5px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--steel)}
+  .rest-note{margin-top:5px;display:inline-block;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn);border-radius:4px;padding:3px 8px;font-size:11px;font-weight:600}
   .canvas-wrap{background:var(--smoke);border:1px solid var(--border);border-radius:6px;padding:14px;overflow-x:auto}
   canvas{display:block}
-
-  .btn-print{background:var(--steel);color:#fff;border:none;border-radius:6px;padding:13px 28px;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s;align-self:flex-start}
-  .btn-print:hover{background:#083f61}
-
-  .field input[type=text]{font-family:'DM Mono',monospace;font-size:13px;font-weight:400}
+  .canvas-note{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:8px}
 
   .history-list{display:flex;flex-direction:column;gap:8px}
   .hist-item{background:var(--smoke);border:1px solid var(--border);border-radius:6px;padding:11px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s}
   .hist-item:hover{border-color:var(--rust)}
-  .hist-meta{flex:1}
-  .hist-title{font-size:13px;font-weight:600;font-family:'DM Mono',monospace}
+  .hist-meta{flex:1;min-width:0}
+  .hist-title{font-size:13px;font-weight:600;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .hist-sub{font-size:11px;color:var(--muted);margin-top:2px}
   .hist-del{width:28px;height:28px;border:1.5px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s,color .15s}
   .hist-del:hover{border-color:var(--rust);color:var(--rust)}
@@ -98,13 +115,14 @@
       <rect x="3" y="9" width="14" height="2" fill="#0B4F79"/>
     </svg>
   </div>
-  <h1>Opskæringskalkulator <span>Induminati</span></h1>
+  <h1>Opskæringsberegner <span>Induminati</span></h1>
   <a class="btn-home" href="../index.html">← Forside</a>
 </header>
 <main>
   <div class="card">
     <h2>Moderruller</h2>
     <div class="col-labels">
+      <span class="col-qty">Antal</span>
       <span>Bredde mm</span>
       <span>Længde mm</span>
       <span class="col-del"></span>
@@ -114,46 +132,9 @@
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       Tilføj moderrulle
     </button>
+    <div class="hint">Rullerne bruges i den rækkefølge de står — øverste rulle skæres først. Sæt den rulle du helst vil bruge op øverst, og den du helst vil bevare hel nederst.</div>
   </div>
-  <div class="card">
-    <h2>Buffer — tillæg per bånd</h2>
-    <div class="input-row">
-      <div class="field" style="max-width:180px"><label>Buffer</label><input type="number" id="buffer" min="0" placeholder="Buffer mm"></div>
-      <div class="field" style="max-width:240px"><label>Maks strimler pr. bredde (valgfrit)</label><input type="number" id="max-strimler" min="1" placeholder="Ingen begrænsning"></div>
-    </div>
-    <div class="hint">"Maks strimler" begrænser antal strimler for hver båndbredde for sig — ikke et samlet loft for hele beregningen.</div>
-  </div>
-  <div class="card">
-    <h2>Dorn — pak bånd i bredden</h2>
-    <div class="input-row">
-      <div class="field" style="max-width:200px">
-        <label>Skæretillæg pr. dorn</label>
-        <input type="number" id="dorn-tillæg" min="0" placeholder="fx 10 mm">
-      </div>
-      <div class="field" style="max-width:200px">
-        <label>Maks bredde pr. dorn</label>
-        <input type="number" id="dorn-maxbredde" min="1" placeholder="700" value="700">
-      </div>
-      <div class="field" style="max-width:220px">
-        <label>Maks bånd-længde for dorn</label>
-        <input type="number" id="dorn-maxlaengde" min="1" placeholder="5500" value="5500">
-      </div>
-    </div>
-    <div class="hint">Bånd der er kortere end "Maks bånd-længde" og findes i flere identiske eksemplarer (samme bredde og længde), pakkes side om side på samme dorn op til "Maks bredde pr. dorn".</div>
-  </div>
-  <div class="card">
-    <h2>Ordre / Reference</h2>
-    <div class="input-row">
-      <div class="field">
-        <label>Ordrenummer / Kunde</label>
-        <input type="text" id="order-ref" placeholder="fx 12345 / Navn">
-      </div>
-      <div class="field">
-        <label>Note (valgfrit)</label>
-        <input type="text" id="order-note" placeholder="fx Lager, Navn">
-      </div>
-    </div>
-  </div>
+
   <div class="card">
     <h2>Bånd der skal skæres</h2>
     <div class="col-labels">
@@ -168,878 +149,1046 @@
       Tilføj linje
     </button>
   </div>
-  <div class="error-box" id="error-box"></div>
+
+  <div class="card">
+    <h2>Tillæg og begrænsninger</h2>
+    <div class="input-row">
+      <div class="field" style="max-width:180px"><label>Buffer pr. bånd</label><input type="number" id="buffer" min="0" step="any" placeholder="0" value="0"></div>
+      <div class="field" style="max-width:260px"><label>Maks strimler pr. båndbredde</label><input type="number" id="max-strimler" min="1" step="1" placeholder="Ingen begrænsning"></div>
+    </div>
+    <div class="hint">
+      <b>Buffer</b> lægges til hvert bånds længde før opskæring — kaplængden bliver længde + buffer.<br>
+      <b>Maks strimler pr. båndbredde</b> begrænser hvor mange strimler af <em>samme</em> bredde der må ligge side om side i én række. Tom = ingen begrænsning.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Dorn — pak bånd i bredden</h2>
+    <label class="toggle"><input type="checkbox" id="dorn-on" checked> Brug dorn-pakning</label>
+    <div class="input-row">
+      <div class="field" style="max-width:200px">
+        <label>Skæretillæg pr. dorn</label>
+        <input type="number" id="dorn-tillaeg" min="0" step="any" placeholder="fx 10" value="0">
+      </div>
+      <div class="field" style="max-width:200px">
+        <label>Maks bredde pr. dorn</label>
+        <input type="number" id="dorn-maxbredde" min="1" step="any" placeholder="700" value="700">
+      </div>
+      <div class="field" style="max-width:220px">
+        <label>Maks bånd-længde for dorn</label>
+        <input type="number" id="dorn-maxlaengde" min="1" step="any" placeholder="5500" value="5500">
+      </div>
+    </div>
+    <div class="hint">Bånd der er kortere end "Maks bånd-længde" og findes i mindst to identiske eksemplarer (samme bredde og længde) skæres ud som én bred strimmel, der bagefter deles på dorn. Strimlens bredde = antal bånd × båndbredde + skæretillæg, dog højst "Maks bredde pr. dorn".</div>
+  </div>
+
+  <div class="card">
+    <h2>Ordre / Reference</h2>
+    <div class="input-row">
+      <div class="field">
+        <label>Ordrenummer / Kunde</label>
+        <input type="text" id="order-ref" placeholder="fx 12345 / Navn">
+      </div>
+      <div class="field">
+        <label>Note (valgfrit)</label>
+        <input type="text" id="order-note" placeholder="fx Lager, Navn">
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-box" id="error-box"></div>
+  <div class="msg-box" id="warn-box"></div>
   <div class="input-row">
     <button class="btn-calc" id="btn-calc">Beregn opskæring</button>
   </div>
   <div id="result"></div>
+
   <div class="card" id="history-card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">
       <h2 style="margin:0;padding:0;border:none">Gemte beregninger</h2>
-      <button class="btn-clear-hist" onclick="clearHistory()">Ryd alt</button>
+      <button class="btn-clear-hist" id="btn-clear-hist">Ryd alt</button>
     </div>
     <div class="history-list" id="history-list"></div>
   </div>
 </main>
+
 <script>
+'use strict';
+
 // ============================================================
-// Row builders — Moderruller / Bånd
+// Hjælpere
+// ============================================================
+const fmt = n => Number(n).toLocaleString('da-DK', { maximumFractionDigits: 2 });
+const pct = n => (Math.round(n * 1000) / 10).toLocaleString('da-DK', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+const EPS = 1e-6;
+
+// ============================================================
+// Inputrækker
 // ============================================================
 const rollList = document.getElementById('roll-list');
 const bandList = document.getElementById('band-list');
 
-function addRollRow(b, l) {
+function makeRow(list, cls, vals) {
   const row = document.createElement('div');
   row.className = 'band-row';
   row.innerHTML = `
-    <div class="field"><label>Bredde</label><input type="number" class="roll-b" min="1" placeholder="Bredde mm" value="${b ?? ''}"></div>
-    <div class="field"><label>Længde</label><input type="number" class="roll-l" min="1" placeholder="Længde mm" value="${l ?? ''}"></div>
-    <button class="btn-del" title="Fjern">×</button>
+    <div class="field f-qty"><label>Antal</label><input type="number" class="${cls}-qty" min="1" step="1" placeholder="Antal" value="${vals && vals.qty != null ? vals.qty : ''}"></div>
+    <div class="field"><label>Bredde</label><input type="number" class="${cls}-b" min="1" step="any" placeholder="Bredde mm" value="${vals && vals.b != null ? vals.b : ''}"></div>
+    <div class="field"><label>Længde</label><input type="number" class="${cls}-l" min="1" step="any" placeholder="Længde mm" value="${vals && vals.l != null ? vals.l : ''}"></div>
+    <button class="btn-del" type="button" title="Fjern række">×</button>
   `;
   row.querySelector('.btn-del').addEventListener('click', () => {
-    if (rollList.children.length > 1) row.remove();
+    row.remove();
+    if (list.children.length === 0) makeRow(list, cls);
   });
-  row.querySelector('.roll-l').addEventListener('keydown', e => {
-    if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); addRollRow(); }
+  row.querySelector('.' + cls + '-l').addEventListener('keydown', e => {
+    if (e.key === 'Tab' && !e.shiftKey && row === list.lastElementChild) {
+      e.preventDefault();
+      makeRow(list, cls).querySelector('input').focus();
+    }
   });
-  rollList.appendChild(row);
-  row.querySelector('input').focus();
+  list.appendChild(row);
+  return row;
 }
 
-function addBandRow() {
-  const row = document.createElement('div');
-  row.className = 'band-row';
-  row.innerHTML = `
-    <div class="field f-qty"><label>Antal</label><input type="number" class="r-qty" min="1" placeholder="Antal"></div>
-    <div class="field"><label>Bredde</label><input type="number" class="r-b" min="1" placeholder="Bredde mm"></div>
-    <div class="field"><label>Længde</label><input type="number" class="r-l" min="1" placeholder="Længde mm"></div>
-    <button class="btn-del" title="Fjern">×</button>
-  `;
-  row.querySelector('.btn-del').addEventListener('click', () => {
-    if (bandList.children.length > 1) row.remove();
+const addRollRow = vals => makeRow(rollList, 'roll', vals);
+const addBandRow = vals => makeRow(bandList, 'r', vals);
+
+document.getElementById('btn-add-roll').addEventListener('click', () => addRollRow().querySelector('input').focus());
+document.getElementById('btn-add').addEventListener('click', () => addBandRow().querySelector('input').focus());
+addRollRow({ qty: 1 });
+addBandRow({ qty: 1 });
+
+// Læser en liste af antal/bredde/længde-rækker. Ufuldstændige rækker giver
+// en fejl i stedet for at blive smidt væk i stilhed — helt tomme rækker
+// ignoreres, så en ubrugt "tilføj linje"-række ikke blokerer beregningen.
+function readRows(list, cls, label) {
+  const rows = [], errors = [];
+  [...list.querySelectorAll('.band-row')].forEach((r, i) => {
+    const qtyRaw = r.querySelector('.' + cls + '-qty').value.trim();
+    const bRaw   = r.querySelector('.' + cls + '-b').value.trim();
+    const lRaw   = r.querySelector('.' + cls + '-l').value.trim();
+    if (!qtyRaw && !bRaw && !lRaw) return;
+
+    const qty = qtyRaw === '' ? 1 : Number(qtyRaw);
+    const b = Number(bRaw), l = Number(lRaw);
+    const bad = [];
+    if (!Number.isFinite(qty) || !Number.isInteger(qty) || qty < 1) bad.push('antal skal være et helt tal ≥ 1');
+    if (!Number.isFinite(b) || b <= 0) bad.push('bredde skal være > 0');
+    if (!Number.isFinite(l) || l <= 0) bad.push('længde skal være > 0');
+    if (bad.length) { errors.push(`${label} linje ${i + 1}: ${bad.join(', ')}.`); return; }
+
+    rows.push({ qty, b, l, srcRow: i + 1 });
   });
-  row.querySelector('.r-l').addEventListener('keydown', e => {
-    if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); addBandRow(); }
-  });
-  bandList.appendChild(row);
-  row.querySelector('input').focus();
+  return { rows, errors };
 }
-
-document.getElementById('btn-add-roll').addEventListener('click', () => addRollRow());
-document.getElementById('btn-add').addEventListener('click', addBandRow);
-addRollRow();
-addBandRow();
-
-function readRolls() {
-  const out = [];
-  rollList.querySelectorAll('.band-row').forEach((r, i) => {
-    const b = parseFloat(r.querySelector('.roll-b').value);
-    const l = parseFloat(r.querySelector('.roll-l').value);
-    if (!isNaN(b) && b > 0 && !isNaN(l) && l > 0) out.push({ id: i, b, l });
-  });
-  return out;
-}
-
-// Flattened one-band-per-item list, used by the packing algorithm.
-function readBands() {
-  const out = [];
-  bandList.querySelectorAll('.band-row').forEach(r => {
-    const qty = parseInt(r.querySelector('.r-qty').value);
-    const b   = parseFloat(r.querySelector('.r-b').value);
-    const l   = parseFloat(r.querySelector('.r-l').value);
-    if (!isNaN(qty) && qty >= 1 && !isNaN(b) && b > 0 && !isNaN(l) && l > 0)
-      for (let i = 0; i < qty; i++) out.push({ b, origL: l });
-  });
-  return out;
-}
-
-// Row-level list (keeps qty grouped), used for saving to history.
-function readBandRows() {
-  const out = [];
-  bandList.querySelectorAll('.band-row').forEach(r => {
-    const qty = parseInt(r.querySelector('.r-qty').value);
-    const b   = parseFloat(r.querySelector('.r-b').value);
-    const l   = parseFloat(r.querySelector('.r-l').value);
-    if (!isNaN(qty) && qty >= 1 && !isNaN(b) && b > 0 && !isNaN(l) && l > 0) out.push({ qty, b, l });
-  });
-  return out;
-}
-
-const fmt = n => Number(n).toLocaleString('da-DK');
-
-function showError(msg) {
-  const el = document.getElementById('error-box');
-  el.textContent = msg;
-  el.style.display = 'block';
-  document.getElementById('result').style.display = 'none';
-}
-function clearError() { document.getElementById('error-box').style.display = 'none'; }
 
 // ============================================================
-// Phase 1 — Dorn grouping
+// Emner ("units")
 //
-// Bands shorter than "maks bånd-længde" that come in 2+ identical copies
-// (same width AND same length) are packed side by side onto a shared dorn,
-// up to "maks bredde pr. dorn". A group that needs more than one dorn is
-// provisionally merged end-to-end into a single virtual strip for phase 2
-// — if that virtual strip can't be placed on any roll, phase 3 splits it
-// back into individual dorns (and, as a last resort, individual bands).
+// Et emne er ét sammenhængende længdesnit i moderrullen: enten et enkelt
+// bånd, eller en dorn — en bred strimmel der bagefter deles i N ens bånd.
+// Dorn-emner beholder deres bånd hele vejen igennem, så arbejdssedlen
+// altid kan vise hvad strimlen skal deles op i.
 // ============================================================
-function groupIntoDorns(bands, { dornTillæg, dornMaxW, dornMaxL, maxRollB }) {
-  const dornGroups = new Map();
-  const resolved = [];
+let _uid = 0;
 
-  for (const band of bands) {
-    if (band.origL <= dornMaxL) {
-      const key = `${band.origL}__${band.b}`;
-      if (!dornGroups.has(key)) dornGroups.set(key, []);
-      dornGroups.get(key).push(band);
-    } else {
-      resolved.push(band);
-    }
-  }
-
-  for (const group of dornGroups.values()) {
-    if (group.length < 2) { resolved.push(group[0]); continue; }
-
-    const bandW = group[0].b, bandL = group[0].l, origL = group[0].origL;
-    const effectiveMaxW = Math.min(maxRollB, dornMaxW);
-    const maxPerDorn = Math.floor((effectiveMaxW - dornTillæg) / bandW);
-
-    if (maxPerDorn < 1) { group.forEach(b => resolved.push(b)); continue; }
-
-    const numDorns = Math.ceil(group.length / maxPerDorn);
-    const dorns = [];
-    for (let d = 0; d < numDorns; d++) {
-      const slice = group.slice(d * maxPerDorn, Math.min((d + 1) * maxPerDorn, group.length));
-      dorns.push({
-        b: slice.length * bandW + dornTillæg, origL, l: bandL,
-        isDorn: true, dornPieces: slice, dornTillæg
-      });
-    }
-
-    if (dorns.length === 1) {
-      resolved.push(dorns[0]);
-    } else {
-      resolved.push({
-        b: Math.max(...dorns.map(d => d.b)), origL,
-        l: dorns.reduce((s, d) => s + d.l, 0),
-        isDorn: true, isDornMulti: true, dornSlices: dorns, dornTillæg
-      });
-    }
-  }
-
-  return resolved;
-}
-
-// ============================================================
-// Phase 2 — Pack each width-group into strips ("strimler")
-//
-// For bands sharing a (post-dorn) width, split them across K parallel
-// strips so the LONGEST strip is as short as possible: try K = 1, 2, 3…
-// and binary-search the shortest achievable strip length for each K, then
-// keep the best K. More strips = shorter strips, but uses more roll width.
-// ============================================================
-function canFit(sortedDesc, K, cap) {
-  if (sortedDesc[0] > cap) return false;
-  const bins = new Array(K).fill(0);
-  for (const x of sortedDesc) {
-    let best = -1;
-    for (let i = 0; i < K; i++) {
-      if (bins[i] + x <= cap && (best === -1 || bins[i] > bins[best])) best = i;
-    }
-    if (best === -1) return false;
-    bins[best] += x;
-  }
-  return true;
-}
-
-function minMaxForK(sortedDesc, K, rollL) {
-  const total = sortedDesc.reduce((a, b) => a + b, 0);
-  let lo = sortedDesc[0], hi = Math.min(total, rollL);
-  if (!canFit(sortedDesc, K, hi)) return Infinity;
-  while (lo < hi) {
-    const mid = Math.floor((lo + hi) / 2);
-    if (canFit(sortedDesc, K, mid)) hi = mid; else lo = mid + 1;
-  }
-  return lo;
-}
-
-function assignToBins(sortedDesc, K, cap) {
-  const bins = new Array(K).fill(0);
-  const items = Array.from({ length: K }, () => []);
-  for (const x of sortedDesc) {
-    let best = -1;
-    for (let i = 0; i < K; i++) {
-      if (bins[i] + x <= cap && (best === -1 || bins[i] > bins[best])) best = i;
-    }
-    bins[best] += x;
-    items[best].push(x);
-  }
-  return items.filter(b => b.length > 0);
-}
-
-function packWidthGroup(items, rollL, availW, width, maxStripsPerGroup) {
-  const sorted = [...items].sort((a, b) => b.l - a.l);
-  const lengths = sorted.map(x => x.l);
-  const maxByWidth = Math.floor(availW / width);
-  const maxK = Math.min(maxStripsPerGroup || Infinity, maxByWidth, items.length);
-
-  let bestLen = Infinity, bestK = 1;
-  for (let K = 1; K <= maxK; K++) {
-    const len = minMaxForK(lengths, K, rollL);
-    if (len < bestLen) { bestLen = len; bestK = K; }
-    if (bestLen <= lengths[0]) break; // longest single item is a hard floor
-  }
-
-  const bins = assignToBins(lengths, bestK, bestLen);
-  const pool = [...sorted];
-  return bins.map(bin => {
-    const pieces = bin.map(len => {
-      const idx = pool.findIndex(x => x.l === len);
-      return pool.splice(idx, 1)[0];
-    });
-    return {
-      width, totalLen: pieces.reduce((s, p) => s + p.l, 0), pieces,
-      isDorn: pieces.length === 1 && !!pieces[0].isDorn,
-      isDornMulti: pieces.length === 1 && !!pieces[0].isDornMulti
-    };
-  });
-}
-
-function packAllWidthGroups(bands, maxRollB, maxRollL, maxStripsPerGroup) {
+function buildUnits(bandRows, buffer, dorn) {
   const groups = new Map();
-  for (const b of bands) {
-    if (!groups.has(b.b)) groups.set(b.b, []);
-    groups.get(b.b).push(b);
+  for (const r of bandRows) {
+    const key = r.b + ' ' + r.l;
+    if (!groups.has(key)) groups.set(key, { b: r.b, l: r.l, qty: 0 });
+    groups.get(key).qty += r.qty;
   }
 
-  const strimler = [];
-  let widthUsed = 0;
-  for (const [width, items] of groups) {
-    const isDornGroup = items.some(x => x.isDorn);
-    const availW = isDornGroup ? maxRollB : maxRollB - widthUsed;
-    const strips = packWidthGroup(items, maxRollL, availW, width, maxStripsPerGroup);
-    strimler.push(...strips);
-    widthUsed += width * strips.length;
-  }
-  return strimler;
-}
+  const units = [];
+  for (const g of groups.values()) {
+    const cutLen = g.l + buffer;
+    const mkBand = () => ({ b: g.b, origL: g.l, len: cutLen });
 
-// ============================================================
-// Phase 3 — Assign strips to rolls
-//
-// Longest strips first. Each roll is a sequence of "rows" (one length-cut,
-// possibly containing several strips side by side). Each strip goes to
-// whichever roll+row wastes the least length. If nothing fits, the strip
-// is split one level down and the pieces are retried — a multi-dorn strip
-// splits into individual dorns before ever falling back to raw bands, so
-// dorn-packing is only abandoned as a last resort.
-// ============================================================
-function assignStrimlerToRolls(strimler, rollDefs) {
-  const rolls = rollDefs.map(r => ({ ...r, rows: [], usedL: 0 }));
-  const unplaced = [];
-
-  function tryPlace(s) {
-    let bestRoll = null, bestRow = null, bestWaste = Infinity, isNewRow = false;
-    for (const roll of rolls) {
-      if (s.width > roll.b) continue;
-
-      for (const row of roll.rows) {
-        if (row.width + s.width <= roll.b && s.totalLen <= row.rowLen) {
-          const waste = row.rowLen - s.totalLen;
-          if (waste < bestWaste) { bestWaste = waste; bestRoll = roll; bestRow = row; isNewRow = false; }
-        }
-      }
-      const remainingL = roll.l - roll.usedL;
-      if (s.totalLen <= remainingL) {
-        const waste = remainingL - s.totalLen;
-        if (waste < bestWaste) { bestWaste = waste; bestRoll = roll; bestRow = null; isNewRow = true; }
-      }
+    let perDorn = 0;
+    if (dorn.on && g.qty >= 2 && g.l <= dorn.maxL) {
+      perDorn = Math.floor((dorn.maxW - dorn.tillaeg) / g.b);
+      if (perDorn < 2) perDorn = 0;
     }
-    if (!bestRoll) return false;
 
-    if (isNewRow) {
-      const row = { width: s.width, items: [s], rowLen: s.totalLen };
-      bestRoll.rows.push(row);
-      bestRoll.usedL += s.totalLen;
+    // Fordel bånd jævnt over det nødvendige antal dorne, så den sidste dorn
+    // ikke ender med ét enkelt bånd (2 dorne à 5 slår 6 + 4).
+    let sizes;
+    if (perDorn) {
+      const n = Math.ceil(g.qty / perDorn);
+      const base = Math.floor(g.qty / n), extra = g.qty % n;
+      sizes = Array.from({ length: n }, (_, i) => base + (i < extra ? 1 : 0));
     } else {
-      bestRow.width += s.width;
-      bestRow.items.push(s);
+      sizes = Array.from({ length: g.qty }, () => 1);
     }
-    return true;
+
+    for (const n of sizes) {
+      if (n >= 2) {
+        units.push({
+          id: _uid++, kind: 'dorn', w: n * g.b + dorn.tillaeg, len: cutLen,
+          bands: Array.from({ length: n }, mkBand),
+          bandW: g.b, origL: g.l, tillaeg: dorn.tillaeg
+        });
+      } else {
+        units.push({ id: _uid++, kind: 'band', w: g.b, len: cutLen, bands: [mkBand()], origL: g.l });
+      }
+    }
   }
-
-  // One level down: multi-dorn → individual dorns; single dorn → its raw
-  // bands; multi-band strip → individual bands. [] if already atomic.
-  function splitOneLevel(s) {
-    if (s.isDorn && s.isDornMulti) {
-      return s.pieces[0].dornSlices.map(d => ({
-        width: d.b, totalLen: d.l, pieces: [d], isDorn: true, isDornMulti: false
-      }));
-    }
-    if (s.isDorn) {
-      return s.pieces[0].dornPieces.map(p => ({
-        width: p.b, totalLen: p.l, pieces: [p], isDorn: false, wasSplitFromDorn: true
-      }));
-    }
-    if (s.pieces.length > 1) {
-      return s.pieces.map(p => ({ width: s.width, totalLen: p.l, pieces: [p], isDorn: false }));
-    }
-    return [];
-  }
-
-  const queue = [...strimler].sort((a, b) => b.totalLen - a.totalLen);
-  while (queue.length) {
-    const s = queue.shift();
-    if (tryPlace(s)) continue;
-    const pieces = splitOneLevel(s);
-    if (pieces.length === 0) { unplaced.push(s); continue; }
-    pieces.sort((a, b) => b.totalLen - a.totalLen);
-    queue.unshift(...pieces);
-  }
-
-  const result = rolls.map(roll => {
-    const cutLen = roll.rows.reduce((s, r) => s + r.rowLen, 0);
-    return {
-      id: roll.id, mrB: roll.b, mrL: roll.l, cutLen,
-      restRulle: { b: roll.b, l: roll.l - cutLen },
-      rows: roll.rows.map(row => ({
-        width: row.width, rowLen: row.rowLen, strimler: row.items,
-        sideRest: { b: roll.b - row.width, l: row.rowLen }
-      }))
-    };
-  }).filter(r => r.rows.length > 0);
-
-  return { rolls: result, unplaced };
+  return units;
 }
 
-// ============================================================
-// Calculate
-// ============================================================
-let _printData = null;
-
-document.getElementById('btn-calc').addEventListener('click', calculate);
-
-function calculate() {
-  clearError();
-
-  const rolls = readRolls();
-  if (rolls.length === 0) { showError('Tilføj mindst én moderrulle med bredde og længde.'); return; }
-
-  const rawBands = readBands();
-  if (rawBands.length === 0) { showError('Udfyld mindst ét bånd med antal, bredde og længde.'); return; }
-
-  const buffer = parseFloat(document.getElementById('buffer').value) || 0;
-  const maxStrimlerInput = parseInt(document.getElementById('max-strimler').value);
-  const maxStripsPerGroup = isNaN(maxStrimlerInput) || maxStrimlerInput < 1 ? null : maxStrimlerInput;
-
-  const dornTillæg = parseFloat(document.getElementById('dorn-tillæg').value) || 0;
-  const dornMaxW = parseFloat(document.getElementById('dorn-maxbredde').value) || 700;
-  const dornMaxL = parseFloat(document.getElementById('dorn-maxlaengde').value) || 5500;
-
-  const bands = rawBands.map(b => ({ b: b.b, origL: b.origL, l: b.origL + buffer }));
-
-  const maxRollB = Math.max(...rolls.map(r => r.b));
-  const maxRollL = Math.max(...rolls.map(r => r.l));
-
-  const resolvedBands = groupIntoDorns(bands, { dornTillæg, dornMaxW, dornMaxL, maxRollB });
-
-  for (const band of resolvedBands) {
-    if (band.l > maxRollL) {
-      showError(`Bånd/dorn ${fmt(band.b)} × ${fmt(band.origL)} mm + buffer ${fmt(buffer)} mm = ${fmt(band.l)} mm — overskrider den længste moderrulle (${fmt(maxRollL)} mm).`);
-      return;
-    }
-    if (band.b > maxRollB) {
-      showError(`Bånd ${fmt(band.b)} mm er bredere end den bredeste moderrulle (${fmt(maxRollB)} mm).`);
-      return;
-    }
-  }
-
-  const allStrimler = packAllWidthGroups(resolvedBands, maxRollB, maxRollL, maxStripsPerGroup);
-  const { rolls: placedRolls, unplaced } = assignStrimlerToRolls(allStrimler, rolls);
-
-  const orderRef  = document.getElementById('order-ref').value.trim();
-  const orderNote = document.getElementById('order-note').value.trim();
-  renderResult({ rolls: placedRolls, unplaced, buffer, orderRef, orderNote });
+// Deler en dorn tilbage i enkeltbånd (bruges når dornen ikke kan placeres).
+function explodeUnit(u) {
+  if (u.kind !== 'dorn') return [u];
+  return u.bands.map(b => ({
+    id: _uid++, kind: 'band', w: b.b, len: b.len, bands: [b], origL: b.origL, fromDorn: true
+  }));
 }
 
+const netAreaOf = u => u.bands.reduce((s, b) => s + b.b * b.len, 0);
+
 // ============================================================
-// Shared strip description — the single place that understands the
-// dorn/pieces data shapes, consumed by both the on-screen steps and the
-// printable arbejdsseddel so they can't drift out of sync.
+// Opskæringsmotor
+//
+// Modellen er et 3-trins guillotinesnit, som det faktisk foregår:
+//   1. Tværsnit — der kappes en RÆKKE af moderrullen i fuld bredde.
+//   2. Længdesnit — rækken slidses i STRIMLER side om side.
+//   3. Tværsnit — hver strimmel kappes i de enkelte bånd/dorne.
+//
+// Rækken bygges greedy: for hver kandidat-rækkelængde H fyldes rækken med
+// strimler, og den H der giver den bedste arealudnyttelse vindes. Målet er
+// at bruge så lidt af rullens LÆNGDE som muligt — det er den eneste knappe
+// ressource, da rullebredden er givet.
 // ============================================================
-function describeStrimmel(s, buffer) {
-  if (s.isDorn && s.isDornMulti) {
-    const slices  = s.pieces[0].dornSlices;
-    const bandW   = slices[0].dornPieces[0].b;
-    const perDorn = slices[0].dornPieces.length;
-    return {
-      kind: 'dorn-multi',
-      title: `Strimmel — DORN ×${slices.length}: ${fmt(s.width)} mm bred, ${fmt(s.totalLen)} mm lang`,
-      groups: slices.map((sl, si) => ({
-        label: `Dorn ${si + 1}`,
-        posNote: `pos ${fmt(si * sl.l)}–${fmt((si + 1) * sl.l)} mm i strimlen`,
-        rows: sl.dornPieces.map((p, pi) => ({ idx: pi + 1, b: p.b, origL: p.origL }))
-      })),
-      action: `Skær hver dorn op i ${perDorn} strimler à ${fmt(bandW)} mm`
-    };
+const CAND_LIMIT = 90;
+
+// Én strimmel af bredde w fyldes med emner ende mod ende, længste først.
+function fillColumn(list, used, cap) {
+  const items = [];
+  let len = 0, added = true;
+  while (added) {
+    added = false;
+    for (const u of list) {
+      if (used.has(u.id)) continue;
+      if (len + u.len > cap + EPS) continue;
+      used.add(u.id); items.push(u); len += u.len; added = true;
+      break;
+    }
   }
-  if (s.isDorn) {
-    const piece = s.pieces[0];
-    const bandW = piece.dornPieces[0].b;
-    return {
-      kind: 'dorn',
-      title: `Strimmel — DORN: ${fmt(s.width)} mm bred, ${fmt(s.totalLen)} mm lang`,
-      groups: [{ label: null, posNote: null, rows: piece.dornPieces.map((p, pi) => ({ idx: pi + 1, b: p.b, origL: p.origL })) }],
-      action: `Skær op i ${piece.dornPieces.length} strimler à ${fmt(bandW)} mm  (tillæg ${fmt(piece.dornTillæg)} mm)`
-    };
+  // Emnerne er kun reserveret under afprøvningen — frigiv dem igen.
+  items.forEach(u => used.delete(u.id));
+  return { items, len };
+}
+
+// Fylder én række af bredde B med strimler, hvor ingen strimmel må være
+// længere end H. Strimlerne vælges marginalt: den bredde hvis næste
+// strimmel kan fyldes med mest længde vinder, fordi arealgevinsten pr.
+// forbrugt rullebredde netop er den fyldte længde.
+function fillSection(units, B, H, maxPerWidth) {
+  const byW = new Map();
+  for (const u of units) {
+    if (u.len > H + EPS || u.w > B + EPS) continue;
+    if (!byW.has(u.w)) byW.set(u.w, []);
+    byW.get(u.w).push(u);
   }
+  for (const arr of byW.values()) arr.sort((a, b) => b.len - a.len);
+
+  const used = new Set(), wCount = new Map(), cols = [];
+  let wRem = B, area = 0;
+
+  for (;;) {
+    let pick = null;
+    for (const [w, list] of byW) {
+      if (w > wRem + EPS) continue;
+      if (maxPerWidth && (wCount.get(w) || 0) >= maxPerWidth) continue;
+      const c = fillColumn(list, used, H);
+      if (c.len <= 0) continue;
+      if (!pick || c.len > pick.len + EPS || (Math.abs(c.len - pick.len) < EPS && w > pick.w))
+        pick = { w, len: c.len, items: c.items };
+    }
+    if (!pick) break;
+
+    pick.items.forEach(u => used.add(u.id));
+    cols.push({ w: pick.w, items: pick.items, filled: pick.len });
+    area += pick.w * pick.len;
+    wRem -= pick.w;
+    wCount.set(pick.w, (wCount.get(pick.w) || 0) + 1);
+  }
+
+  if (!cols.length) return null;
+
+  // Rækken kappes kun så lang som den længste strimmel faktisk blev.
+  const len = Math.max(...cols.map(c => c.filled));
+  let x = 0;
+  for (const c of cols) { c.x = x; x += c.w; c.rest = len - c.filled; }
+  return { len, cols, area, widthUsed: B - wRem, sideRest: wRem };
+}
+
+// Kandidat-rækkelængder = de længder en strimmel rent faktisk kan ramme
+// (delsummer af emnelængder), afgrænset til [minH, maxH].
+function candidateLengths(units, minH, maxH, limit) {
+  const counts = new Map();
+  for (const u of units) counts.set(u.len, (counts.get(u.len) || 0) + 1);
+  const lens = [...counts.keys()].sort((a, b) => a - b);
+
+  const sums = new Set([0]);
+  const CAP = 4000;
+  outer:
+  for (const L of lens) {
+    for (const s of [...sums]) {
+      let v = s;
+      for (let k = 1; k <= counts.get(L); k++) {
+        v += L;
+        if (v > maxH + EPS) break;
+        sums.add(v);
+        if (sums.size > CAP) break outer;
+      }
+    }
+  }
+
+  const set = new Set();
+  for (const l of lens) if (l >= minH - EPS && l <= maxH + EPS) set.add(l);
+  for (const v of sums) if (v >= minH - EPS && v <= maxH + EPS) set.add(v);
+  let out = [...set].sort((a, b) => a - b);
+  if (!out.length) return [minH];
+
+  if (out.length > limit) {
+    const picked = new Set([out[0], out[out.length - 1]]);
+    for (let i = 0; i < limit; i++) picked.add(out[Math.round(i * (out.length - 1) / (limit - 1))]);
+    out = [...picked].sort((a, b) => a - b);
+  }
+  return out;
+}
+
+function bestSection(units, B, maxLen, maxPerWidth) {
+  const usable = units.filter(u => u.w <= B + EPS && u.len <= maxLen + EPS);
+  if (!usable.length) return null;
+
+  // Rækken skal altid rumme det længste resterende emne — ellers udskydes
+  // det bare til en dyrere række senere.
+  const minH = Math.max(...usable.map(u => u.len));
+  let best = null;
+  for (const H of candidateLengths(usable, minH, maxLen, CAND_LIMIT)) {
+    const s = fillSection(usable, B, H, maxPerWidth);
+    if (!s) continue;
+    // Det samlede båndareal er givet, så "mindst muligt spild i denne række"
+    // er præcis det samme mål som "mindst muligt af rullens længde brugt i
+    // alt" — derfor scores på absolut spild, ikke på udnyttelsesprocent.
+    s.waste = s.len * B - s.area;
+    s.eff = s.area / (s.len * B);
+    if (!best
+      || s.waste < best.waste - EPS
+      || (Math.abs(s.waste - best.waste) < EPS && (s.len < best.len - EPS
+        || (Math.abs(s.len - best.len) < EPS && s.area > best.area + EPS)))) best = s;
+    if (s.waste < EPS) break;
+  }
+  return best;
+}
+
+function placePass(rolls, pool, maxPerWidth) {
+  let remaining = pool;
+  for (const roll of rolls) {
+    while (remaining.length) {
+      const avail = roll.len - roll.usedLen;
+      if (avail <= EPS) break;
+      const sec = bestSection(remaining, roll.w, avail, maxPerWidth);
+      if (!sec) break;
+      roll.sections.push(sec);
+      roll.usedLen += sec.len;
+      const placed = new Set();
+      for (const c of sec.cols) for (const u of c.items) placed.add(u.id);
+      remaining = remaining.filter(u => !placed.has(u.id));
+    }
+  }
+  return remaining;
+}
+
+function attemptPlan(rollDefs, units, maxPerWidth) {
+  const rolls = rollDefs.map((r, i) => ({ idx: i, w: r.w, len: r.len, sections: [], usedLen: 0 }));
+  const maxW = Math.max(...rolls.map(r => r.w));
+  const maxL = Math.max(...rolls.map(r => r.len));
+  // Dorne der slet ikke kan ligge på nogen rulle deles op med det samme.
+  const pool = units.flatMap(u => (u.w > maxW + EPS || u.len > maxL + EPS) ? explodeUnit(u) : [u]);
+  return { rolls, leftovers: placePass(rolls, pool, maxPerWidth) };
+}
+
+// Færrest uplacerede bånd vejer tungest, derefter mindst brugt rullelængde.
+function planScore(p) {
+  return [p.leftovers.reduce((s, u) => s + u.bands.length, 0), p.rolls.reduce((s, r) => s + r.usedLen, 0)];
+}
+const betterPlan = (a, b) => a[0] !== b[0] ? a[0] < b[0] : a[1] < b[1] - EPS;
+
+function planCutting(rollDefs, units, maxPerWidth) {
+  let best = attemptPlan(rollDefs, units, maxPerWidth);
+  let bestScore = planScore(best);
+
+  // Kan noget ikke placeres, deles de dorn-grupper op der drillede, og hele
+  // planen lægges om fra bunden — at fortsætte på halvt opbrugte ruller ville
+  // låse os fast på de rækker der netop ikke gik op. Dorn-pakningen opgives
+  // gruppe for gruppe, og kun hvis det rent faktisk giver en bedre plan.
+  let cur = units;
+  for (let round = 0; round < 5 && bestScore[0] > 0; round++) {
+    const bad = new Set(best.leftovers.flatMap(u => u.bands.map(b => b.b + ' ' + b.origL)));
+    let split = false;
+    const next = cur.flatMap(u => {
+      if (u.kind === 'dorn' && u.bands.some(b => bad.has(b.b + ' ' + b.origL))) { split = true; return explodeUnit(u); }
+      return [u];
+    });
+    if (!split) break;
+    cur = next;
+    const cand = attemptPlan(rollDefs, cur, maxPerWidth);
+    const score = planScore(cand);
+    if (betterPlan(score, bestScore)) { best = cand; bestScore = score; }
+  }
+
   return {
-    kind: 'normal',
-    title: `Strimmel — ${fmt(s.width)} mm bred, ${fmt(s.totalLen)} mm lang${s.wasSplitFromDorn ? '  (enkeltbånd, splittet fra dorn)' : ''}`,
-    groups: [{ label: null, posNote: null, rows: s.pieces.map((p, pi) => ({ idx: pi + 1, b: s.width, origL: p.origL, l: p.l })) }],
-    action: null
+    rolls: best.rolls.filter(r => r.sections.length),
+    unusedRolls: best.rolls.filter(r => !r.sections.length),
+    leftovers: best.leftovers
   };
 }
 
-// Every individual raw band making up a strip (used for "unplaced" tables).
-function flattenToRawBands(s) {
-  if (s.isDorn && s.isDornMulti) {
-    return s.pieces[0].dornSlices.flatMap(sl => sl.dornPieces.map(p => ({ b: p.b, origL: p.origL })));
-  }
-  if (s.isDorn) {
-    return s.pieces[0].dornPieces.map(p => ({ b: p.b, origL: p.origL }));
-  }
-  return s.pieces.map(p => ({ b: s.width, origL: p.origL }));
+// ============================================================
+// Beregn
+// ============================================================
+document.getElementById('btn-calc').addEventListener('click', calculate);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); calculate(); }
+});
+
+function showError(list) {
+  const el = document.getElementById('error-box');
+  el.innerHTML = list.length === 1 ? esc(list[0]) : '<ul>' + list.map(m => `<li>${esc(m)}</li>`).join('') + '</ul>';
+  el.style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function showWarnings(list) {
+  const el = document.getElementById('warn-box');
+  if (!list.length) { el.style.display = 'none'; return; }
+  el.innerHTML = list.length === 1 ? esc(list[0]) : '<ul>' + list.map(m => `<li>${esc(m)}</li>`).join('') + '</ul>';
+  el.style.display = 'block';
+}
+function clearMessages() {
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('warn-box').style.display = 'none';
 }
 
-function stepTags(desc, buffer) {
-  const tags = [];
-  if (desc.kind === 'dorn-multi') {
-    desc.groups.forEach(g => tags.push(`${g.label}: ${g.rows.length} × ${fmt(g.rows[0].b)} mm  (${g.posNote})`));
-  } else if (desc.kind === 'dorn') {
-    desc.groups[0].rows.forEach(r => tags.push(`Bånd ${r.idx}: ${fmt(r.b)} × ${fmt(r.origL)} mm`));
-  } else {
-    desc.groups[0].rows.forEach(r => tags.push(`${fmt(r.b)} × ${fmt(r.origL)} mm  (+${fmt(buffer)} → ${fmt(r.l)} mm)`));
+function num(id, fallback) {
+  const raw = document.getElementById(id).value.trim();
+  if (raw === '') return fallback;
+  const v = Number(raw);
+  return Number.isFinite(v) ? v : fallback;
+}
+
+function calculate() {
+  clearMessages();
+  const errors = [], warnings = [];
+
+  const rollRes = readRows(rollList, 'roll', 'Moderrulle');
+  const bandRes = readRows(bandList, 'r', 'Bånd');
+  errors.push(...rollRes.errors, ...bandRes.errors);
+
+  if (!rollRes.rows.length) errors.push('Tilføj mindst én moderrulle med antal, bredde og længde.');
+  if (!bandRes.rows.length) errors.push('Tilføj mindst ét bånd med antal, bredde og længde.');
+  if (errors.length) { showError(errors); return; }
+
+  const buffer = num('buffer', 0);
+  if (!Number.isFinite(buffer) || buffer < 0) errors.push('Buffer skal være 0 eller derover.');
+
+  const maxStripsRaw = document.getElementById('max-strimler').value.trim();
+  let maxPerWidth = null;
+  if (maxStripsRaw !== '') {
+    const v = Number(maxStripsRaw);
+    if (!Number.isInteger(v) || v < 1) errors.push('"Maks strimler pr. båndbredde" skal være et helt tal ≥ 1, eller tomt.');
+    else maxPerWidth = v;
   }
-  if (desc.action) tags.push(`→ ${desc.action}`);
-  return tags;
+
+  const dorn = {
+    on: document.getElementById('dorn-on').checked,
+    tillaeg: num('dorn-tillaeg', 0),
+    maxW: num('dorn-maxbredde', 700),
+    maxL: num('dorn-maxlaengde', 5500)
+  };
+  if (dorn.on) {
+    if (!Number.isFinite(dorn.tillaeg) || dorn.tillaeg < 0) errors.push('Skæretillæg pr. dorn skal være 0 eller derover.');
+    if (!Number.isFinite(dorn.maxW) || dorn.maxW <= 0) errors.push('Maks bredde pr. dorn skal være > 0.');
+    if (!Number.isFinite(dorn.maxL) || dorn.maxL <= 0) errors.push('Maks bånd-længde for dorn skal være > 0.');
+  }
+  if (errors.length) { showError(errors); return; }
+
+  // Fold antal ud til enkeltruller.
+  const rollDefs = [];
+  rollRes.rows.forEach(r => { for (let i = 0; i < r.qty; i++) rollDefs.push({ w: r.b, len: r.l }); });
+
+  const maxRollW = Math.max(...rollDefs.map(r => r.w));
+  const maxRollL = Math.max(...rollDefs.map(r => r.len));
+
+  for (const r of bandRes.rows) {
+    if (r.b > maxRollW + EPS)
+      errors.push(`Bånd linje ${r.srcRow}: bredde ${fmt(r.b)} mm er bredere end den bredeste moderrulle (${fmt(maxRollW)} mm).`);
+    if (r.l + buffer > maxRollL + EPS)
+      errors.push(`Bånd linje ${r.srcRow}: kaplængde ${fmt(r.l)} + ${fmt(buffer)} = ${fmt(r.l + buffer)} mm er længere end den længste moderrulle (${fmt(maxRollL)} mm).`);
+  }
+  if (errors.length) { showError(errors); return; }
+
+  if (dorn.on) {
+    const effMaxW = Math.min(dorn.maxW, maxRollW);
+    if (dorn.tillaeg >= effMaxW)
+      warnings.push(`Skæretillægget (${fmt(dorn.tillaeg)} mm) fylder hele dorn-bredden (${fmt(effMaxW)} mm) — der pakkes ingen dorne.`);
+  }
+
+  _uid = 0;
+  const units = buildUnits(bandRes.rows, buffer, dorn);
+  const plan = planCutting(rollDefs, units, maxPerWidth);
+
+  const totalBands = bandRes.rows.reduce((s, r) => s + r.qty, 0);
+  const placedBands = plan.rolls.reduce((s, r) =>
+    s + r.sections.reduce((s2, sec) =>
+      s2 + sec.cols.reduce((s3, c) => s3 + c.items.reduce((s4, u) => s4 + u.bands.length, 0), 0), 0), 0);
+  const lostBands = plan.leftovers.reduce((s, u) => s + u.bands.length, 0);
+
+  if (placedBands + lostBands !== totalBands)
+    warnings.push(`Intern kontrol: ${totalBands} bånd ind, ${placedBands + lostBands} bånd ud. Kontrollér planen manuelt.`);
+  if (maxPerWidth && plan.leftovers.length)
+    warnings.push('"Maks strimler pr. båndbredde" kan være årsag til at ikke alt kunne placeres — prøv at hæve eller fjerne begrænsningen.');
+  showWarnings(warnings);
+
+  renderResult({
+    plan, buffer, dorn, maxPerWidth,
+    totalBands, placedBands,
+    orderRef: document.getElementById('order-ref').value.trim(),
+    orderNote: document.getElementById('order-note').value.trim(),
+    inputs: {
+      rolls: rollRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l })),
+      bands: bandRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l })),
+      buffer, maxPerWidth, dorn
+    }
+  });
 }
 
 // ============================================================
-// Render — on-screen results
+// Beskrivelse af én strimmel — ét sted, brugt af både skærm og udskrift
 // ============================================================
+function describeColumn(col, buffer) {
+  const pieces = [];
+  let pos = 0;
+  for (const u of col.items) {
+    const from = pos, to = pos + u.len;
+    pos = to;
+    if (u.kind === 'dorn') {
+      pieces.push({
+        dorn: true,
+        head: `${u.bands.length} × ${fmt(u.bandW)} × ${fmt(u.origL)} mm på dorn`,
+        cut: `Kaplængde ${fmt(u.len)} mm`,
+        pos: `pos. ${fmt(from)} – ${fmt(to)} mm`,
+        action: `Skær strimlen op i ${u.bands.length} bånd à ${fmt(u.bandW)} mm` +
+                (u.tillaeg > 0 ? ` (skæretillæg ${fmt(u.tillaeg)} mm)` : '')
+      });
+    } else {
+      pieces.push({
+        dorn: false,
+        head: `${fmt(u.w)} × ${fmt(u.origL)} mm`,
+        cut: buffer > 0 ? `Kaplængde ${fmt(u.len)} mm (+${fmt(buffer)} buffer)` : `Kaplængde ${fmt(u.len)} mm`,
+        pos: `pos. ${fmt(from)} – ${fmt(to)} mm`,
+        action: u.fromDorn ? 'Enkeltbånd — kunne ikke pakkes på dorn' : null
+      });
+    }
+  }
+  return {
+    isDorn: col.items.some(u => u.kind === 'dorn'),
+    width: col.w,
+    from: col.x, to: col.x + col.w,
+    filled: col.filled, rest: col.rest,
+    bandCount: col.items.reduce((s, u) => s + u.bands.length, 0),
+    pieces
+  };
+}
+
+// ============================================================
+// Render — skærm
+// ============================================================
+let _lastPlan = null;
+
+function rollStats(roll, buffer) {
+  const cols = roll.sections.reduce((s, sec) => s + sec.cols.length, 0);
+  const bands = roll.sections.reduce((s, sec) =>
+    s + sec.cols.reduce((s2, c) => s2 + c.items.reduce((s3, u) => s3 + u.bands.length, 0), 0), 0);
+  const net = roll.sections.reduce((s, sec) =>
+    s + sec.cols.reduce((s2, c) => s2 + c.items.reduce((s3, u) => s3 + netAreaOf(u), 0), 0), 0);
+  const usedArea = roll.usedLen * roll.w;
+  return { cols, bands, net, usedArea, eff: usedArea > 0 ? net / usedArea : 0, rest: roll.len - roll.usedLen };
+}
+
 function renderResult(d) {
+  _lastPlan = d;
   const res = document.getElementById('result');
   res.style.display = 'flex';
   res.innerHTML = '';
 
-  if (d.orderRef) {
-    const h = document.createElement('div');
-    h.className = 'card';
-    h.innerHTML = `<h2 style="margin:0;padding:0;border:none">Ordre — ${d.orderRef}${d.orderNote ? ' · ' + d.orderNote : ''}</h2>`;
-    res.appendChild(h);
-  }
+  // --- Samlet overblik ---
+  const totalUsed = d.plan.rolls.reduce((s, r) => s + r.usedLen, 0);
+  const totalArea = d.plan.rolls.reduce((s, r) => s + r.usedLen * r.w, 0);
+  const totalNet = d.plan.rolls.reduce((s, r) => s + rollStats(r, d.buffer).net, 0);
 
-  if (d.unplaced && d.unplaced.length > 0) {
-    const totalW = d.unplaced.reduce((s, x) => s + x.width, 0);
-    const warnCard = document.createElement('div');
-    warnCard.className = 'card';
-    warnCard.style.borderColor = '#D64545';
-    warnCard.style.background = '#FBEAEA';
+  const head = document.createElement('div');
+  head.className = 'card';
+  head.innerHTML = `<h2>${d.orderRef ? 'Ordre — ' + esc(d.orderRef) + (d.orderNote ? ' · ' + esc(d.orderNote) : '') : 'Samlet overblik'}</h2>`;
+  const hg = document.createElement('div');
+  hg.className = 'summary-grid';
+  [
+    { lbl: 'Bånd i alt', val: `${fmt(d.placedBands)} af ${fmt(d.totalBands)}` },
+    { lbl: 'Moderruller brugt', val: `${fmt(d.plan.rolls.length)}` },
+    { lbl: 'Brugt rullelængde', val: `${fmt(totalUsed)} mm` },
+    { lbl: 'Udnyttelse', val: totalArea > 0 ? pct(totalNet / totalArea) : '—' },
+    { lbl: 'Spild', val: `${fmt(Math.round((totalArea - totalNet) / 1e6 * 100) / 100)} m²` },
+  ].forEach(i => {
+    const el = document.createElement('div');
+    el.className = 'sum-card';
+    el.innerHTML = `<div class="sc-lbl">${i.lbl}</div><div class="sc-val">${i.val}</div>`;
+    hg.appendChild(el);
+  });
+  head.appendChild(hg);
+  res.appendChild(head);
 
-    const rows = d.unplaced.flatMap(s => {
-      const isDornSource = !!s.isDorn;
-      return flattenToRawBands(s).map(p =>
-        `<tr><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td><td>${isDornSource ? 'Dorn-bånd' : '—'}</td></tr>`
-      );
-    }).join('');
-
-    warnCard.innerHTML = `
-      <h2 style="color:#D64545;border-color:#F0C7C7">⚠ Manglende materiale — ${d.unplaced.length} strimmel/strimler kunne ikke placeres</h2>
-      <p style="font-size:13px;color:#D64545;margin-bottom:14px">
-        Samlet ${fmt(totalW)} mm bredde kunne ikke være på de angivne moderruller. Tilføj flere, bredere eller længere ruller for at få plads til disse bånd.
+  // --- Manglende materiale ---
+  if (d.plan.leftovers.length) {
+    const grouped = new Map();
+    for (const u of d.plan.leftovers)
+      for (const b of u.bands) {
+        const k = b.b + ' ' + b.origL;
+        grouped.set(k, { b: b.b, l: b.origL, qty: (grouped.get(k)?.qty || 0) + 1 });
+      }
+    const warn = document.createElement('div');
+    warn.className = 'card';
+    warn.style.borderColor = 'var(--danger)';
+    warn.style.background = 'var(--danger-bg)';
+    warn.innerHTML = `
+      <h2 style="color:var(--danger);border-color:var(--danger-border)">⚠ Manglende materiale</h2>
+      <p style="font-size:13px;color:var(--danger);margin-bottom:14px">
+        Der er ikke plads til alle bånd på de angivne moderruller. Tilføj flere, bredere eller længere ruller.
       </p>
       <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace">
         <thead><tr style="text-align:left;color:#B23A3A">
-          <th style="padding:6px 8px;border-bottom:1px solid #F0C7C7">Bredde</th>
-          <th style="padding:6px 8px;border-bottom:1px solid #F0C7C7">Længde</th>
-          <th style="padding:6px 8px;border-bottom:1px solid #F0C7C7">Type</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--danger-border)">Antal</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--danger-border)">Bredde</th>
+          <th style="padding:6px 8px;border-bottom:1px solid var(--danger-border)">Længde</th>
         </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-    res.appendChild(warnCard);
+        <tbody>${[...grouped.values()].map(g =>
+          `<tr><td style="padding:5px 8px">${fmt(g.qty)} stk</td><td style="padding:5px 8px">${fmt(g.b)} mm</td><td style="padding:5px 8px">${fmt(g.l)} mm</td></tr>`
+        ).join('')}</tbody>
+      </table>`;
+    res.appendChild(warn);
   }
 
-  d.rolls.forEach((roll, ri) => {
-    const rollCard = document.createElement('div');
-    rollCard.className = 'card';
-    rollCard.innerHTML = `<h2>Moderrulle ${ri + 1} — ${fmt(roll.mrB)} × ${fmt(roll.mrL)} mm</h2>`;
+  // --- Pr. moderrulle ---
+  d.plan.rolls.forEach((roll, ri) => {
+    const st = rollStats(roll, d.buffer);
 
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<h2>Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm</h2>`;
     const sg = document.createElement('div');
     sg.className = 'summary-grid';
-    const totalStrimler = roll.rows.reduce((s, r) => s + r.strimler.length, 0);
     [
-      { lbl: 'Antal strimler', val: String(totalStrimler) },
-      { lbl: 'Antal snit (rækker)', val: String(roll.rows.length) },
-      { lbl: 'Brugt længde', val: `${fmt(roll.cutLen)} mm` },
-      { lbl: 'Tilbage som moderrulle', val: `${fmt(roll.restRulle.b)} × ${fmt(roll.restRulle.l)} mm`, green: true },
-    ].forEach(item => {
+      { lbl: 'Rækker (tværsnit)', val: String(roll.sections.length) },
+      { lbl: 'Strimler (længdesnit)', val: String(st.cols) },
+      { lbl: 'Bånd på denne rulle', val: String(st.bands) },
+      { lbl: 'Brugt længde', val: `${fmt(roll.usedLen)} mm` },
+      { lbl: 'Udnyttelse', val: pct(st.eff) },
+      { lbl: 'Tilbage som moderrulle', val: `${fmt(roll.w)} × ${fmt(st.rest)} mm`, green: true },
+    ].forEach(i => {
       const el = document.createElement('div');
-      el.className = 'sum-card' + (item.green ? ' green' : '');
-      el.innerHTML = `<div class="sc-lbl">${item.lbl}</div><div class="sc-val">${item.val}</div>`;
+      el.className = 'sum-card' + (i.green ? ' green' : '');
+      el.innerHTML = `<div class="sc-lbl">${i.lbl}</div><div class="sc-val">${i.val}</div>`;
       sg.appendChild(el);
     });
-    rollCard.appendChild(sg);
-    res.appendChild(rollCard);
+    card.appendChild(sg);
+    res.appendChild(card);
 
-    const stepsCard = document.createElement('div');
-    stepsCard.className = 'card';
-    stepsCard.innerHTML = `<h2>Opskæringsplan</h2>`;
-    const st = document.createElement('div');
-    st.className = 'steps';
-    let n = 1;
-
-    roll.rows.forEach((row, rowIdx) => {
-      let usedWidth = 0;
-      row.strimler.forEach(s => {
-        const desc = describeStrimmel(s, d.buffer);
-        const detail = `Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm (række ${rowIdx + 1}).`;
-        const tags = stepTags(desc, d.buffer);
-        if (s.totalLen < row.rowLen) tags.push(`REST: ${fmt(s.width)} × ${fmt(row.rowLen - s.totalLen)} mm`);
-        addStep(st, n++, desc.title, detail, tags, s.isDorn);
-        usedWidth += s.width;
-      });
-
-      if (row.sideRest.b > 0)
-        addStep(st, n++,
-          `Siderest (række ${rowIdx + 1}) — ${fmt(row.sideRest.b)} × ${fmt(row.sideRest.l)} mm`,
-          `Ubrugt bredde i denne række.`, []
-        );
-    });
-
-    stepsCard.appendChild(st);
-    res.appendChild(stepsCard);
+    const planCard = document.createElement('div');
+    planCard.className = 'card';
+    planCard.innerHTML = `<h2>Opskæringsplan — moderrulle ${ri + 1}</h2>` + sectionsHTML(roll, d.buffer);
+    res.appendChild(planCard);
 
     const visCard = document.createElement('div');
     visCard.className = 'card';
-    visCard.innerHTML = `<h2>Visuel oversigt</h2><div class="canvas-wrap"><canvas id="vis-${ri}"></canvas></div>`;
+    visCard.innerHTML = `<h2>Visuel oversigt — moderrulle ${ri + 1}</h2>
+      <div class="canvas-wrap"><canvas id="vis-${ri}"></canvas></div>
+      <div class="canvas-note">Bredden er i målestok. Længden er skaleret for at kunne vises — rækkerne er indbyrdes i korrekt forhold.</div>`;
     res.appendChild(visCard);
   });
+
+  if (d.plan.unusedRolls.length) {
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.innerHTML = `<h2>Urørte moderruller</h2><div style="font-family:'DM Mono',monospace;font-size:13px;line-height:1.8">` +
+      d.plan.unusedRolls.map(r => `${fmt(r.w)} × ${fmt(r.len)} mm — ikke brugt`).join('<br>') + `</div>`;
+    res.appendChild(c);
+  }
 
   const printBtn = document.createElement('button');
   printBtn.className = 'btn-print';
   printBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M3 11H1V6h13v5h-2M3 9h9v5H3z" stroke="white" stroke-width="1.4" stroke-linejoin="round"/></svg> Udskriv arbejdsseddel`;
-  printBtn.onclick = () => openPrintWindow(d);
+  printBtn.addEventListener('click', () => openPrintWindow(d));
   res.appendChild(printBtn);
 
-  d.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
+  d.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
 
-  _printData = d;
   saveToHistory(d);
   res.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function addStep(container, num, title, detail, tags, isDorn) {
-  const div = document.createElement('div');
-  div.className = 'step' + (isDorn ? ' step-dorn' : '');
-  const tagHTML = tags.map(t => {
-    const isRest = t.startsWith('REST:');
-    const isDornTag = t.startsWith('→');
-    return `<span class="tag${isRest ? ' rest' : isDornTag ? ' dorn-action' : ''}">${t}</span>`;
-  }).join('');
-  div.innerHTML = `
-    <div class="step-num">${num}</div>
-    <div class="step-body">
-      <div class="step-title">${title}</div>
-      <div class="step-detail">${detail}</div>
-      ${tagHTML ? `<div class="step-tags">${tagHTML}</div>` : ''}
-    </div>
-  `;
-  container.appendChild(div);
+function piecesHTML(desc, buffer) {
+  let html = '';
+  desc.pieces.forEach((p, i) => {
+    html += `<div class="piece">${desc.pieces.length > 1 ? `<b>${i + 1}.</b> ` : ''}` +
+      `${p.dorn ? '<span class="badge">DORN</span>' : ''}<b>${esc(p.head)}</b> — ${esc(p.cut)}` +
+      `${desc.pieces.length > 1 ? ` <span class="pos">· ${esc(p.pos)}</span>` : ''}</div>`;
+    if (p.action) html += `<div class="action">→ ${esc(p.action)}</div>`;
+  });
+  if (desc.rest > EPS) html += `<div class="rest-note">Længderest: ${fmt(desc.width)} × ${fmt(desc.rest)} mm</div>`;
+  return html;
+}
+
+function sectionsHTML(roll, buffer) {
+  let html = '', pos = 0;
+  roll.sections.forEach((sec, si) => {
+    const from = pos, to = pos + sec.len;
+    pos = to;
+    let rows = '';
+    sec.cols.forEach((col, ci) => {
+      const desc = describeColumn(col, buffer);
+      rows += `<tr class="${desc.isDorn ? 'dorn' : ''}">
+        <td class="strip-no">${ci + 1}</td>
+        <td>${fmt(desc.from)} – ${fmt(desc.to)}</td>
+        <td>${fmt(desc.width)} mm</td>
+        <td>${piecesHTML(desc, buffer)}</td>
+      </tr>`;
+    });
+    if (sec.sideRest > EPS)
+      rows += `<tr class="siderest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Siderest — ubrugt bredde i denne række (${fmt(sec.sideRest)} × ${fmt(sec.len)} mm)</td></tr>`;
+
+    html += `<div class="section">
+      <div class="sec-head">
+        <span class="sec-num">Række ${si + 1}</span>
+        <span class="sec-title">Kap ${fmt(sec.len)} mm af moderrullen</span>
+        <span class="sec-meta">pos. ${fmt(from)} – ${fmt(to)} mm · ${sec.cols.length} strimler · siderest ${fmt(sec.sideRest)} mm</span>
+      </div>
+      <table class="cut">
+        <thead><tr><th style="width:60px">Strimmel</th><th style="width:130px">Position</th><th style="width:80px">Bredde</th><th>Skal indeholde</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  });
+  return html;
 }
 
 // ============================================================
-// Print window
+// Udskrift
 // ============================================================
-function buildPrintRows(desc, s, row, buffer) {
-  let rows = '';
-  if (desc.kind === 'dorn-multi') {
-    desc.groups.forEach(g => {
-      rows += `<tr class="dorn-row"><td colspan="3"><strong>${g.label}</strong> — ${g.posNote}</td></tr>`;
-      g.rows.forEach(r => { rows += `<tr><td>${r.idx}</td><td>${fmt(r.b)} mm</td><td>${fmt(r.origL)} mm</td></tr>`; });
-    });
-  } else {
-    desc.groups[0].rows.forEach(r => {
-      const lenCell = desc.kind === 'normal'
-        ? `${fmt(r.origL)} mm  <span class="muted">(+${fmt(buffer)} → ${fmt(r.l)} mm)</span>`
-        : `${fmt(r.origL)} mm`;
-      rows += `<tr><td>${r.idx}</td><td>${fmt(r.b)} mm</td><td>${lenCell}</td></tr>`;
-    });
-  }
-  if (desc.action) rows += `<tr class="action-row"><td colspan="3">→ ${desc.action}</td></tr>`;
-  if (s.totalLen < row.rowLen) rows += `<tr class="rest-row"><td colspan="3">Længderest: ${fmt(s.width)} × ${fmt(row.rowLen - s.totalLen)} mm</td></tr>`;
-  return rows;
-}
-
 function openPrintWindow(d) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const timeStr = now.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
 
-  let allSections = '';
+  let body = '';
 
-  if (d.unplaced && d.unplaced.length > 0) {
-    const unplacedRows = d.unplaced.flatMap(s => flattenToRawBands(s).map(p =>
-      `<tr><td>${fmt(p.b)} mm</td><td>${fmt(p.origL)} mm</td></tr>`
-    )).join('');
-    allSections += `
-      <div class="unplaced-block">
-        <div class="unplaced-title">⚠ Manglende materiale — kunne ikke placeres</div>
-        <table><thead><tr><th>Bredde</th><th>Længde</th></tr></thead><tbody>${unplacedRows}</tbody></table>
-      </div>`;
+  if (d.plan.leftovers.length) {
+    const grouped = new Map();
+    for (const u of d.plan.leftovers)
+      for (const b of u.bands) {
+        const k = b.b + ' ' + b.origL;
+        grouped.set(k, { b: b.b, l: b.origL, qty: (grouped.get(k)?.qty || 0) + 1 });
+      }
+    body += `<div class="unplaced">
+      <div class="unplaced-title">⚠ Manglende materiale — følgende bånd kunne ikke placeres</div>
+      <table class="cut"><thead><tr><th>Antal</th><th>Bredde</th><th>Længde</th></tr></thead><tbody>${
+        [...grouped.values()].map(g => `<tr><td>${fmt(g.qty)} stk</td><td>${fmt(g.b)} mm</td><td>${fmt(g.l)} mm</td></tr>`).join('')
+      }</tbody></table></div>`;
   }
 
-  d.rolls.forEach((roll, ri) => {
-    let sections = `<div class="roll-header">Moderrulle ${ri + 1} — ${fmt(roll.mrB)} × ${fmt(roll.mrL)} mm</div>`;
-
-    roll.rows.forEach((row, rowIdx) => {
-      let usedWidth = 0;
-      row.strimler.forEach(s => {
-        const desc = describeStrimmel(s, d.buffer);
-        const rows = buildPrintRows(desc, s, row, d.buffer);
-        sections += `
-          <div class="strimmel-block">
-            <div class="strimmel-title">${desc.title}</div>
-            <div class="strimmel-pos">Position ${fmt(usedWidth)} – ${fmt(usedWidth + s.width)} mm  ·  Række ${rowIdx + 1}</div>
-            <table><tbody>${rows}</tbody></table>
-          </div>`;
-        usedWidth += s.width;
-      });
-
-      if (row.sideRest.b > 0) {
-        sections += `
-          <div class="strimmel-block siderest-block">
-            <div class="strimmel-title">Siderest (række ${rowIdx + 1})</div>
-            <div class="strimmel-pos">${fmt(row.sideRest.b)} × ${fmt(row.sideRest.l)} mm — ubrugt bredde</div>
-          </div>`;
-      }
-    });
-
-    allSections += sections;
+  d.plan.rolls.forEach((roll, ri) => {
+    const st = rollStats(roll, d.buffer);
+    body += `<div class="roll-header">Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm
+      <span class="roll-sub">${roll.sections.length} rækker · ${st.cols} strimler · ${st.bands} bånd · brugt ${fmt(roll.usedLen)} mm · rest ${fmt(roll.w)} × ${fmt(st.rest)} mm</span></div>`;
+    body += sectionsHTML(roll, d.buffer);
   });
 
   const html = `<!DOCTYPE html><html lang="da"><head>
-<meta charset="UTF-8"><title>Arbejdsseddel</title>
+<meta charset="UTF-8"><title>Arbejdsseddel — opskæring</title>
 <style>
-@page{size:A4 portrait;margin:13mm 13mm 13mm 13mm}
+@page{size:A4 portrait;margin:12mm}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;font-size:11px;color:#17324A;background:#fff}
-.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #17324A;padding-bottom:8px;margin-bottom:14px}
+body{font-family:Arial,Helvetica,sans-serif;font-size:10.5px;color:#17324A;background:#fff}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #17324A;padding-bottom:8px;margin-bottom:12px}
 .hdr-title{font-size:16px;font-weight:700}
 .hdr-sub{font-size:9px;color:#666;margin-top:3px}
 .hdr-meta{text-align:right;font-size:9px;color:#666;font-family:monospace}
-.roll-header{font-size:13px;font-weight:700;color:#0B4F79;background:#E5F1FA;padding:6px 10px;border-radius:4px;margin:14px 0 8px;page-break-after:avoid}
-.unplaced-block{margin-bottom:14px;page-break-inside:avoid;border:1.5px solid #D64545;border-radius:4px;padding:10px}
-.unplaced-title{font-size:12px;font-weight:700;color:#D64545;margin-bottom:8px}
-.unplaced-block table th{text-align:left;font-size:8px;text-transform:uppercase;color:#999;padding:4px 6px;border-bottom:1px solid #F0C7C7}
-.strimmel-block{margin-bottom:14px;page-break-inside:avoid;border:1px solid #ddd;border-radius:4px;padding:8px 10px}
-.strimmel-title{font-size:12px;font-weight:700;margin-bottom:2px}
-.strimmel-pos{font-size:9px;color:#666;font-family:monospace;margin-bottom:7px}
-table{width:100%;border-collapse:collapse}
-td{padding:4px 6px;border-bottom:1px solid #eee;font-family:monospace;font-size:10px}
-tr:last-child td{border-bottom:none}
-.muted{color:#999}
-.dorn-row td{background:#FCEADA;font-family:Arial,sans-serif;font-size:9px;padding-top:8px}
-.action-row td{background:#FCEADA;color:#0B4F79;font-weight:700;font-family:Arial,sans-serif;font-size:10px}
-.rest-row td{background:#FFF8ED;color:#7A5A18;font-weight:700;font-family:Arial,sans-serif;font-size:10px}
-.siderest-block{background:#FAFAF8;border-style:dashed}
-.siderest-block .strimmel-pos{margin-bottom:0}
-.footer{margin-top:8px;font-size:7px;color:#bbb;text-align:right;border-top:1px solid #eee;padding-top:4px}
+.roll-header{font-size:12.5px;font-weight:700;color:#0B4F79;background:#E5F1FA;padding:6px 10px;border-radius:4px;margin:12px 0 8px;page-break-after:avoid}
+.roll-sub{display:block;font-size:8.5px;font-weight:400;color:#456;font-family:monospace;margin-top:2px}
+.section{border:1px solid #ccd;border-radius:4px;margin-bottom:10px;page-break-inside:avoid;overflow:hidden}
+.sec-head{background:#F1F6FA;padding:5px 9px}
+.sec-num{background:#0B4F79;color:#fff;font-family:monospace;font-size:9px;border-radius:3px;padding:2px 6px;margin-right:7px}
+.sec-title{font-size:11.5px;font-weight:700;color:#0B4F79}
+.sec-meta{font-family:monospace;font-size:8.5px;color:#667;float:right}
+table.cut{width:100%;border-collapse:collapse}
+table.cut th{text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#889;padding:4px 8px;border-bottom:1px solid #ddd}
+table.cut td{padding:5px 8px;border-bottom:1px solid #eee;font-family:monospace;font-size:9.5px;vertical-align:top}
+table.cut tr:last-child td{border-bottom:none}
+table.cut tr.dorn td{background:#FCEADA}
+table.cut tr.siderest td{background:#FAFAF8;color:#889;font-style:italic}
+.strip-no{font-weight:700;font-size:11px}
+.badge{display:inline-block;background:#E8791E;color:#fff;font-size:7.5px;font-weight:700;letter-spacing:.08em;border-radius:3px;padding:1px 5px;font-family:Arial,sans-serif;margin-right:5px}
+.piece{line-height:1.6}
+.piece .pos{color:#889}
+.action{margin-top:3px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#0B4F79}
+.rest-note{margin-top:3px;display:inline-block;background:#FFF8ED;border:1px solid #E0C8A0;color:#7A5A18;border-radius:3px;padding:2px 6px;font-size:9px;font-weight:700;font-family:Arial,sans-serif}
+.unplaced{border:1.5px solid #D64545;border-radius:4px;padding:9px;margin-bottom:12px;page-break-inside:avoid}
+.unplaced-title{font-size:11.5px;font-weight:700;color:#D64545;margin-bottom:6px}
+.footer{margin-top:10px;font-size:7.5px;color:#bbb;text-align:right;border-top:1px solid #eee;padding-top:4px}
 </style></head><body>
 <div class="hdr">
   <div>
-    <div class="hdr-title">Opskæringsplan — Strimler</div>
-    <div class="hdr-sub">${d.orderRef ? d.orderRef + ' &nbsp;|&nbsp; ' : ''}${d.rolls.length} moderrulle(r)  &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm${d.orderNote ? ' &nbsp;|&nbsp; ' + d.orderNote : ''}</div>
+    <div class="hdr-title">Arbejdsseddel — opskæring</div>
+    <div class="hdr-sub">${d.orderRef ? esc(d.orderRef) + ' &nbsp;|&nbsp; ' : ''}${d.plan.rolls.length} moderrulle(r) &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm${d.dorn.on ? ' &nbsp;|&nbsp; Dorn: maks ' + fmt(d.dorn.maxW) + ' mm, tillæg ' + fmt(d.dorn.tillaeg) + ' mm' : ' &nbsp;|&nbsp; Dorn: fra'}${d.orderNote ? ' &nbsp;|&nbsp; ' + esc(d.orderNote) : ''}</div>
   </div>
   <div class="hdr-meta">Dato: ${dateStr}<br>Kl. ${timeStr}</div>
 </div>
-${allSections}
-<div class="footer">Udskrevet ${dateStr} kl. ${timeStr} — Opskæringskalkulator Induminati</div>
+${body}
+<div class="footer">Udskrevet ${dateStr} kl. ${timeStr} — Opskæringsberegner, Induminati</div>
 </body></html>`;
 
-  const w = window.open('', '_blank', 'width=900,height=750');
+  const w = window.open('', '_blank', 'width=980,height=800');
+  if (!w) { alert('Browseren blokerede pop op-vinduet. Tillad pop op for denne side og prøv igen.'); return; }
+  w.document.open();
   w.document.write(html);
   w.document.close();
   w.focus();
-  setTimeout(() => w.print(), 400);
+  const go = () => { try { w.print(); } catch (e) { /* brugeren kan printe manuelt */ } };
+  if (w.document.readyState === 'complete') setTimeout(go, 120); else w.addEventListener('load', () => setTimeout(go, 120));
 }
 
 // ============================================================
-// Canvas — draws all rows for one roll
+// Canvas
 // ============================================================
+const clamp = (lo, v, hi) => Math.max(lo, Math.min(hi, v));
+const hexA = (hex, a) => `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`;
+const COLORS = ['#C94F1E','#1565C0','#2E7D32','#6A1B9A','#00695C','#E65100','#0277BD','#558B2F'];
+
 function drawRollCanvas(roll, rollIndex) {
   const canvas = document.getElementById(`vis-${rollIndex}`);
   if (!canvas) return;
-  const W = Math.min(760, canvas.parentElement.clientWidth - 28);
-  const scaleW = W / roll.mrB;
-  const aspect = Math.min(roll.cutLen / roll.mrB, 3);
-  const H = Math.max(100, Math.round(W * aspect));
-  const scaleL = H / roll.cutLen;
+  const wrapW = canvas.parentElement.clientWidth - 28;
+  const W = Math.max(320, Math.min(820, wrapW));
+  const scaleX = W / roll.w;
 
-  canvas.width  = W;
-  canvas.height = H;
+  const n = roll.sections.length;
+  const MIN_ROW = 40, REST_H = 40, AXIS_H = 18;
+  const bodyH = Math.max(200, MIN_ROW * n + 140);
+  const sectionH = roll.sections.map(s =>
+    MIN_ROW + (bodyH - MIN_ROW * n) * (s.len / Math.max(roll.usedLen, EPS)));
+  const H = Math.round(sectionH.reduce((a, b) => a + b, 0)) + REST_H + AXIS_H;
 
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
   const ctx = canvas.getContext('2d');
-  const COLORS = ['#C94F1E','#1565C0','#2E7D32','#6A1B9A','#00695C','#E65100','#0277BD','#558B2F'];
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  ctx.fillStyle = '#DDD8D0';
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#EFEAE2';
+  ctx.fillRect(0, 0, W, H - AXIS_H);
 
-  let yOff = 0;
-  let colorIdx = 0;
-  roll.rows.forEach(row => {
-    const rowH = row.rowLen * scaleL;
-    let xOff = 0;
-    row.strimler.forEach(s => {
-      const sw = s.width * scaleW;
-      const sh = s.totalLen * scaleL;
-      const col = COLORS[colorIdx % COLORS.length];
-      colorIdx++;
+  let y = 0, colorIdx = 0;
+  roll.sections.forEach((sec, si) => {
+    const rowH = sectionH[si];
+    const scaleY = rowH / sec.len;
 
-      ctx.fillStyle = hexA(col, 0.15);
-      ctx.fillRect(xOff, yOff, sw, rowH);
-      ctx.fillStyle = hexA(col, 0.65);
-      ctx.fillRect(xOff, yOff, sw, sh);
-      ctx.strokeStyle = hexA(col, 0.85);
+    sec.cols.forEach(col => {
+      const x = col.x * scaleX, cw = col.w * scaleX;
+      const c = COLORS[colorIdx++ % COLORS.length];
+      const isDorn = col.items.some(u => u.kind === 'dorn');
+
+      // Ubrugt længde bagest i strimlen
+      ctx.fillStyle = hexA(c, 0.13);
+      ctx.fillRect(x, y, cw, rowH);
+      // Fyldt del
+      ctx.fillStyle = hexA(c, isDorn ? 0.80 : 0.62);
+      ctx.fillRect(x, y, cw, col.filled * scaleY);
+
+      // Skillelinjer mellem emnerne i strimlen
+      let p = 0;
+      ctx.strokeStyle = 'rgba(255,255,255,.75)';
       ctx.lineWidth = 1;
-      ctx.strokeRect(xOff + 0.5, yOff + 0.5, sw - 1, sh - 1);
+      col.items.forEach((u, i) => {
+        p += u.len;
+        if (i < col.items.length - 1) {
+          ctx.beginPath();
+          ctx.moveTo(x, y + p * scaleY); ctx.lineTo(x + cw, y + p * scaleY); ctx.stroke();
+        }
+      });
 
-      if (sw >= 22 && sh >= 18) {
+      ctx.strokeStyle = hexA(c, 0.9);
+      ctx.strokeRect(x + 0.5, y + 0.5, cw - 1, col.filled * scaleY - 1);
+
+      if (cw >= 26 && col.filled * scaleY >= 20) {
         ctx.save();
-        const fs = clamp(8, sw / 5, 12);
-        ctx.font = `600 ${fs}px Inter,sans-serif`;
+        const fs = clamp(8, cw / 5.5, 12);
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`${fmt(s.width)}`, xOff + sw / 2, yOff + sh / 2 - fs * 0.7);
-        ctx.font = `${clamp(7, sw / 6, 10)}px DM Mono,monospace`;
-        ctx.fillText(`${fmt(s.totalLen)}`, xOff + sw / 2, yOff + sh / 2 + fs * 0.7);
+        const cy = y + (col.filled * scaleY) / 2;
+        ctx.font = `600 ${fs}px Inter,sans-serif`;
+        ctx.fillText(fmt(col.w), x + cw / 2, cy - fs * 0.62);
+        ctx.font = `${clamp(7, cw / 7, 10)}px 'DM Mono',monospace`;
+        ctx.fillText(fmt(col.filled), x + cw / 2, cy + fs * 0.62);
+        if (isDorn && cw >= 44 && col.filled * scaleY >= fs * 4.4) {
+          ctx.font = `700 8px Inter,sans-serif`;
+          ctx.fillText('DORN', x + cw / 2, cy + fs * 1.8);
+        }
         ctx.restore();
       }
-      xOff += sw;
     });
 
-    if (row.sideRest.b > 0) {
-      const rw = row.sideRest.b * scaleW;
-      ctx.fillStyle = 'rgba(150,140,130,0.2)';
-      ctx.fillRect(xOff, yOff, rw, rowH);
-      if (rw >= 20 && rowH >= 16) {
+    if (sec.sideRest > EPS) {
+      const x = sec.widthUsed * scaleX, rw = sec.sideRest * scaleX;
+      ctx.fillStyle = 'rgba(150,140,130,0.22)';
+      ctx.fillRect(x, y, rw, rowH);
+      if (rw >= 46 && rowH >= 16) {
         ctx.save();
-        ctx.font = '10px Inter,sans-serif';
-        ctx.fillStyle = '#999';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Siderest', xOff + rw / 2, yOff + rowH / 2);
+        ctx.font = '9px Inter,sans-serif';
+        ctx.fillStyle = '#7A7268';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('Siderest ' + fmt(sec.sideRest), x + rw / 2, y + rowH / 2);
         ctx.restore();
       }
     }
 
-    if (yOff > 0) {
-      ctx.strokeStyle = '#888';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4,3]);
-      ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(W, yOff); ctx.stroke();
+    // Tværsnit
+    if (si > 0) {
+      ctx.strokeStyle = '#5F7C90';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 3]);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       ctx.setLineDash([]);
     }
 
-    yOff += rowH;
+    ctx.save();
+    ctx.font = '9px "DM Mono",monospace';
+    ctx.fillStyle = '#17324A';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(`R${si + 1} · ${fmt(sec.len)} mm`, 4, y + 3);
+    ctx.restore();
+
+    y += rowH;
   });
+
+  // Rest af moderrullen
+  ctx.fillStyle = '#E6F7EC';
+  ctx.fillRect(0, y, W, REST_H);
+  ctx.strokeStyle = '#A8DFB8';
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.save();
+  ctx.font = '600 11px Inter,sans-serif';
+  ctx.fillStyle = '#2E9E52';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(`Rest som moderrulle: ${fmt(roll.w)} × ${fmt(roll.len - roll.usedLen)} mm`, W / 2, y + REST_H / 2);
+  ctx.restore();
 
   ctx.strokeStyle = '#AAA49C';
   ctx.lineWidth = 1;
-  ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+  ctx.strokeRect(0.5, 0.5, W - 1, H - AXIS_H - 1);
 
-  if (H > 20) {
-    ctx.save();
-    ctx.font = '10px DM Mono,monospace';
-    ctx.fillStyle = '#666';
-    ctx.textAlign = 'center';
-    ctx.fillText(`← ${fmt(roll.mrB)} mm →`, W / 2, H - 4);
-    ctx.restore();
-  }
+  ctx.save();
+  ctx.font = '10px "DM Mono",monospace';
+  ctx.fillStyle = '#5F7C90';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText(`← ${fmt(roll.w)} mm bredde →`, W / 2, H - 3);
+  ctx.restore();
 }
-
-function hexA(hex, a) {
-  return `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`;
-}
-function clamp(lo, v, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 // ============================================================
-// History
+// Historik
 // ============================================================
 const HIST_KEY = 'opsk_history';
 const HIST_MAX = 15;
-
-function saveToHistory(d) {
-  const hist = loadHistory();
-  const entry = {
-    id:        Date.now(),
-    date:      new Date().toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-    time:      new Date().toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }),
-    orderRef:  d.orderRef  || '',
-    orderNote: d.orderNote || '',
-    buffer:    d.buffer,
-    rolls:     d.rolls,
-    rollDefs:  readRolls().map(r => ({ b: r.b, l: r.l })),
-    bandRows:  readBandRows()
-  };
-  hist.unshift(entry);
-  if (hist.length > HIST_MAX) hist.length = HIST_MAX;
-  localStorage.setItem(HIST_KEY, JSON.stringify(hist));
-  renderHistory();
-}
 
 function loadHistory() {
   try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; }
   catch { return []; }
 }
 
-function clearHistory() {
-  if (!confirm('Slet hele historikken?')) return;
-  localStorage.removeItem(HIST_KEY);
+function saveToHistory(d) {
+  const hist = loadHistory();
+  const now = new Date();
+  const entry = {
+    id: Date.now(),
+    v: 3,
+    date: now.toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    time: now.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }),
+    orderRef: d.orderRef, orderNote: d.orderNote,
+    inputs: d.inputs,
+    summary: {
+      bands: d.totalBands,
+      placed: d.placedBands,
+      rolls: d.plan.rolls.length,
+      usedLen: d.plan.rolls.reduce((s, r) => s + r.usedLen, 0),
+      rests: d.plan.rolls.map(r => ({ b: r.w, l: r.len - r.usedLen }))
+    }
+  };
+  hist.unshift(entry);
+  if (hist.length > HIST_MAX) hist.length = HIST_MAX;
+  try { localStorage.setItem(HIST_KEY, JSON.stringify(hist)); }
+  catch { /* fuld localStorage — historikken er ikke kritisk */ }
   renderHistory();
 }
 
 function deleteHistEntry(id) {
-  const hist = loadHistory().filter(e => e.id !== id);
-  localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  localStorage.setItem(HIST_KEY, JSON.stringify(loadHistory().filter(e => e.id !== id)));
   renderHistory();
 }
 
+document.getElementById('btn-clear-hist').addEventListener('click', () => {
+  if (!confirm('Slet hele historikken?')) return;
+  localStorage.removeItem(HIST_KEY);
+  renderHistory();
+});
+
+// Understøtter både det nuværende format og de gamle entries (rollDefs/bandRows/bands).
+function entryInputs(e) {
+  if (e.inputs) return e.inputs;
+  return {
+    rolls: (e.rollDefs || []).map(r => ({ qty: 1, b: r.b, l: r.l })),
+    bands: e.bandRows || (e.bands || []).map(b => ({ qty: 1, b: b.b, l: b.origL })),
+    buffer: e.buffer || 0, maxPerWidth: null,
+    dorn: { on: true, tillaeg: 0, maxW: 700, maxL: 5500 }
+  };
+}
+
 function loadHistEntry(entry) {
+  const inp = entryInputs(entry);
   document.getElementById('order-ref').value  = entry.orderRef  || '';
   document.getElementById('order-note').value = entry.orderNote || '';
-  document.getElementById('buffer').value     = entry.buffer;
+  document.getElementById('buffer').value     = inp.buffer ?? 0;
+  document.getElementById('max-strimler').value = inp.maxPerWidth ?? '';
+  document.getElementById('dorn-on').checked  = inp.dorn ? inp.dorn.on !== false : true;
+  document.getElementById('dorn-tillaeg').value    = inp.dorn?.tillaeg ?? 0;
+  document.getElementById('dorn-maxbredde').value  = inp.dorn?.maxW ?? 700;
+  document.getElementById('dorn-maxlaengde').value = inp.dorn?.maxL ?? 5500;
 
   rollList.innerHTML = '';
-  (entry.rollDefs || []).forEach(r => addRollRow(r.b, r.l));
-  if (rollList.children.length === 0) addRollRow();
+  (inp.rolls || []).forEach(r => addRollRow({ qty: r.qty ?? 1, b: r.b, l: r.l }));
+  if (!rollList.children.length) addRollRow({ qty: 1 });
 
   bandList.innerHTML = '';
-  // bandRows is the current format (qty/b/l); fall back to the older
-  // flattened "bands" format (b/origL, one row per unit) if present.
-  const rows = entry.bandRows || (entry.bands || []).map(b => ({ qty: 1, b: b.b, l: b.origL }));
-  rows.forEach(row => {
-    addBandRow();
-    const last = bandList.lastElementChild;
-    last.querySelector('.r-qty').value = row.qty || 1;
-    last.querySelector('.r-b').value   = row.b;
-    last.querySelector('.r-l').value   = row.l;
-  });
-  if (bandList.children.length === 0) addBandRow();
+  (inp.bands || []).forEach(r => addBandRow({ qty: r.qty ?? 1, b: r.b, l: r.l }));
+  if (!bandList.children.length) addBandRow({ qty: 1 });
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1047,34 +1196,36 @@ function loadHistEntry(entry) {
 function renderHistory() {
   const hist = loadHistory();
   const el = document.getElementById('history-list');
-  if (!hist.length) {
-    el.innerHTML = '<div class="hist-empty">Ingen gemte beregninger endnu</div>';
-    return;
-  }
-  window._histCache = hist;
-  el.innerHTML = hist.map(e => {
-    const numRolls = (e.rolls || []).length;
-    const title = e.orderRef ? e.orderRef : `${numRolls} moderrulle(r)`;
-    const restSummary = (e.rolls || []).map(r => `${fmt(r.restRulle.b)}×${fmt(r.restRulle.l)}`).join(', ');
-    const sub = `${e.date} ${e.time}  ·  ${numRolls} rulle(r)  ·  Rest: ${restSummary}${e.orderNote ? '  ·  ' + e.orderNote : ''}`;
-    return `
-      <div class="hist-item" onclick="loadHistEntryById(${e.id})">
-        <div class="hist-meta">
-          <div class="hist-title">${title}</div>
-          <div class="hist-sub">${sub}</div>
-        </div>
-        <button class="hist-del" onclick="event.stopPropagation();deleteHistEntry(${e.id})" title="Slet">×</button>
-      </div>`;
-  }).join('');
-}
+  if (!hist.length) { el.innerHTML = '<div class="hist-empty">Ingen gemte beregninger endnu</div>'; return; }
 
-function loadHistEntryById(id) {
-  const entry = (window._histCache || loadHistory()).find(e => e.id === id);
-  if (entry) loadHistEntry(entry);
+  el.innerHTML = '';
+  hist.forEach(e => {
+    const s = e.summary;
+    const inp = entryInputs(e);
+    const title = e.orderRef || `${(inp.bands || []).reduce((a, b) => a + (b.qty || 1), 0)} bånd`;
+    const sub = s
+      ? `${e.date} ${e.time} · ${fmt(s.placed)}/${fmt(s.bands)} bånd · ${s.rolls} rulle(r) · brugt ${fmt(s.usedLen)} mm · rest ${s.rests.map(r => `${fmt(r.b)}×${fmt(r.l)}`).join(', ')}`
+      : `${e.date} ${e.time}`;
+
+    const item = document.createElement('div');
+    item.className = 'hist-item';
+    item.innerHTML = `<div class="hist-meta">
+        <div class="hist-title">${esc(title)}</div>
+        <div class="hist-sub">${esc(sub)}${e.orderNote ? ' · ' + esc(e.orderNote) : ''}</div>
+      </div>
+      <button class="hist-del" type="button" title="Slet">×</button>`;
+    item.addEventListener('click', () => loadHistEntry(e));
+    item.querySelector('.hist-del').addEventListener('click', ev => { ev.stopPropagation(); deleteHistEntry(e.id); });
+    el.appendChild(item);
+  });
 }
 
 renderHistory();
+
+window.addEventListener('resize', () => {
+  if (_lastPlan) _lastPlan.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
+});
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringskalkulator &middot; v2.0 &middot; 10-07-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.0 &middot; 21-08-2026</div>
 </body>
 </html>

@@ -16,7 +16,7 @@ Ingen build-step, ingen framework, ingen backend. Hvert værktøj er én selvst�
 
 | Mappe | Værktøj | Beskrivelse |
 |---|---|---|
-| `Opskæring/` | Opskæringsberegner | Optimal opskæring af transportbånd fra moderrulle. Minimerer spild. |
+| `Opskæring/` | Opskæringsberegner | Opskæring af transportbånd fra moderrulle. Lægger en 3-trins guillotineplan (tværsnit → længdesnit → kap) der bruger mindst mulig rullelængde, håndterer flere moderruller og dorn-pakning, og udskriver arbejdsseddel. |
 | `Styreliste/` | Styreliste Beregner | Beregn placering og mål for styrelister på transportbånd. |
 | `DXF/` | DXF → NCP Konverter | Konverter DXF-filer til NCP-format til vandskæring og CNC. |
 | `Baanddb/` | Bånd & Medbringer DB | Opslagsdatabase over bånd- og medbringertyper med søgning og GitHub-sync. |
