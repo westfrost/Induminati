@@ -419,6 +419,10 @@ function fillSection(units, B, H, maxPerWidth) {
 
   if (!cols.length) return null;
 
+  // Strimler med samme bredde skal ligge ved siden af hinanden, så knivene
+  // står samlet og operatøren får alle bånd af samme bredde i træk.
+  cols.sort((a, b) => b.w - a.w || b.filled - a.filled);
+
   // Rækken kappes kun så lang som den længste strimmel faktisk blev.
   const len = Math.max(...cols.map(c => c.filled));
   let x = 0;
@@ -478,11 +482,13 @@ function bestSection(units, B, maxLen, maxPerWidth) {
     // alt" — derfor scores på absolut spild, ikke på udnyttelsesprocent.
     s.waste = s.len * B - s.area;
     s.eff = s.area / (s.len * B);
+    // Mindst spild først. Ved samme spild vinder den LÆNGSTE række: den har
+    // pr. definition fået mere materiale med (areal = længde × bredde −
+    // spild), og den sparer en knivopstilling, fordi bånd der ellers ville
+    // blive kappet i hver sin række nu ligger i forlængelse af hinanden.
     if (!best
       || s.waste < best.waste - EPS
-      || (Math.abs(s.waste - best.waste) < EPS && (s.len < best.len - EPS
-        || (Math.abs(s.len - best.len) < EPS && s.area > best.area + EPS)))) best = s;
-    if (s.waste < EPS) break;
+      || (Math.abs(s.waste - best.waste) < EPS && s.len > best.len + EPS)) best = s;
   }
   return best;
 }
@@ -505,13 +511,81 @@ function placePass(rolls, pool, maxPerWidth) {
   return remaining;
 }
 
+// Rækker med samme knivopstilling lægges i forlængelse af hinanden.
+//
+// To rækker med samme sæt strimmelbredder kan altid slås sammen: strimlerne
+// parres og båndene kappes ud efter hinanden i samme snit. Det kan aldrig
+// koste rullelængde — den nye længde er max over strimlerne af summen, og
+// max(a) + max(b) >= max(a + b) — og det sparer en omstilling af knivene.
+// Strimlerne parres mindst-fyldte-først, så den samlede række bliver kortest.
+function mergeSameLayoutSections(roll) {
+  const key = sec => sec.cols.map(c => c.w).sort((a, b) => a - b).join('|');
+
+  const groups = new Map();
+  roll.sections.forEach((sec, i) => {
+    const k = key(sec);
+    if (!groups.has(k)) groups.set(k, { at: i, list: [] });
+    groups.get(k).list.push(sec);
+  });
+  if (groups.size === roll.sections.length) return false;
+
+  const merged = [];
+  for (const g of [...groups.values()].sort((a, b) => a.at - b.at)) {
+    if (g.list.length === 1) { merged.push(g.list[0]); continue; }
+
+    // Én "plads" pr. strimmel i opstillingen; alle rækker i gruppen har
+    // samme bredder, så antallet af pladser pr. bredde passer.
+    const slots = new Map();
+    for (const c of g.list[0].cols) {
+      if (!slots.has(c.w)) slots.set(c.w, []);
+      slots.get(c.w).push({ w: c.w, items: [], filled: 0 });
+    }
+    for (const sec of g.list) {
+      const byW = new Map();
+      for (const c of sec.cols) { if (!byW.has(c.w)) byW.set(c.w, []); byW.get(c.w).push(c); }
+      for (const [w, list] of byW) {
+        for (const c of [...list].sort((a, b) => b.filled - a.filled)) {
+          const target = slots.get(w).reduce((m, s) => s.filled < m.filled ? s : m);
+          target.items.push(...c.items);
+          target.filled += c.filled;
+        }
+      }
+    }
+
+    const cols = [...slots.values()].flat().sort((a, b) => b.w - a.w || b.filled - a.filled);
+    const len = Math.max(...cols.map(c => c.filled));
+    let x = 0;
+    for (const c of cols) { c.x = x; x += c.w; c.rest = len - c.filled; }
+    merged.push({
+      len, cols, area: cols.reduce((s, c) => s + c.w * c.filled, 0),
+      widthUsed: x, sideRest: roll.w - x
+    });
+  }
+
+  roll.sections = merged;
+  roll.usedLen = merged.reduce((s, sec) => s + sec.len, 0);
+  return true;
+}
+
 function attemptPlan(rollDefs, units, maxPerWidth) {
   const rolls = rollDefs.map((r, i) => ({ idx: i, w: r.w, len: r.len, sections: [], usedLen: 0 }));
   const maxW = Math.max(...rolls.map(r => r.w));
   const maxL = Math.max(...rolls.map(r => r.len));
   // Dorne der slet ikke kan ligge på nogen rulle deles op med det samme.
   const pool = units.flatMap(u => (u.w > maxW + EPS || u.len > maxL + EPS) ? explodeUnit(u) : [u]);
-  return { rolls, leftovers: placePass(rolls, pool, maxPerWidth) };
+
+  // Sammenlægningen kan frigøre rullelængde, så der forsøges placeret igen
+  // så længe der både er emner tilbage og noget at vinde.
+  let leftovers = placePass(rolls, pool, maxPerWidth);
+  for (let i = 0; i < 3; i++) {
+    let changed = false;
+    for (const roll of rolls) if (mergeSameLayoutSections(roll)) changed = true;
+    if (!changed || !leftovers.length) break;
+    const before = leftovers.length;
+    leftovers = placePass(rolls, leftovers, maxPerWidth);
+    if (leftovers.length === before) break;
+  }
+  return { rolls, leftovers };
 }
 
 // Færrest uplacerede bånd vejer tungest, derefter mindst brugt rullelængde.
@@ -1226,6 +1300,6 @@ window.addEventListener('resize', () => {
   if (_lastPlan) _lastPlan.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
 });
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.0 &middot; 21-08-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.1 &middot; 22-08-2026</div>
 </body>
 </html>
