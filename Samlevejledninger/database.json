@@ -163,5 +163,16 @@
     "holdetid": "5",
     "tryk": "1,8",
     "bemaerkning": ""
+  },
+  {
+    "id": 16,
+    "baandtype": "Polymax Poly LA-4E14",
+    "kategori": "PU",
+    "vareNr": "60317",
+    "tempOver": "190",
+    "tempUnder": "190",
+    "holdetid": "5",
+    "tryk": "2",
+    "bemaerkning": "Temperaturer er til rødhætten."
   }
 ]
