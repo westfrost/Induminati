@@ -152,5 +152,16 @@
     "holdetid": "5",
     "tryk": "1,5",
     "bemaerkning": ""
+  },
+  {
+    "id": 15,
+    "baandtype": "Polymax 2M016BLÅ PU CONE",
+    "kategori": "PU",
+    "vareNr": "110250",
+    "tempOver": "155",
+    "tempUnder": "155",
+    "holdetid": "5",
+    "tryk": "1,8",
+    "bemaerkning": ""
   }
 ]
