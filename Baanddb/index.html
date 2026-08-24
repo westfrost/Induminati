@@ -1006,12 +1006,25 @@ function applyTombstones(parsed) {
   return parsed.filter(e => !deletedIds.has(e.id));
 }
 
+// localDirty must survive page reloads — otherwise: user edits+saves (fine),
+// reloads the page before pushing, a fresh auto-load sees no in-memory dirty
+// flag, and silently overwrites the unpushed edit with the still-old remote
+// copy. Persisting it means "there are local changes not yet on GitHub" is
+// remembered until an actual push (or an intentional manual pull) resolves it.
+const LOCAL_DIRTY_KEY = 'baanddb_local_dirty';
+function loadLocalDirty() { return localStorage.getItem(LOCAL_DIRTY_KEY) === '1'; }
+function setLocalDirty(val) {
+  localDirty = val;
+  if (val) localStorage.setItem(LOCAL_DIRTY_KEY, '1');
+  else localStorage.removeItem(LOCAL_DIRTY_KEY);
+}
+
 let db = loadDB();
 let nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
 let deletedIds = loadDeletedIds();
-let localDirty = false; // true once the user has changed something locally —
-                         // guards against the background auto-load silently
-                         // overwriting unsaved/unsynced local edits (race condition)
+let localDirty = loadLocalDirty(); // true once the user has changed something
+                         // locally and it hasn't been pushed yet — guards
+                         // against the auto-load silently overwriting it
 
 // ============================================================
 // NAVIGATION
@@ -1252,7 +1265,7 @@ function saveEntry() {
     db.push({ id: nextId++, ...vals });
   }
   saveDB(db);
-  localDirty = true;
+  setLocalDirty(true);
   clearForm();
   switchMachine('Store HF');
   document.getElementById('editId').value = '';
@@ -1307,7 +1320,7 @@ function deleteEntry(id) {
   saveDB(db);
   deletedIds.add(id);
   saveDeletedIds();
-  localDirty = true;
+  setLocalDirty(true);
   renderAllTable();
   toast('Post slettet');
 }
@@ -1333,7 +1346,7 @@ function importDB() {
     db = parsed;
     nextId = db.length ? Math.max(...db.map(e=>e.id)) + 1 : 1;
     saveDB(db);
-    localDirty = true;
+    setLocalDirty(true);
     toast(`${db.length} poster importeret!`);
     renderPreview();
   } catch(e) {
@@ -1483,6 +1496,7 @@ async function githubPush() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+    setLocalDirty(false); // local now matches what's on GitHub
     syncLog(`✓ Push lykkedes! ${db.length} poster gemt i ${s.user}/${s.repo}/${s.path}`, 'ok');
     toast('Database pushet til GitHub!');
   } catch(err) {
@@ -1763,7 +1777,7 @@ function saveBulk() {
   });
 
   saveDB(db);
-  localDirty = true;
+  setLocalDirty(true);
   renderPreview();
   updateBulkCount();
 
@@ -1886,6 +1900,7 @@ async function githubPull() {
       nextId = parsed.length ? Math.max(...parsed.map(e=>e.id)) + 1 : 1;
       db = applyTombstones(parsed);
       saveDB(db);
+      setLocalDirty(false); // local now mirrors GitHub (minus tombstoned deletions)
       syncLog(`✓ Pull lykkedes! ${db.length} poster hentet (offentlig URL).`, 'ok');
       toast(`${db.length} poster hentet fra GitHub!`);
       renderPreview();
@@ -1910,6 +1925,7 @@ async function githubPull() {
     nextId = parsed.length ? Math.max(...parsed.map(e=>e.id)) + 1 : 1;
     db = applyTombstones(parsed);
     saveDB(db);
+    setLocalDirty(false); // local now mirrors GitHub (minus tombstoned deletions)
     syncLog(`✓ Pull lykkedes! ${db.length} poster hentet fra GitHub.`, 'ok');
     toast(`${db.length} poster hentet fra GitHub!`);
     renderPreview();
@@ -1927,6 +1943,6 @@ applyGhPassword();
 autoLoadFromGithub();
 switchMachine('Store HF');
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.7 &middot; 20-08-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.8 &middot; 24-08-2026</div>
 </body>
 </html>
