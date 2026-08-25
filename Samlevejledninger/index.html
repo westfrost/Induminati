@@ -37,6 +37,9 @@
   .page-title{font-size:22px;font-weight:700;margin-bottom:4px}
   .page-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6}
 
+  .notice-banner{background:var(--pu-bg);border:1px solid var(--pu);border-radius:8px;padding:11px 16px;font-size:12.5px;color:var(--text);margin-bottom:22px;display:flex;align-items:center;gap:8px;line-height:1.5}
+  .notice-banner strong{color:var(--dark)}
+
   /* === TOOLBAR (search + filter + print) === */
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:22px}
   .search-input{flex:1;min-width:200px;background:var(--light);border:1.5px solid var(--border);color:var(--text);font-size:14px;padding:10px 14px;border-radius:7px;outline:none;transition:border-color .15s}
@@ -168,12 +171,13 @@
   @media print {
     @page{size:A4 portrait;margin:12mm 10mm}
     header, .toolbar, footer, .page, .print-group,
-    .page-title, .page-sub { display:none !important; }
+    .page-title, .page-sub, .notice-banner { display:none !important; }
     body{background:#fff;color:#000}
     main{max-width:100%;padding:0;margin:0}
     #printArea{display:block !important}
     #printTitle{display:block !important;text-align:center;font-size:15px;font-weight:700;margin:0 0 2px}
     #printMeta{display:block !important;text-align:center;font-size:9px;color:#444;margin:0 0 10px}
+    #printNotice{display:block !important;text-align:center;font-size:9px;font-style:italic;color:#444;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid #ccc}
     .print-cat{font-size:11px;font-weight:700;margin:12px 0 3px;padding-bottom:2px;border-bottom:1.5px solid #000;break-after:avoid}
     .print-cat:first-child{margin-top:0}
     table.print-table{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed}
@@ -188,7 +192,7 @@
     table.print-table col.w-val{width:9%}
     table.print-table col.w-note{width:21%}
   }
-  #printTitle,#printMeta{display:none}
+  #printTitle,#printMeta,#printNotice{display:none}
 </style>
 </head>
 <body>
@@ -218,8 +222,11 @@
 
 <main>
 
+  <div class="notice-banner">⚠️ <span><strong>Bemærk:</strong> Alle temperaturer, holdetider og tryk i denne oversigt er vejledende.</span></div>
+
   <div id="printTitle">Samlevejledninger</div>
   <div id="printMeta"></div>
+  <div id="printNotice">Bemærk: Alle temperaturer, holdetider og tryk er vejledende.</div>
   <div id="printArea"></div>
 
   <!-- OPSLAG PAGE -->
@@ -406,7 +413,7 @@
 
 <div class="toast" id="toast"></div>
 
-<footer>Induminati &middot; v1.9 &middot; 24-08-2026 &middot; <a href="../index.html">Tilbage til forsiden</a></footer>
+<footer>Induminati &middot; v2.0 &middot; 25-08-2026 &middot; <a href="../index.html">Tilbage til forsiden</a></footer>
 
 <script>
 // ============================================================
