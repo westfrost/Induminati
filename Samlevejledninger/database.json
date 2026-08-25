@@ -185,5 +185,16 @@
     "holdetid": "5",
     "tryk": "1,8",
     "bemaerkning": ""
+  },
+  {
+    "id": 18,
+    "baandtype": "Polymax 2M24AG-S",
+    "kategori": "PVC",
+    "vareNr": "36459",
+    "tempOver": "180",
+    "tempUnder": "180",
+    "holdetid": "5",
+    "tryk": "1,8",
+    "bemaerkning": ""
   }
 ]
