@@ -196,5 +196,16 @@
     "holdetid": "5",
     "tryk": "1,8",
     "bemaerkning": ""
+  },
+  {
+    "id": 19,
+    "baandtype": "1M012AG P6 SH 60",
+    "kategori": "PVC",
+    "vareNr": "10250",
+    "tempOver": "180",
+    "tempUnder": "180",
+    "holdetid": "5",
+    "tryk": "1,8",
+    "bemaerkning": ""
   }
 ]
