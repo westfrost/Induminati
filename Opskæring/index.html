@@ -134,7 +134,7 @@
       <div class="lager-dropzone" id="lager-drop" tabindex="0" role="button" aria-label="Upload lagerliste">
         <input type="file" id="lager-file-input" accept=".xlsx,.xls" hidden>
         Træk en lagerliste (.xlsx) hertil, eller klik for at vælge<br>
-        Kolonner: Kode, Bredde, Længde, Planlagt disponibel balance
+        Kolonner: Kode, Bredde, Længde — hver linje regnes som 1 rulle
       </div>
       <div class="lager-status" id="lager-status"></div>
       <button class="btn-add" id="btn-auto-select" type="button" style="display:none">
@@ -672,9 +672,10 @@ function planCutting(rollDefs, units, maxPerWidth) {
 // Lagerliste-upload — automatisk valg af moderruller
 //
 // En uploadet .xlsx (fra Business Central) lister de moderrulle-varianter
-// der er på lager: Kode, Bredde, Længde og "Planlagt disponibel balance"
-// (den lagerførte mængde i m² — bredde×længde i meter). Antal fysiske
-// ruller af hver variant er derfor balance ÷ (bredde × længde), afrundet.
+// der er på lager: Kode, Bredde, Længde. Der regnes altid med præcis 1
+// fysisk rulle pr. linje/variant — "Planlagt disponibel balance" (den
+// lagerførte mængde i m²) bruges bevidst ikke til noget, da den ikke
+// pålideligt afspejler hvor mange hele ruller der reelt ligger på hylden.
 // ============================================================
 let lagerRuller = []; // [{kode, beskrivelse, bredde, laengde, antal}]
 
@@ -733,12 +734,10 @@ function parseLagerRows(rows, filename) {
   const colBeskrivelse = findCol(['Beskrivelse']);
   const colBredde = findCol(['Bredde']);
   const colLaengde = findCol(['Længde', 'Laengde']);
-  const colBalance = findCol(['Planlagt disponibel balance']);
 
   const missing = [];
   if (!colBredde) missing.push('Bredde');
   if (!colLaengde) missing.push('Længde');
-  if (!colBalance) missing.push('Planlagt disponibel balance');
   if (missing.length) {
     setLagerStatus(`Filen "${filename}" mangler kolonne(r): ${missing.join(', ')}.`, 'err');
     lagerRuller = [];
@@ -746,28 +745,23 @@ function parseLagerRows(rows, filename) {
     return;
   }
 
+  // Hver linje = 1 fysisk rulle. "Planlagt disponibel balance" (hvis den
+  // findes i filen) læses bevidst ikke — se kommentaren ovenfor.
   const parsed = [];
-  let skipped = 0, roundWarn = 0;
+  let skipped = 0;
   rows.forEach(r => {
-    const b = Number(r[colBredde]), l = Number(r[colLaengde]), bal = Number(r[colBalance]);
-    if (!Number.isFinite(b) || b <= 0 || !Number.isFinite(l) || l <= 0 || !Number.isFinite(bal) || bal <= 0) { skipped++; return; }
-    const areal = (b / 1000) * (l / 1000);
-    const antalRaw = bal / areal;
-    const antal = Math.round(antalRaw);
-    if (antal < 1) { skipped++; return; }
-    if (Math.abs(antalRaw - antal) > 0.05) roundWarn++;
+    const b = Number(r[colBredde]), l = Number(r[colLaengde]);
+    if (!Number.isFinite(b) || b <= 0 || !Number.isFinite(l) || l <= 0) { skipped++; return; }
     parsed.push({
       kode: colKode ? String(r[colKode]).trim() : '',
       beskrivelse: colBeskrivelse ? String(r[colBeskrivelse]).trim() : '',
-      bredde: b, laengde: l, antal
+      bredde: b, laengde: l, antal: 1
     });
   });
 
   lagerRuller = parsed;
-  const totalRuller = parsed.reduce((s, r) => s + r.antal, 0);
-  let msg = `✓ ${fmt(parsed.length)} varianter indlæst fra "${filename}" (${fmt(totalRuller)} ruller i alt).`;
-  if (skipped) msg += ` ${fmt(skipped)} linje(r) sprunget over (ugyldig bredde/længde/balance).`;
-  if (roundWarn) msg += ` ${fmt(roundWarn)} linje(r) gik ikke helt op i et helt antal ruller — antallet er afrundet.`;
+  let msg = `✓ ${fmt(parsed.length)} ruller indlæst fra "${filename}" (1 stk. pr. linje).`;
+  if (skipped) msg += ` ${fmt(skipped)} linje(r) sprunget over (ugyldig bredde/længde).`;
   setLagerStatus(msg, parsed.length ? 'ok' : 'err');
   btnAutoSelect.style.display = parsed.length ? 'flex' : 'none';
 }
@@ -1569,6 +1563,6 @@ window.addEventListener('resize', () => {
   if (_lastPlan) _lastPlan.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
 });
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.2 &middot; 14-09-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.3 &middot; 14-09-2026</div>
 </body>
 </html>
