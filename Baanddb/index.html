@@ -47,6 +47,8 @@
   .logo-text .brand { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
   .logo-text .brand span { color: var(--accent); }
   .logo-text .sub { font-size: 11px; color: #B9D8EA; letter-spacing: .04em; }
+  .btn-home { color: #CFE3EE; text-decoration: none; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 5px; white-space: nowrap; padding: 6px 10px; border: 1px solid rgba(255,255,255,.3); border-radius: 5px; transition: color .15s, border-color .15s; }
+  .btn-home:hover { color: #fff; border-color: var(--accent); }
   .header-right { display: flex; align-items: center; gap: 14px; margin-left: auto; flex-wrap: wrap; }
   nav { display: flex; gap: 8px; }
   .nav-btn {
@@ -646,19 +648,20 @@
 <body>
 
 <header>
-  <a class="logo-icon" href="../index.html" title="Forside">
+  <div class="logo-icon">
     <svg viewBox="0 0 26 26" fill="none">
       <rect x="2" y="10" width="22" height="7" rx="3.5" fill="white" opacity=".9"/>
       <circle cx="6" cy="13.5" r="3" fill="white"/>
       <circle cx="20" cy="13.5" r="3" fill="white"/>
       <rect x="5" y="12.5" width="16" height="2" fill="#0B4F79"/>
     </svg>
-  </a>
+  </div>
   <div class="logo-text">
     <div class="brand">Bånd<span>DB</span></div>
     <div class="sub">Bånd- & medbringerdatabase</div>
   </div>
   <div class="header-right">
+    <a class="btn-home" href="../index.html">← Forside</a>
     <div id="syncStatus" style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:#B9D8EA;display:none;align-items:center;gap:6px"></div>
     <nav>
       <button class="nav-btn active" onclick="showPage('search')">SØG</button>
@@ -1943,6 +1946,6 @@ applyGhPassword();
 autoLoadFromGithub();
 switchMachine('Store HF');
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.8 &middot; 24-08-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Bånd &amp; Medbringer DB &middot; v1.9 &middot; 14-09-2026</div>
 </body>
 </html>
