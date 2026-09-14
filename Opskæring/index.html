@@ -44,10 +44,19 @@
   .col-labels span.col-del{width:34px;flex:none}
   .band-list{display:flex;flex-direction:column;gap:7px}
   .band-row{display:flex;gap:8px;align-items:center;animation:fadeIn .15s ease}
+  .band-row.has-kode{flex-wrap:wrap}
   @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
   .band-row .field{flex:1}
   .band-row .field.f-qty{max-width:74px;flex:none;width:74px}
   .band-row .field label{display:none}
+  .roll-kode{flex:1 0 100%;order:5;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--sky);background:#EAF4FB;border:1px solid var(--border);border-radius:4px;padding:3px 8px;margin-top:2px;display:inline-block;max-width:max-content}
+  .lager-upload{margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--border)}
+  .lager-dropzone{border:1.5px dashed var(--border);border-radius:6px;padding:16px;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;transition:border-color .15s,background .15s}
+  .lager-dropzone:hover,.lager-dropzone.drag{border-color:var(--rust);background:var(--dorn-bg)}
+  .lager-status{font-size:12px;font-weight:500;margin-top:8px;line-height:1.5;display:none}
+  .lager-status.ok{color:var(--green)}
+  .lager-status.err{color:var(--danger)}
+  .lager-status.info{color:var(--sky)}
   .btn-del{width:34px;height:38px;flex-shrink:0;border:1.5px solid var(--border);border-radius:5px;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s,background .15s}
   .btn-del:hover{border-color:var(--rust);color:var(--rust);background:var(--dorn-bg)}
   .btn-add{margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:1.5px dashed var(--border);border-radius:5px;padding:9px 14px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s}
@@ -121,6 +130,18 @@
 <main>
   <div class="card">
     <h2>Moderruller</h2>
+    <div class="lager-upload">
+      <div class="lager-dropzone" id="lager-drop" tabindex="0" role="button" aria-label="Upload lagerliste">
+        <input type="file" id="lager-file-input" accept=".xlsx,.xls" hidden>
+        Træk en lagerliste (.xlsx) hertil, eller klik for at vælge<br>
+        Kolonner: Kode, Bredde, Længde, Planlagt disponibel balance
+      </div>
+      <div class="lager-status" id="lager-status"></div>
+      <button class="btn-add" id="btn-auto-select" type="button" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Vælg ruller automatisk (færrest mulige, mindste først)
+      </button>
+    </div>
     <div class="col-labels">
       <span class="col-qty">Antal</span>
       <span>Bredde mm</span>
@@ -132,7 +153,7 @@
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       Tilføj moderrulle
     </button>
-    <div class="hint">Rullerne bruges i den rækkefølge de står — øverste rulle skæres først. Sæt den rulle du helst vil bruge op øverst, og den du helst vil bevare hel nederst.</div>
+    <div class="hint">Rullerne bruges i den rækkefølge de står — øverste rulle skæres først. Sæt den rulle du helst vil bruge op øverst, og den du helst vil bevare hel nederst. "Vælg ruller automatisk" udfylder listen ud fra den uploadede lagerliste og den aktuelle bånd-liste nedenfor — ryd eller tilføj derefter rækker i hånden efter behov, det ændrer ikke ved de øvrige.</div>
   </div>
 
   <div class="card">
@@ -212,6 +233,7 @@
   </div>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 'use strict';
 
@@ -232,11 +254,18 @@ const bandList = document.getElementById('band-list');
 function makeRow(list, cls, vals) {
   const row = document.createElement('div');
   row.className = 'band-row';
+  const hasKode = cls === 'roll' && vals && vals.kode;
+  if (hasKode) {
+    row.classList.add('has-kode');
+    row.dataset.lagerKode = vals.kode;
+    row.dataset.lagerBeskrivelse = vals.beskrivelse || '';
+  }
   row.innerHTML = `
     <div class="field f-qty"><label>Antal</label><input type="number" class="${cls}-qty" min="1" step="1" placeholder="Antal" value="${vals && vals.qty != null ? vals.qty : ''}"></div>
     <div class="field"><label>Bredde</label><input type="number" class="${cls}-b" min="1" step="any" placeholder="Bredde mm" value="${vals && vals.b != null ? vals.b : ''}"></div>
     <div class="field"><label>Længde</label><input type="number" class="${cls}-l" min="1" step="any" placeholder="Længde mm" value="${vals && vals.l != null ? vals.l : ''}"></div>
     <button class="btn-del" type="button" title="Fjern række">×</button>
+    ${hasKode ? `<div class="roll-kode" title="${esc(vals.beskrivelse || '')}">Fra lager: ${esc(vals.kode)}</div>` : ''}
   `;
   row.querySelector('.btn-del').addEventListener('click', () => {
     row.remove();
@@ -248,6 +277,21 @@ function makeRow(list, cls, vals) {
       makeRow(list, cls).querySelector('input').focus();
     }
   });
+  if (cls === 'roll') {
+    // Redigeres mål på en auto-valgt rulle i hånden, passer den ikke længere
+    // præcist på det lagernummer, den kom fra — fjern mærket i stedet for at
+    // vise en kode, der ikke er dækning for.
+    ['.' + cls + '-b', '.' + cls + '-l'].forEach(sel => {
+      row.querySelector(sel).addEventListener('input', () => {
+        if (!row.dataset.lagerKode) return;
+        delete row.dataset.lagerKode;
+        delete row.dataset.lagerBeskrivelse;
+        row.classList.remove('has-kode');
+        const chip = row.querySelector('.roll-kode');
+        if (chip) chip.remove();
+      });
+    });
+  }
   list.appendChild(row);
   return row;
 }
@@ -279,7 +323,7 @@ function readRows(list, cls, label) {
     if (!Number.isFinite(l) || l <= 0) bad.push('længde skal være > 0');
     if (bad.length) { errors.push(`${label} linje ${i + 1}: ${bad.join(', ')}.`); return; }
 
-    rows.push({ qty, b, l, srcRow: i + 1 });
+    rows.push({ qty, b, l, srcRow: i + 1, kode: r.dataset.lagerKode || '', beskrivelse: r.dataset.lagerBeskrivelse || '' });
   });
   return { rows, errors };
 }
@@ -568,7 +612,7 @@ function mergeSameLayoutSections(roll) {
 }
 
 function attemptPlan(rollDefs, units, maxPerWidth) {
-  const rolls = rollDefs.map((r, i) => ({ idx: i, w: r.w, len: r.len, sections: [], usedLen: 0 }));
+  const rolls = rollDefs.map((r, i) => ({ idx: i, w: r.w, len: r.len, kode: r.kode || '', beskrivelse: r.beskrivelse || '', sections: [], usedLen: 0 }));
   const maxW = Math.max(...rolls.map(r => r.w));
   const maxL = Math.max(...rolls.map(r => r.len));
   // Dorne der slet ikke kan ligge på nogen rulle deles op med det samme.
@@ -623,6 +667,231 @@ function planCutting(rollDefs, units, maxPerWidth) {
     leftovers: best.leftovers
   };
 }
+
+// ============================================================
+// Lagerliste-upload — automatisk valg af moderruller
+//
+// En uploadet .xlsx (fra Business Central) lister de moderrulle-varianter
+// der er på lager: Kode, Bredde, Længde og "Planlagt disponibel balance"
+// (den lagerførte mængde i m² — bredde×længde i meter). Antal fysiske
+// ruller af hver variant er derfor balance ÷ (bredde × længde), afrundet.
+// ============================================================
+let lagerRuller = []; // [{kode, beskrivelse, bredde, laengde, antal}]
+
+const lagerDrop = document.getElementById('lager-drop');
+const lagerFileInput = document.getElementById('lager-file-input');
+const lagerStatusEl = document.getElementById('lager-status');
+const btnAutoSelect = document.getElementById('btn-auto-select');
+
+function setLagerStatus(msg, type) {
+  lagerStatusEl.textContent = msg;
+  lagerStatusEl.className = 'lager-status' + (type ? ' ' + type : '');
+  lagerStatusEl.style.display = msg ? 'block' : 'none';
+}
+
+['dragover', 'dragleave', 'drop'].forEach(evt =>
+  lagerDrop.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }));
+lagerDrop.addEventListener('dragover', () => lagerDrop.classList.add('drag'));
+lagerDrop.addEventListener('dragleave', () => lagerDrop.classList.remove('drag'));
+lagerDrop.addEventListener('drop', e => {
+  lagerDrop.classList.remove('drag');
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) handleLagerFile(f);
+});
+lagerDrop.addEventListener('click', () => lagerFileInput.click());
+lagerDrop.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lagerFileInput.click(); }
+});
+lagerFileInput.addEventListener('change', () => {
+  if (lagerFileInput.files[0]) handleLagerFile(lagerFileInput.files[0]);
+});
+
+function handleLagerFile(file) {
+  setLagerStatus('Læser "' + file.name + '" …', 'info');
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      parseLagerRows(rows, file.name);
+    } catch (err) {
+      setLagerStatus('Kunne ikke læse filen: ' + err.message, 'err');
+      btnAutoSelect.style.display = 'none';
+    }
+  };
+  reader.onerror = () => setLagerStatus('Kunne ikke læse filen.', 'err');
+  reader.readAsArrayBuffer(file);
+}
+
+function parseLagerRows(rows, filename) {
+  if (!rows.length) { setLagerStatus('Filen "' + filename + '" er tom.', 'err'); btnAutoSelect.style.display = 'none'; return; }
+
+  const headers = Object.keys(rows[0]);
+  const findCol = names => headers.find(h => names.includes(h.trim()));
+  const colKode = findCol(['Kode']);
+  const colBeskrivelse = findCol(['Beskrivelse']);
+  const colBredde = findCol(['Bredde']);
+  const colLaengde = findCol(['Længde', 'Laengde']);
+  const colBalance = findCol(['Planlagt disponibel balance']);
+
+  const missing = [];
+  if (!colBredde) missing.push('Bredde');
+  if (!colLaengde) missing.push('Længde');
+  if (!colBalance) missing.push('Planlagt disponibel balance');
+  if (missing.length) {
+    setLagerStatus(`Filen "${filename}" mangler kolonne(r): ${missing.join(', ')}.`, 'err');
+    lagerRuller = [];
+    btnAutoSelect.style.display = 'none';
+    return;
+  }
+
+  const parsed = [];
+  let skipped = 0, roundWarn = 0;
+  rows.forEach(r => {
+    const b = Number(r[colBredde]), l = Number(r[colLaengde]), bal = Number(r[colBalance]);
+    if (!Number.isFinite(b) || b <= 0 || !Number.isFinite(l) || l <= 0 || !Number.isFinite(bal) || bal <= 0) { skipped++; return; }
+    const areal = (b / 1000) * (l / 1000);
+    const antalRaw = bal / areal;
+    const antal = Math.round(antalRaw);
+    if (antal < 1) { skipped++; return; }
+    if (Math.abs(antalRaw - antal) > 0.05) roundWarn++;
+    parsed.push({
+      kode: colKode ? String(r[colKode]).trim() : '',
+      beskrivelse: colBeskrivelse ? String(r[colBeskrivelse]).trim() : '',
+      bredde: b, laengde: l, antal
+    });
+  });
+
+  lagerRuller = parsed;
+  const totalRuller = parsed.reduce((s, r) => s + r.antal, 0);
+  let msg = `✓ ${fmt(parsed.length)} varianter indlæst fra "${filename}" (${fmt(totalRuller)} ruller i alt).`;
+  if (skipped) msg += ` ${fmt(skipped)} linje(r) sprunget over (ugyldig bredde/længde/balance).`;
+  if (roundWarn) msg += ` ${fmt(roundWarn)} linje(r) gik ikke helt op i et helt antal ruller — antallet er afrundet.`;
+  setLagerStatus(msg, parsed.length ? 'ok' : 'err');
+  btnAutoSelect.style.display = parsed.length ? 'flex' : 'none';
+}
+
+// Vælg færrest mulige ruller fra lageret, der tilsammen dækker den
+// aktuelle bånd-liste — mindste rulle først. Heuristisk, i to trin:
+//
+//  1. Kan én enkelt rulle fra lageret klare hele ordren alene? Brug i så
+//     fald den mindste af dem — der er ingen grund til at bruge to ruller,
+//     eller en større rulle, når én lille kan det hele.
+//  2. Ellers bygges en pulje op fra bunden: den næstmindste tilgængelige
+//     rulle lægges til, og hele planen prøves igen — indtil ordren er
+//     dækket, eller lageret slipper op. Puljen genafprøves fra bunden hver
+//     gang (samme princip som planCuttings egen retry — at bygge videre på
+//     et forsøg der ikke gik op, ville låse planen fast på de forkerte snit).
+//
+// Dette er ikke en garanteret globalt mindste løsning (motoren er
+// heuristisk hele vejen igennem, se planCutting), men det finder altid en
+// ægte 1-rulle-løsning hvis én findes, og ellers vokser puljen aldrig med
+// mere end nødvendigt for at nå frem til en, der virker.
+function vaelgRullerFraLager(lager, bandRows, buffer, dorn, maxPerWidth) {
+  const instances = [];
+  lager.forEach(v => {
+    for (let i = 0; i < v.antal; i++)
+      instances.push({ kode: v.kode, beskrivelse: v.beskrivelse, w: v.bredde, len: v.laengde });
+  });
+  instances.sort((a, b) =>
+    (a.w * a.len) - (b.w * b.len) || a.len - b.len || a.w - b.w || (a.kode < b.kode ? -1 : 1));
+
+  _uid = 0;
+  const units = buildUnits(bandRows, buffer, dorn);
+  const asRollDefs = list => list.map(p => ({ w: p.w, len: p.len }));
+
+  // Nødvendig (men ikke tilstrækkelig) betingelse for at én rulle kan klare
+  // det hele: dens areal skal mindst svare til den samlede kaplængde × bredde
+  // for alle bånd. Sparer os for at afprøve alle de alt for små ruller.
+  const totalBaseArea = bandRows.reduce((s, r) => s + r.qty * r.b * (r.l + buffer), 0);
+  for (const inst of instances) {
+    if (inst.w * inst.len < totalBaseArea) continue;
+    const plan = planCutting([{ w: inst.w, len: inst.len }], units, maxPerWidth);
+    if (!plan.leftovers.length) return { rolls: [inst], daekket: true };
+  }
+
+  const pool = [];
+  let sidstePlan = null;
+  for (const inst of instances) {
+    pool.push(inst);
+    sidstePlan = planCutting(asRollDefs(pool), units, maxPerWidth);
+    if (!sidstePlan.leftovers.length) return { rolls: pool.slice(), daekket: true };
+  }
+
+  return { rolls: pool.slice(), daekket: false, leftovers: sidstePlan ? sidstePlan.leftovers : units };
+}
+
+btnAutoSelect.addEventListener('click', () => {
+  if (!lagerRuller.length) { setLagerStatus('Upload en lagerliste først.', 'err'); return; }
+
+  const bandRes = readRows(bandList, 'r', 'Bånd');
+  if (bandRes.errors.length || !bandRes.rows.length) {
+    setLagerStatus('Udfyld "Bånd der skal skæres" korrekt, før ruller kan vælges automatisk.', 'err');
+    return;
+  }
+
+  const buffer = num('buffer', 0);
+  const maxStripsRaw = document.getElementById('max-strimler').value.trim();
+  const maxStrips = Number(maxStripsRaw);
+  const maxPerWidth = maxStripsRaw !== '' && Number.isInteger(maxStrips) && maxStrips >= 1 ? maxStrips : null;
+  const dorn = {
+    on: document.getElementById('dorn-on').checked,
+    tillaeg: num('dorn-tillaeg', 0),
+    maxW: num('dorn-maxbredde', 700),
+    maxL: num('dorn-maxlaengde', 5500)
+  };
+
+  // Er noget for bredt eller for langt til overhovedet at kunne ligge på
+  // nogen rulle på lageret, er det spildt at lede — hele lageret ville
+  // blive afprøvet forgæves. Samme slags tjek som calculate() laver mod de
+  // manuelt tastede ruller.
+  const maxLagerW = Math.max(...lagerRuller.map(v => v.bredde));
+  const maxLagerL = Math.max(...lagerRuller.map(v => v.laengde));
+  const lagerErrors = [];
+  bandRes.rows.forEach(r => {
+    if (r.b > maxLagerW + EPS)
+      lagerErrors.push(`linje ${r.srcRow}: bredde ${fmt(r.b)} mm er bredere end den bredeste rulle på lager (${fmt(maxLagerW)} mm)`);
+    if (r.l + buffer > maxLagerL + EPS)
+      lagerErrors.push(`linje ${r.srcRow}: kaplængde ${fmt(r.l + buffer)} mm er længere end den længste rulle på lager (${fmt(maxLagerL)} mm)`);
+  });
+  if (lagerErrors.length) {
+    setLagerStatus(`Lageret kan aldrig dække det hele — ${lagerErrors.join('; ')}. Tilføj en moderrulle i hånden for de bånd.`, 'err');
+    return;
+  }
+
+  setLagerStatus('Beregner færrest mulige ruller …', 'info');
+  // Kort forsinkelse så statusteksten ovenfor når at blive tegnet, før det
+  // (for et stort lager potentielt tunge) synkrone opslag låser fanen.
+  setTimeout(() => {
+    const res = vaelgRullerFraLager(lagerRuller, bandRes.rows, buffer, dorn, maxPerWidth);
+
+    // Fjern forrige auto-valg — rør ikke rækker der er tastet i hånden.
+    [...rollList.querySelectorAll('.band-row[data-lager-kode]')].forEach(r => r.remove());
+    // Var listen kun den ubrugte standardrække, ryddes den for pladsens skyld.
+    if (rollList.children.length === 1) {
+      const only = rollList.children[0];
+      if (!only.dataset.lagerKode && !only.querySelector('.roll-b').value && !only.querySelector('.roll-l').value)
+        only.remove();
+    }
+
+    const grouped = new Map();
+    res.rolls.forEach(r => {
+      const key = r.kode + '|' + r.w + '|' + r.len;
+      if (!grouped.has(key)) grouped.set(key, { qty: 0, b: r.w, l: r.len, kode: r.kode, beskrivelse: r.beskrivelse });
+      grouped.get(key).qty++;
+    });
+    grouped.forEach(g => addRollRow(g));
+    if (!rollList.children.length) addRollRow({ qty: 1 });
+
+    if (res.daekket) {
+      setLagerStatus(`✓ Valgte ${fmt(res.rolls.length)} rulle(r) fra lageret, der tilsammen dækker bånd-listen — mindst muligt, mindste rulle først.`, 'ok');
+    } else {
+      const mangler = (res.leftovers || []).reduce((s, u) => s + u.bands.length, 0);
+      setLagerStatus(`⚠ Hele lageret (${fmt(res.rolls.length)} rulle(r)) blev valgt, men ${fmt(mangler)} bånd kan stadig ikke placeres — tilføj flere ruller i hånden for resten.`, 'err');
+    }
+  }, 30);
+});
 
 // ============================================================
 // Beregn
@@ -695,7 +964,7 @@ function calculate() {
 
   // Fold antal ud til enkeltruller.
   const rollDefs = [];
-  rollRes.rows.forEach(r => { for (let i = 0; i < r.qty; i++) rollDefs.push({ w: r.b, len: r.l }); });
+  rollRes.rows.forEach(r => { for (let i = 0; i < r.qty; i++) rollDefs.push({ w: r.b, len: r.l, kode: r.kode, beskrivelse: r.beskrivelse }); });
 
   const maxRollW = Math.max(...rollDefs.map(r => r.w));
   const maxRollL = Math.max(...rollDefs.map(r => r.len));
@@ -736,7 +1005,7 @@ function calculate() {
     orderRef: document.getElementById('order-ref').value.trim(),
     orderNote: document.getElementById('order-note').value.trim(),
     inputs: {
-      rolls: rollRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l })),
+      rolls: rollRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l, kode: r.kode, beskrivelse: r.beskrivelse })),
       bands: bandRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l })),
       buffer, maxPerWidth, dorn
     }
@@ -863,7 +1132,7 @@ function renderResult(d) {
 
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = `<h2>Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm</h2>`;
+    card.innerHTML = `<h2>Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm${roll.kode ? ' · ' + esc(roll.kode) : ''}</h2>`;
     const sg = document.createElement('div');
     sg.className = 'summary-grid';
     [
@@ -899,7 +1168,7 @@ function renderResult(d) {
     const c = document.createElement('div');
     c.className = 'card';
     c.innerHTML = `<h2>Urørte moderruller</h2><div style="font-family:'DM Mono',monospace;font-size:13px;line-height:1.8">` +
-      d.plan.unusedRolls.map(r => `${fmt(r.w)} × ${fmt(r.len)} mm — ikke brugt`).join('<br>') + `</div>`;
+      d.plan.unusedRolls.map(r => `${fmt(r.w)} × ${fmt(r.len)} mm${r.kode ? ' · ' + esc(r.kode) : ''} — ikke brugt`).join('<br>') + `</div>`;
     res.appendChild(c);
   }
 
@@ -986,7 +1255,7 @@ function openPrintWindow(d) {
 
   d.plan.rolls.forEach((roll, ri) => {
     const st = rollStats(roll, d.buffer);
-    body += `<div class="roll-header">Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm
+    body += `<div class="roll-header">Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm${roll.kode ? ' · ' + esc(roll.kode) : ''}
       <span class="roll-sub">${roll.sections.length} rækker · ${st.cols} strimler · ${st.bands} bånd · brugt ${fmt(roll.usedLen)} mm · rest ${fmt(roll.w)} × ${fmt(st.rest)} mm</span></div>`;
     body += sectionsHTML(roll, d.buffer);
   });
@@ -1257,7 +1526,7 @@ function loadHistEntry(entry) {
   document.getElementById('dorn-maxlaengde').value = inp.dorn?.maxL ?? 5500;
 
   rollList.innerHTML = '';
-  (inp.rolls || []).forEach(r => addRollRow({ qty: r.qty ?? 1, b: r.b, l: r.l }));
+  (inp.rolls || []).forEach(r => addRollRow({ qty: r.qty ?? 1, b: r.b, l: r.l, kode: r.kode, beskrivelse: r.beskrivelse }));
   if (!rollList.children.length) addRollRow({ qty: 1 });
 
   bandList.innerHTML = '';
@@ -1300,6 +1569,6 @@ window.addEventListener('resize', () => {
   if (_lastPlan) _lastPlan.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
 });
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.1 &middot; 22-08-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.2 &middot; 14-09-2026</div>
 </body>
 </html>
