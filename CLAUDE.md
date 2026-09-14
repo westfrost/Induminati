@@ -45,6 +45,28 @@ Defineres som CSS custom properties i hver sides `:root`. Semantiske statusfarve
 
 Nye sider/UI-elementer skal bruge samme CSS-variabelmønster frem for nye ad-hoc-farver.
 
+**Header og "← Forside"-knap.** Alle værktøjssider (dvs. alt undtagen `index.html` og `Test/index.html`, som er hub-sider med deres eget brand-header-mønster) skal have en identisk header-opbygning:
+
+```html
+<header>
+  <div class="logo-icon">…SVG…</div>   <!-- rent dekorativt, ALDRIG en <a> -->
+  <h1>Værktøjsnavn <span>evt. undertekst</span></h1>
+  <a class="btn-home" href="../index.html">← Forside</a>
+</header>
+```
+
+```css
+header{background:var(--dark-token);padding:18px 28px;display:flex;align-items:center;gap:14px}
+.logo-icon{width:34px;height:34px;background:var(--accent-token);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+header h1{font-size:16px;font-weight:600;color:#fff;flex:1}
+.btn-home{color:#CFE3EE;text-decoration:none;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:5px;transition:color .15s,border-color .15s}
+.btn-home:hover{color:#fff;border-color:var(--accent-token)}
+```
+
+(variabelnavne varierer pr. side — `--dark`/`--steel`/`--accent2` osv. for den mørkeblå, `--accent`/`--rust` osv. for orange — men værdierne er altid `#0B4F79` og `#E8791E`.)
+
+Dette var **ikke** ensartet før 14-09-2026: Styreliste/Ordrer/Opskæring/DXF havde altid dette mønster (dekorativt logo + synlig "← Forside"-knap), men Samlevejledninger og Baanddb havde i stedet et **klikbart logo** (`<a class="logo-mark"/"logo-icon" href="../index.html">`) og ingen synlig knap, og Kapacitet havde **slet ingen** header-bjælke, intet logo og ingen vej tilbage til forsiden overhovedet (kun en lys `border-bottom` under en almindelig `<h1>`, inde i `.wrap`). En bruger skulle derfor enten klikke en usynlig-som-knap logo-firkant eller slet ikke kunne komme tilbage, afhængigt af hvilket værktøj de stod på — det er rettet ved at gøre alle logoer rent dekorative (`<div>`, ingen `href`, ingen `:hover`-farveskift) og altid tilføje den samme synlige `.btn-home`-knap. For Kapacitet krævede det at flytte `<header>` uden for `.wrap` (så bjælken bliver fuld bredde som på alle andre sider) og flytte `body`'s gamle padding over på `.wrap` i stedet (bjælken selv har sin egen padding) — **`Kapacitet`s `@media (prefers-color-scheme: dark)`-blok er urørt**, kun `--dark:#0B4F79` er tilføjet til det lyse `:root` (ikke til dark-mode-blokken), så header-bjælken altid er den samme faste blå, uanset OS-tema, ligesom på alle andre sider.
+
 **Versionsnummer pr. side.** De fleste sider har en footer i formatet:
 `<div ...>Værktøjsnavn &middot; vX.Y &middot; DD-MM-YYYY</div>`
 Ved enhver reel opdatering af en side (funktionsændring, redesign, bugfix — ikke rene formateringsrettelser) skal versionsnummeret bumpes og datoen sættes til dags dato, i samme ændring. Mangler en side stadig en footer, tilføjes en i samme stil næste gang siden redigeres væsentligt.
@@ -102,7 +124,7 @@ Disse to mekanismer (`localDirty` og tombstones) blev tilføjet for at rette to 
 
 ### Samlevejledninger/index.html — Samlevejledninger
 
-**Fil:** `/home/user/Induminati/Samlevejledninger/index.html` (~1113 linjer). **Version:** v2.0 · 25-08-2026. **Data:** `Samlevejledninger/database.json` (live-array, opdateres af push), `Samlevejledninger/gh-auth.json` (krypteret delt token).
+**Fil:** `/home/user/Induminati/Samlevejledninger/index.html` (~1113 linjer). **Version:** v2.1 · 14-09-2026. **Data:** `Samlevejledninger/database.json` (live-array, opdateres af push), `Samlevejledninger/gh-auth.json` (krypteret delt token).
 
 **Formål:** Opslagsværk over samlevejledninger (svejseparametre) for PU- og PVC-bånd — hvilken temperatur (over/under), holdetid (minutter) og tryk (bar) der skal bruges til at samle et givent bånd, plus et Vare nr. og fritekst-bemærkning. Bygget som en simplere, mere overskuelig søster til Baanddb.
 
@@ -252,7 +274,7 @@ None — there is no `@media print` block, no `window.print()` call, and no prin
 
 #### Current version
 
-Footer at the bottom of the file: **v1.8, dated 24-08-2026** — `<div ...>Bånd &amp; Medbringer DB &middot; v1.8 &middot; 24-08-2026</div>`.
+Footer at the bottom of the file: **v1.9, dated 14-09-2026** — `<div ...>Bånd &amp; Medbringer DB &middot; v1.9 &middot; 14-09-2026</div>`.
 
 ---
 
@@ -589,6 +611,8 @@ Kapacitetsoverblik visualizes projected order volume against actual production c
 
 #### 2. UI walkthrough
 
+**Header (14-09-2026):** now the same full-width dark-blue bar + decorative logo icon + `<h1>` + "← Forside" `.btn-home` link used by every other tool page — previously this page had no header bar at all, just a bare `<h1>Kapacitetsoverblik</h1>` + `.step-tag` span sitting inside `.wrap` with a plain `border-bottom`. Fixing that required moving `<header>` to be a direct child of `<body>` (before `.wrap`, so it can be full-bleed) and moving `body`'s old `padding:32px 24px 64px` onto `.wrap` instead (the header has its own `padding:18px 28px`). A new `--dark:#0B4F79` token was added to the **light** `:root` block only — deliberately **not** to the `@media (prefers-color-scheme: dark)` override below it, so the header bar stays the same fixed blue regardless of OS theme, exactly like every other page's header (which has no dark-mode awareness at all). The existing dark-mode block itself is otherwise untouched.
+
 The page is organized as 5 numbered panels:
 
 **Panel 1 — "Afdelinger & kapacitet"**
@@ -670,7 +694,7 @@ function statusLabel(pct, capacity) {
 
 #### 5. Dark mode support
 
-The file has its own `@media (prefers-color-scheme: dark)` block (lines ~25–40) that redefines the entire `:root` custom-property palette for OS-level dark mode: `--ink` (white), `--paper`/`--surface` (near-black), `--line`/`--baseline` (dark greys), `--secondary`/`--muted` (light greys), `--accent` (a brighter blue `#3987e5` instead of orange — notably the dark-mode accent here is blue, not the site's orange), `--accent-soft` (dark navy), and the three status colors `--good`/`--warn`/`--crit` get brighter/more saturated dark-mode-friendly variants. There are two smaller companion dark-mode overrides further down: `tr.unmapped td` background (`#3a2f14`) and `.status.info` background/color. This is purely a `prefers-color-scheme` media query — there is no manual light/dark toggle control or `[data-theme]` attribute handling, and no JS reads or sets a theme preference; it only responds to the OS/browser setting. Per the task brief, this is distinct from the rest of the site (most other pages have no dark-mode block at all) and was deliberately left in place during the recent site-wide light-theme recolor — only the default/light `:root` values were unified to the shared blue/orange palette, not this page's dark override.
+The file has its own `@media (prefers-color-scheme: dark)` block (lines ~25–40) that redefines the entire `:root` custom-property palette for OS-level dark mode: `--ink` (white), `--paper`/`--surface` (near-black), `--line`/`--baseline` (dark greys), `--secondary`/`--muted` (light greys), `--accent` (a brighter blue `#3987e5` instead of orange — notably the dark-mode accent here is blue, not the site's orange), `--accent-soft` (dark navy), and the three status colors `--good`/`--warn`/`--crit` get brighter/more saturated dark-mode-friendly variants. There are two smaller companion dark-mode overrides further down: `tr.unmapped td` background (`#3a2f14`) and `.status.info` background/color. This is purely a `prefers-color-scheme` media query — there is no manual light/dark toggle control or `[data-theme]` attribute handling, and no JS reads or sets a theme preference; it only responds to the OS/browser setting. Per the task brief, this is distinct from the rest of the site (most other pages have no dark-mode block at all) and was deliberately left in place during the recent site-wide light-theme recolor — only the default/light `:root` values were unified to the shared blue/orange palette, not this page's dark override. The 14-09-2026 header fix (§2) added `--dark:#0B4F79` for the new header bar to the light block only, again deliberately not to this dark-mode block — the header bar is exempt from the OS dark-mode theming and stays the fixed site blue, same as every other page's header.
 
 #### 6. GitHub sync / persistence
 
@@ -697,7 +721,7 @@ Not stateless — it has two independent layers of persistence, both scoped to `
 
 #### 8. Current version
 
-Footer (bottom of `<body>`): **`Byg til intern brug · v1.1 · 07-07-2026`** — note it uses the generic "Byg til intern brug" label rather than the tool's own name, consistent with the CLAUDE.md note that some pages use a generic footer phrase rather than restating the tool name.
+Footer (bottom of `<body>`): **`Byg til intern brug · v1.2 · 14-09-2026`** — note it uses the generic "Byg til intern brug" label rather than the tool's own name, consistent with the CLAUDE.md note that some pages use a generic footer phrase rather than restating the tool name.
 
 ---
 
