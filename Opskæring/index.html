@@ -90,6 +90,7 @@
   table.cut tr:last-child td{border-bottom:none}
   table.cut tr.dorn td{background:var(--dorn-bg)}
   table.cut tr.siderest td{background:#FAFAF8;color:var(--muted);font-style:italic}
+  table.cut tr.langrest td{background:var(--green-bg);color:var(--green);font-style:italic}
   .strip-no{font-weight:600;font-size:13px}
   .badge{display:inline-block;background:var(--rust);color:#fff;font-size:9px;font-weight:700;letter-spacing:.08em;border-radius:3px;padding:2px 6px;font-family:'Inter',sans-serif;margin-right:6px;vertical-align:1px}
   .piece{line-height:1.65}
@@ -638,6 +639,32 @@ function planScore(p) {
 }
 const betterPlan = (a, b) => a[0] !== b[0] ? a[0] < b[0] : a[1] < b[1] - EPS;
 
+// Længde vejer tungere end bredde for den rest, der bliver tilbage: kan
+// rullens sidste række ikke bruge hele bredden, forlænges den længdesnittet
+// helt ud til rullens fysiske ende i stedet for at stoppe ved præcis det,
+// rækken selv skal bruge. Uden dette ville den ubrugte bredde blive et kort,
+// ubrugeligt "siderest"-udfald ved siden af rækken, OG resten af rullen
+// derefter stå som en separat, urørt (men kortere) moderrulle for sig selv —
+// to stykker, hvor det ene reelt går til spilde. Ved i stedet at lade
+// længdesnittet fortsætte hele vejen ud får man ét sammenhængende, smallere
+// men længere reststykke, som er langt federe råvare til en senere ordre end
+// et kort udfald. Kun den SIDSTE række på en rulle kan gøre dette — alle
+// tidligere rækkers siderest er allerede afgrænset af rækken efter og er
+// dermed et selvstændigt kort udfaldsstykke, uanset hvad. `roll.langRest`
+// gemmer bredde/længde på det reelt reststykke, så `rollStats` kan holde det
+// ude af spild-regnskabet (se dér) — uden det ville arealet blive talt som
+// spildt materiale, selvom det er en brugbar rest.
+function forlaengSidsteRaekkeForLaengsteRest(roll) {
+  const tail = roll.len - roll.usedLen;
+  if (tail <= EPS || !roll.sections.length) return;
+  const last = roll.sections[roll.sections.length - 1];
+  if (last.sideRest <= EPS) return;
+  last.len += tail;
+  for (const c of last.cols) c.rest = last.len - c.filled;
+  roll.usedLen = roll.len;
+  roll.langRest = { w: last.sideRest, len: last.len };
+}
+
 function planCutting(rollDefs, units, maxPerWidth) {
   let best = attemptPlan(rollDefs, units, maxPerWidth);
   let bestScore = planScore(best);
@@ -661,8 +688,16 @@ function planCutting(rollDefs, units, maxPerWidth) {
     if (betterPlan(score, bestScore)) { best = cand; bestScore = score; }
   }
 
+  const usedRolls = best.rolls.filter(r => r.sections.length);
+  // Anvendes først på den endeligt valgte plan — aldrig undervejs i
+  // attemptPlan/placePass, som regner `avail = roll.len - roll.usedLen` for
+  // at vide, om mere kan placeres på rullen. Skete forlængelsen tidligere,
+  // ville den spærre for al senere fyldning af rullen i samme attemptPlan-
+  // kald, selvom der reelt var mere tilbage at placere.
+  usedRolls.forEach(forlaengSidsteRaekkeForLaengsteRest);
+
   return {
-    rolls: best.rolls.filter(r => r.sections.length),
+    rolls: usedRolls,
     unusedRolls: best.rolls.filter(r => !r.sections.length),
     leftovers: best.leftovers
   };
@@ -1055,8 +1090,15 @@ function rollStats(roll, buffer) {
     s + sec.cols.reduce((s2, c) => s2 + c.items.reduce((s3, u) => s3 + u.bands.length, 0), 0), 0);
   const net = roll.sections.reduce((s, sec) =>
     s + sec.cols.reduce((s2, c) => s2 + c.items.reduce((s3, u) => s3 + netAreaOf(u), 0), 0), 0);
-  const usedArea = roll.usedLen * roll.w;
-  return { cols, bands, net, usedArea, eff: usedArea > 0 ? net / usedArea : 0, rest: roll.len - roll.usedLen };
+  // roll.langRest (se forlaengSidsteRaekkeForLaengsteRest) er en bevidst
+  // bevaret rest, ikke spild — dens areal trækkes ud af usedArea, ellers ville
+  // den brugbare rest fejlagtigt tælle med som spildt materiale, bare fordi
+  // den nu ligger inden for roll.usedLen i stedet for at være en urørt hale.
+  const langRestAreal = roll.langRest ? roll.langRest.w * roll.langRest.len : 0;
+  const usedArea = roll.usedLen * roll.w - langRestAreal;
+  const restW = roll.langRest ? roll.langRest.w : roll.w;
+  const restLen = roll.langRest ? roll.langRest.len : roll.len - roll.usedLen;
+  return { cols, bands, net, usedArea, eff: usedArea > 0 ? net / usedArea : 0, restW, restLen };
 }
 
 function renderResult(d) {
@@ -1067,7 +1109,10 @@ function renderResult(d) {
 
   // --- Samlet overblik ---
   const totalUsed = d.plan.rolls.reduce((s, r) => s + r.usedLen, 0);
-  const totalArea = d.plan.rolls.reduce((s, r) => s + r.usedLen * r.w, 0);
+  // usedArea holder allerede en bevaret langRest ude af regnestykket (se
+  // rollStats) — brug den i stedet for r.usedLen*r.w, ellers ville en
+  // bevaret rest fejlagtigt tælle med i "Spild" nedenfor.
+  const totalArea = d.plan.rolls.reduce((s, r) => s + rollStats(r, d.buffer).usedArea, 0);
   const totalNet = d.plan.rolls.reduce((s, r) => s + rollStats(r, d.buffer).net, 0);
 
   const head = document.createElement('div');
@@ -1135,7 +1180,7 @@ function renderResult(d) {
       { lbl: 'Bånd på denne rulle', val: String(st.bands) },
       { lbl: 'Brugt længde', val: `${fmt(roll.usedLen)} mm` },
       { lbl: 'Udnyttelse', val: pct(st.eff) },
-      { lbl: 'Tilbage som moderrulle', val: `${fmt(roll.w)} × ${fmt(st.rest)} mm`, green: true },
+      { lbl: 'Tilbage som moderrulle', val: `${fmt(st.restW)} × ${fmt(st.restLen)} mm`, green: true },
     ].forEach(i => {
       const el = document.createElement('div');
       el.className = 'sum-card' + (i.green ? ' green' : '');
@@ -1205,14 +1250,22 @@ function sectionsHTML(roll, buffer) {
         <td>${piecesHTML(desc, buffer)}</td>
       </tr>`;
     });
+    // Er dette den sidste række, og har forlaengSidsteRaekkeForLaengsteRest
+    // strukket den helt ud til rullens ende, er sideRest ikke udfald — det er
+    // netop den rest, der er beholdt til senere. Vises derfor som en bevaret
+    // rest (samme grønne betydning som "Tilbage som moderrulle"), ikke som
+    // spild — se rollStats/forlaengSidsteRaekkeForLaengsteRest.
+    const erBevaretRest = si === roll.sections.length - 1 && !!roll.langRest;
     if (sec.sideRest > EPS)
-      rows += `<tr class="siderest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Siderest — ubrugt bredde i denne række (${fmt(sec.sideRest)} × ${fmt(sec.len)} mm)</td></tr>`;
+      rows += erBevaretRest
+        ? `<tr class="langrest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Rest til senere brug — ${fmt(sec.sideRest)} × ${fmt(sec.len)} mm moderrulle, ikke spild</td></tr>`
+        : `<tr class="siderest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Siderest — ubrugt bredde i denne række (${fmt(sec.sideRest)} × ${fmt(sec.len)} mm)</td></tr>`;
 
     html += `<div class="section">
       <div class="sec-head">
         <span class="sec-num">Række ${si + 1}</span>
         <span class="sec-title">Kap ${fmt(sec.len)} mm af moderrullen</span>
-        <span class="sec-meta">pos. ${fmt(from)} – ${fmt(to)} mm · ${sec.cols.length} strimler · siderest ${fmt(sec.sideRest)} mm</span>
+        <span class="sec-meta">pos. ${fmt(from)} – ${fmt(to)} mm · ${sec.cols.length} strimler · ${erBevaretRest ? 'rest til senere brug' : 'siderest'} ${fmt(sec.sideRest)} mm</span>
       </div>
       <table class="cut">
         <thead><tr><th style="width:60px">Strimmel</th><th style="width:130px">Position</th><th style="width:80px">Bredde</th><th>Skal indeholde</th></tr></thead>
@@ -1250,7 +1303,7 @@ function openPrintWindow(d) {
   d.plan.rolls.forEach((roll, ri) => {
     const st = rollStats(roll, d.buffer);
     body += `<div class="roll-header">Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm${roll.kode ? ' · ' + esc(roll.kode) : ''}
-      <span class="roll-sub">${roll.sections.length} rækker · ${st.cols} strimler · ${st.bands} bånd · brugt ${fmt(roll.usedLen)} mm · rest ${fmt(roll.w)} × ${fmt(st.rest)} mm</span></div>`;
+      <span class="roll-sub">${roll.sections.length} rækker · ${st.cols} strimler · ${st.bands} bånd · brugt ${fmt(roll.usedLen)} mm · rest ${fmt(st.restW)} × ${fmt(st.restLen)} mm</span></div>`;
     body += sectionsHTML(roll, d.buffer);
   });
 
@@ -1277,6 +1330,7 @@ table.cut td{padding:5px 8px;border-bottom:1px solid #eee;font-family:monospace;
 table.cut tr:last-child td{border-bottom:none}
 table.cut tr.dorn td{background:#FCEADA}
 table.cut tr.siderest td{background:#FAFAF8;color:#889;font-style:italic}
+table.cut tr.langrest td{background:#E6F7EC;color:#2E9E52;font-style:italic}
 .strip-no{font-weight:700;font-size:11px}
 .badge{display:inline-block;background:#E8791E;color:#fff;font-size:7.5px;font-weight:700;letter-spacing:.08em;border-radius:3px;padding:1px 5px;font-family:Arial,sans-serif;margin-right:5px}
 .piece{line-height:1.6}
@@ -1323,7 +1377,10 @@ function drawRollCanvas(roll, rollIndex) {
   const scaleX = W / roll.w;
 
   const n = roll.sections.length;
-  const MIN_ROW = 40, REST_H = 40, AXIS_H = 18;
+  const MIN_ROW = 40, AXIS_H = 18;
+  // Er resten allerede vist grønt inde i sidste række (roll.langRest), er der
+  // ingen selvstændig hale at reservere plads til hernede.
+  const REST_H = roll.langRest ? 0 : 40;
   const bodyH = Math.max(200, MIN_ROW * n + 140);
   const sectionH = roll.sections.map(s =>
     MIN_ROW + (bodyH - MIN_ROW * n) * (s.len / Math.max(roll.usedLen, EPS)));
@@ -1392,15 +1449,20 @@ function drawRollCanvas(roll, rollIndex) {
     });
 
     if (sec.sideRest > EPS) {
+      // Sidste række strukket ud af forlaengSidsteRaekkeForLaengsteRest: dens
+      // siderest er den bevarede rest, ikke spild — tegnes grøn som "Tilbage
+      // som moderrulle" i stedet for grå, ellers ser den bevarede rest ud til
+      // at være kasseret. Se rollStats/sectionsHTML for samme skelnen.
+      const erBevaretRest = si === roll.sections.length - 1 && !!roll.langRest;
       const x = sec.widthUsed * scaleX, rw = sec.sideRest * scaleX;
-      ctx.fillStyle = 'rgba(150,140,130,0.22)';
+      ctx.fillStyle = erBevaretRest ? 'rgba(46,158,82,0.16)' : 'rgba(150,140,130,0.22)';
       ctx.fillRect(x, y, rw, rowH);
       if (rw >= 46 && rowH >= 16) {
         ctx.save();
-        ctx.font = '9px Inter,sans-serif';
-        ctx.fillStyle = '#7A7268';
+        ctx.font = erBevaretRest ? '600 9px Inter,sans-serif' : '9px Inter,sans-serif';
+        ctx.fillStyle = erBevaretRest ? '#2E9E52' : '#7A7268';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('Siderest ' + fmt(sec.sideRest), x + rw / 2, y + rowH / 2);
+        ctx.fillText((erBevaretRest ? 'Rest ' : 'Siderest ') + fmt(sec.sideRest), x + rw / 2, y + rowH / 2);
         ctx.restore();
       }
     }
@@ -1424,19 +1486,24 @@ function drawRollCanvas(roll, rollIndex) {
     y += rowH;
   });
 
-  // Rest af moderrullen
-  ctx.fillStyle = '#E6F7EC';
-  ctx.fillRect(0, y, W, REST_H);
-  ctx.strokeStyle = '#A8DFB8';
-  ctx.setLineDash([4, 3]);
-  ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.save();
-  ctx.font = '600 11px Inter,sans-serif';
-  ctx.fillStyle = '#2E9E52';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(`Rest som moderrulle: ${fmt(roll.w)} × ${fmt(roll.len - roll.usedLen)} mm`, W / 2, y + REST_H / 2);
-  ctx.restore();
+  // Rest af moderrullen — kun når resten er en urørt hale for sig selv.
+  // Har forlaengSidsteRaekkeForLaengsteRest strukket sidste række ud i
+  // stedet (roll.langRest), er resten allerede vist grønt inde i selve
+  // rækken herover, og skal ikke vises en gang til hernede.
+  if (!roll.langRest) {
+    ctx.fillStyle = '#E6F7EC';
+    ctx.fillRect(0, y, W, REST_H);
+    ctx.strokeStyle = '#A8DFB8';
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.save();
+    ctx.font = '600 11px Inter,sans-serif';
+    ctx.fillStyle = '#2E9E52';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`Rest som moderrulle: ${fmt(roll.w)} × ${fmt(roll.len - roll.usedLen)} mm`, W / 2, y + REST_H / 2);
+    ctx.restore();
+  }
 
   ctx.strokeStyle = '#AAA49C';
   ctx.lineWidth = 1;
@@ -1476,7 +1543,7 @@ function saveToHistory(d) {
       placed: d.placedBands,
       rolls: d.plan.rolls.length,
       usedLen: d.plan.rolls.reduce((s, r) => s + r.usedLen, 0),
-      rests: d.plan.rolls.map(r => ({ b: r.w, l: r.len - r.usedLen }))
+      rests: d.plan.rolls.map(r => r.langRest ? { b: r.langRest.w, l: r.langRest.len } : { b: r.w, l: r.len - r.usedLen })
     }
   };
   hist.unshift(entry);
@@ -1563,6 +1630,6 @@ window.addEventListener('resize', () => {
   if (_lastPlan) _lastPlan.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
 });
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.3 &middot; 14-09-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.4 &middot; 15-09-2026</div>
 </body>
 </html>
