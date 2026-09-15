@@ -186,7 +186,7 @@
 
   <div class="card">
     <h2>Dorn — pak bånd i bredden</h2>
-    <label class="toggle"><input type="checkbox" id="dorn-on" checked> Brug dorn-pakning</label>
+    <label class="toggle"><input type="checkbox" id="dorn-on"> Brug dorn-pakning</label>
     <div class="input-row">
       <div class="field" style="max-width:200px">
         <label>Skæretillæg pr. dorn</label>
@@ -202,20 +202,6 @@
       </div>
     </div>
     <div class="hint">Bånd der er kortere end "Maks bånd-længde" og findes i mindst to identiske eksemplarer (samme bredde og længde) skæres ud som én bred strimmel, der bagefter deles på dorn. Strimlens bredde = antal bånd × båndbredde + skæretillæg, dog højst "Maks bredde pr. dorn".</div>
-  </div>
-
-  <div class="card">
-    <h2>Ordre / Reference</h2>
-    <div class="input-row">
-      <div class="field">
-        <label>Ordrenummer / Kunde</label>
-        <input type="text" id="order-ref" placeholder="fx 12345 / Navn">
-      </div>
-      <div class="field">
-        <label>Note (valgfrit)</label>
-        <input type="text" id="order-note" placeholder="fx Lager, Navn">
-      </div>
-    </div>
   </div>
 
   <div class="msg-box" id="error-box"></div>
@@ -1031,8 +1017,6 @@ function calculate() {
   renderResult({
     plan, buffer, dorn, maxPerWidth,
     totalBands, placedBands,
-    orderRef: document.getElementById('order-ref').value.trim(),
-    orderNote: document.getElementById('order-note').value.trim(),
     inputs: {
       rolls: rollRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l, kode: r.kode, beskrivelse: r.beskrivelse })),
       bands: bandRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l })),
@@ -1054,18 +1038,18 @@ function describeColumn(col, buffer) {
       pieces.push({
         dorn: true,
         head: `${u.bands.length} × ${fmt(u.bandW)} × ${fmt(u.origL)} mm på dorn`,
-        cut: `Kaplængde ${fmt(u.len)} mm`,
+        cut: `Kap ${fmt(u.len)} mm`,
         pos: `pos. ${fmt(from)} – ${fmt(to)} mm`,
-        action: `Skær strimlen op i ${u.bands.length} bånd à ${fmt(u.bandW)} mm` +
-                (u.tillaeg > 0 ? ` (skæretillæg ${fmt(u.tillaeg)} mm)` : '')
+        action: `${u.bands.length} bånd à ${fmt(u.bandW)} mm` +
+                (u.tillaeg > 0 ? ` (tillæg ${fmt(u.tillaeg)} mm)` : '')
       });
     } else {
       pieces.push({
         dorn: false,
         head: `${fmt(u.w)} × ${fmt(u.origL)} mm`,
-        cut: buffer > 0 ? `Kaplængde ${fmt(u.len)} mm (+${fmt(buffer)} buffer)` : `Kaplængde ${fmt(u.len)} mm`,
+        cut: buffer > 0 ? `Kap ${fmt(u.len)} mm (+${fmt(buffer)})` : `Kap ${fmt(u.len)} mm`,
         pos: `pos. ${fmt(from)} – ${fmt(to)} mm`,
-        action: u.fromDorn ? 'Enkeltbånd — kunne ikke pakkes på dorn' : null
+        action: u.fromDorn ? 'Enkeltbånd, ikke dorn' : null
       });
     }
   }
@@ -1106,34 +1090,6 @@ function renderResult(d) {
   const res = document.getElementById('result');
   res.style.display = 'flex';
   res.innerHTML = '';
-
-  // --- Samlet overblik ---
-  const totalUsed = d.plan.rolls.reduce((s, r) => s + r.usedLen, 0);
-  // usedArea holder allerede en bevaret langRest ude af regnestykket (se
-  // rollStats) — brug den i stedet for r.usedLen*r.w, ellers ville en
-  // bevaret rest fejlagtigt tælle med i "Spild" nedenfor.
-  const totalArea = d.plan.rolls.reduce((s, r) => s + rollStats(r, d.buffer).usedArea, 0);
-  const totalNet = d.plan.rolls.reduce((s, r) => s + rollStats(r, d.buffer).net, 0);
-
-  const head = document.createElement('div');
-  head.className = 'card';
-  head.innerHTML = `<h2>${d.orderRef ? 'Ordre — ' + esc(d.orderRef) + (d.orderNote ? ' · ' + esc(d.orderNote) : '') : 'Samlet overblik'}</h2>`;
-  const hg = document.createElement('div');
-  hg.className = 'summary-grid';
-  [
-    { lbl: 'Bånd i alt', val: `${fmt(d.placedBands)} af ${fmt(d.totalBands)}` },
-    { lbl: 'Moderruller brugt', val: `${fmt(d.plan.rolls.length)}` },
-    { lbl: 'Brugt rullelængde', val: `${fmt(totalUsed)} mm` },
-    { lbl: 'Udnyttelse', val: totalArea > 0 ? pct(totalNet / totalArea) : '—' },
-    { lbl: 'Spild', val: `${fmt(Math.round((totalArea - totalNet) / 1e6 * 100) / 100)} m²` },
-  ].forEach(i => {
-    const el = document.createElement('div');
-    el.className = 'sum-card';
-    el.innerHTML = `<div class="sc-lbl">${i.lbl}</div><div class="sc-val">${i.val}</div>`;
-    hg.appendChild(el);
-  });
-  head.appendChild(hg);
-  res.appendChild(head);
 
   // --- Manglende materiale ---
   if (d.plan.leftovers.length) {
@@ -1258,17 +1214,18 @@ function sectionsHTML(roll, buffer) {
     const erBevaretRest = si === roll.sections.length - 1 && !!roll.langRest;
     if (sec.sideRest > EPS)
       rows += erBevaretRest
-        ? `<tr class="langrest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Rest til senere brug — ${fmt(sec.sideRest)} × ${fmt(sec.len)} mm moderrulle, ikke spild</td></tr>`
-        : `<tr class="siderest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Siderest — ubrugt bredde i denne række (${fmt(sec.sideRest)} × ${fmt(sec.len)} mm)</td></tr>`;
+        ? `<tr class="langrest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Rest til senere brug</td></tr>`
+        : `<tr class="siderest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Siderest, spild</td></tr>`;
 
+    const strimlerLbl = sec.cols.length === 1 ? 'strimmel' : 'strimler';
     html += `<div class="section">
       <div class="sec-head">
         <span class="sec-num">Række ${si + 1}</span>
-        <span class="sec-title">Kap ${fmt(sec.len)} mm af moderrullen</span>
-        <span class="sec-meta">pos. ${fmt(from)} – ${fmt(to)} mm · ${sec.cols.length} strimler · ${erBevaretRest ? 'rest til senere brug' : 'siderest'} ${fmt(sec.sideRest)} mm</span>
+        <span class="sec-title">Kap ${fmt(sec.len)} mm</span>
+        <span class="sec-meta">pos. ${fmt(from)} – ${fmt(to)} mm · ${sec.cols.length} ${strimlerLbl}</span>
       </div>
       <table class="cut">
-        <thead><tr><th style="width:60px">Strimmel</th><th style="width:130px">Position</th><th style="width:80px">Bredde</th><th>Skal indeholde</th></tr></thead>
+        <thead><tr><th style="width:60px">Strimmel</th><th style="width:130px">Position</th><th style="width:80px">Bredde</th><th>Indhold</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -1344,7 +1301,7 @@ table.cut tr.langrest td{background:#E6F7EC;color:#2E9E52;font-style:italic}
 <div class="hdr">
   <div>
     <div class="hdr-title">Arbejdsseddel — opskæring</div>
-    <div class="hdr-sub">${d.orderRef ? esc(d.orderRef) + ' &nbsp;|&nbsp; ' : ''}${d.plan.rolls.length} moderrulle(r) &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm${d.dorn.on ? ' &nbsp;|&nbsp; Dorn: maks ' + fmt(d.dorn.maxW) + ' mm, tillæg ' + fmt(d.dorn.tillaeg) + ' mm' : ' &nbsp;|&nbsp; Dorn: fra'}${d.orderNote ? ' &nbsp;|&nbsp; ' + esc(d.orderNote) : ''}</div>
+    <div class="hdr-sub">${d.plan.rolls.length} moderrulle(r) &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm${d.dorn.on ? ' &nbsp;|&nbsp; Dorn: maks ' + fmt(d.dorn.maxW) + ' mm, tillæg ' + fmt(d.dorn.tillaeg) + ' mm' : ' &nbsp;|&nbsp; Dorn: fra'}</div>
   </div>
   <div class="hdr-meta">Dato: ${dateStr}<br>Kl. ${timeStr}</div>
 </div>
@@ -1536,7 +1493,6 @@ function saveToHistory(d) {
     v: 3,
     date: now.toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' }),
     time: now.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }),
-    orderRef: d.orderRef, orderNote: d.orderNote,
     inputs: d.inputs,
     summary: {
       bands: d.totalBands,
@@ -1577,8 +1533,6 @@ function entryInputs(e) {
 
 function loadHistEntry(entry) {
   const inp = entryInputs(entry);
-  document.getElementById('order-ref').value  = entry.orderRef  || '';
-  document.getElementById('order-note').value = entry.orderNote || '';
   document.getElementById('buffer').value     = inp.buffer ?? 0;
   document.getElementById('max-strimler').value = inp.maxPerWidth ?? '';
   document.getElementById('dorn-on').checked  = inp.dorn ? inp.dorn.on !== false : true;
@@ -1630,6 +1584,6 @@ window.addEventListener('resize', () => {
   if (_lastPlan) _lastPlan.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
 });
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.4 &middot; 15-09-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.5 &middot; 15-09-2026</div>
 </body>
 </html>
