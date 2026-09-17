@@ -207,5 +207,27 @@
     "holdetid": "5,5",
     "tryk": "1,3",
     "bemaerkning": "SKAL TØRRES AF MED SPRIT INDEN PRESSE"
+  },
+  {
+    "id": 20,
+    "baandtype": "P22 MED PILE",
+    "kategori": "PU",
+    "vareNr": "12468",
+    "tempOver": "150",
+    "tempUnder": "150",
+    "holdetid": "0",
+    "tryk": "1",
+    "bemaerkning": "Pile til løbsretning"
+  },
+  {
+    "id": 21,
+    "baandtype": "P22 Langsgående striber",
+    "kategori": "PU",
+    "vareNr": "12468",
+    "tempOver": "140",
+    "tempUnder": "140",
+    "holdetid": "0",
+    "tryk": "1",
+    "bemaerkning": "JP 2meter presse"
   }
 ]
