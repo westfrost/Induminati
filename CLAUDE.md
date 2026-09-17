@@ -280,8 +280,8 @@ Footer at the bottom of the file: **v1.9, dated 14-09-2026** — `<div ...>Bånd
 
 ### Ordrer/ — Ordreliste-værktøj
 
-**File:** `/home/user/Induminati/Ordrer/index.html` (single self-contained file, 913 lines — no separate CSS/JS files)
-**Current version:** `v3.0 · 18-08-2026` (footer: `<footer>Byg til intern brug &middot; v3.0 &middot; 18-08-2026</footer>`)
+**File:** `/home/user/Induminati/Ordrer/index.html` (single self-contained file, ~920 lines — no separate CSS/JS files)
+**Current version:** `v3.1 · 17-09-2026` (footer: `<footer>Byg til intern brug &middot; v3.1 &middot; 17-09-2026</footer>`)
 **Status:** Live front-page tool (moved out of `Test/` per commit `637ced0`, "Flyt Ordreliste-værktøj fra Test til forsiden")
 
 #### 1. Purpose
@@ -344,10 +344,11 @@ Diff key is **`Nummer`** (`KEY_COLUMN`), compared as a trimmed string.
   - Yesterday's rows are re-aligned to today's header set (`yesterdayAligned`) and re-formatted for date-like columns, then empty rows dropped.
   - **"Rykket" auto-stamping**: for each yesterday row, if `Ny leveringsdato` is filled in but `Rykket` is still blank, `Rykket` is set to `todayDK()` (today's date) — a one-time stamp of when the change was first detected. If `Rykket` already has a value, the tool never touches either field again (per commit `40654ec`, "Ret 'Rykket'-logik ... til at stemple dags dato" — this used to copy something else in, now it stamps today's date).
   - **New rows**: any `Nummer` in today's cleaned set not present in yesterday's key set is a "new order" — collected into `newOrders` and their keys into `newRowKeys` (used for preview highlighting).
-  - **Field sync for rows present in both** (built from `todayKeyStatus`/`todayKeyKildenr`/`todayKeyDate` maps keyed off the **raw** today rows, not the cleaned ones):
+  - **Field sync for rows present in both** (built from `todayKeyStatus`/`todayKeyKildenr`/`todayKeyDate`/`todayKeyBeskrivelse2` maps keyed off the **raw** today rows, not the cleaned ones):
     - `Status` is always overwritten to today's value if different (`statusUpdated` counter).
     - `Bekræftet leveringsdato` is always overwritten to today's value if different (`dateUpdated` counter) — per commit `d4b9515`, "Opdater Bekræftet leveringsdato altid ved sammenligning".
     - `Kildenr.` is filled in from today **only if it was blank in yesterday's row and today has a value** — never overwrites an existing value (`kildenrFilled` counter).
+    - `Beskrivelse 2` is overwritten from today **only when today's value is non-blank and differs from yesterday's** (`beskrivelse2Updated` counter, added 17-09-2026) — a third, distinct sync pattern from both `Status`/date (always overwrite, even to blank) and `Kildenr.` (fill-only-if-yesterday-blank): here it's *today's* value that gates the overwrite, not yesterday's. Before this fix, `Beskrivelse 2` had no sync path at all — yesterday's value silently persisted forever and today's was discarded for any row present in both files (only brand-new rows ever showed today's value, since those come from `cleanedToday`/`newOrders` rather than `yesterdayAligned`). Explicitly requested and confirmed reversed-behavior fix; if today's `Beskrivelse 2` is blank, yesterday's value is left untouched (this is deliberately different from `Status`/date, which overwrite unconditionally including to blank).
     - `Rykket`, `Grund`, `Ny leveringsdato` are never touched by this sync step — they're the user's manually-maintained fields, preserved as-is from yesterday.
   - **Removal**: a yesterday row is dropped from the result only if its key is no longer present in today's raw data at all, or if today's status for that key is `6. SFE`/`3. FÆRDIG`. Critically, an order that just fell outside the selected week range is **not** removed — the week filter only applies to brand-new rows coming from "i dag" (see §5), so previously-tracked orders survive regardless of week selection.
   - Final result = `yesterdayAligned` (surviving, updated rows) concatenated with `newOrders`, then sorted.
