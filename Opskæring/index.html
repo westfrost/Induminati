@@ -640,11 +640,58 @@ const betterPlan = (a, b) => a[0] !== b[0] ? a[0] < b[0] : a[1] < b[1] - EPS;
 // gemmer bredde/længde på det reelt reststykke, så `rollStats` kan holde det
 // ude af spild-regnskabet (se dér) — uden det ville arealet blive talt som
 // spildt materiale, selvom det er en brugbar rest.
+// Samler den sidste rækkes strimler af samme bredde i færre, længere
+// strimler, når rækken alligevel skal forlænges (se funktionen nedenfor).
+// Emnerne flyttes ikke ud af rækken — kun om på færre strimler af hver
+// bredde, ende mod ende i den nu tilgængelige længde (`capLen`).
+function packForMinWidth(cols, capLen) {
+  const byW = new Map();
+  for (const c of cols) for (const u of c.items) {
+    if (!byW.has(u.w)) byW.set(u.w, []);
+    byW.get(u.w).push(u);
+  }
+  const packed = [];
+  for (const [w, list] of byW) {
+    list.sort((a, b) => b.len - a.len);
+    const bins = [];
+    for (const u of list) {
+      let bin = bins.find(b => b.filled + u.len <= capLen + EPS);
+      if (!bin) { bin = { items: [], filled: 0 }; bins.push(bin); }
+      bin.items.push(u);
+      bin.filled += u.len;
+    }
+    for (const bin of bins) packed.push({ w, items: bin.items, filled: bin.filled });
+  }
+  return packed;
+}
+
 function forlaengSidsteRaekkeForLaengsteRest(roll) {
   const tail = roll.len - roll.usedLen;
   if (tail <= EPS || !roll.sections.length) return;
   const last = roll.sections[roll.sections.length - 1];
   if (last.sideRest <= EPS) return;
+
+  // Bånd der lige nu ligger i hver sin lige brede strimmel kan ofte lægges i
+  // forlængelse af hinanden i én strimmel i stedet. Det ændrer ingenting
+  // FØR forlængelsen, men bagefter bliver al ubrugt bredde til restrullen og
+  // al ubrugt LÆNGDE pr. strimmel til rent spild — så jo mindre bredde
+  // indholdet fylder, jo mindre spild og jo bredere (federe) restrulle,
+  // uanset hvor langt rækken ender med at blive. Færre, smallere strimler er
+  // derfor altid mindst lige så godt; prøv det altid, og behold kun
+  // resultatet hvis det rent faktisk bruger mindre bredde end i forvejen.
+  const available = last.len + tail;
+  const packed = packForMinWidth(last.cols, available);
+  const packedWidth = packed.reduce((s, c) => s + c.w, 0);
+  if (packedWidth < last.widthUsed - EPS) {
+    packed.sort((a, b) => b.w - a.w || b.filled - a.filled);
+    let x = 0;
+    for (const c of packed) { c.x = x; x += c.w; }
+    last.cols = packed;
+    last.area = packed.reduce((s, c) => s + c.w * c.filled, 0);
+    last.widthUsed = packedWidth;
+    last.sideRest = roll.w - packedWidth;
+  }
+
   last.len += tail;
   for (const c of last.cols) c.rest = last.len - c.filled;
   roll.usedLen = roll.len;
@@ -1584,6 +1631,6 @@ window.addEventListener('resize', () => {
   if (_lastPlan) _lastPlan.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
 });
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.5 &middot; 15-09-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.6 &middot; 17-09-2026</div>
 </body>
 </html>
