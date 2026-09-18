@@ -324,7 +324,7 @@
       <label><input type="checkbox" class="week-cb" data-offset="5"><span>Uge +5<span class="week-range" id="weekRange5"></span><span class="week-num" id="weekNum5"></span></span></label>
     </div>
     <div class="rules" style="margin-top:12px;">
-      Filtrerer "i dag"-arket på <code>Bekræftet leveringsdato</code> – ordrer til og med den seneste valgte uge tages med, inklusiv alt bagudrettet/overskredet.<br>
+      Filtrerer "i dag"-arket på <code>Bekræftet leveringsdato</code> – ordrer til og med den seneste valgte uge tages med, inklusiv alt bagudrettet/overskredet. Ordrer <u>uden</u> en gyldig leveringsdato bliver <u>ikke</u> sorteret fra – de kommer med på listen ligesom bagudrettede ordrer, bare uden en dato på.<br>
       Gælder ikke for rækker som allerede er bevaret fra "i går"; de beholdes uanset ugevalg.
     </div>
   </div>
@@ -360,7 +360,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v3.1 &middot; 17-09-2026</footer>
+  <footer>Byg til intern brug &middot; v3.2 &middot; 18-09-2026</footer>
 </div>
 
 <script>
@@ -646,7 +646,12 @@ function buildCleanedTodayRows() {
   let weekExcluded = 0;
   if (weekRanges.length && headers.includes(DATE_COLUMN)) {
     const beforeWeekFilter = mappedRows.length;
-    mappedRows = mappedRows.filter(row => row.__weekDate && isDateInRanges(row.__weekDate, weekRanges));
+    // En ordre uden en gyldig/parsérbar leveringsdato skal IKKE forsvinde stille
+    // fra arket — den behandles som om den var bagudrettet/overskredet (som
+    // ugefilteret jo alligevel altid tager med), dvs. den kommer med i listen,
+    // bare uden en dato på. Kun rækker der RENT FAKTISK har en dato, der ligger
+    // efter den seneste valgte uge, sorteres fra.
+    mappedRows = mappedRows.filter(row => !row.__weekDate || isDateInRanges(row.__weekDate, weekRanges));
     weekExcluded = beforeWeekFilter - mappedRows.length;
   }
   mappedRows.forEach(row => delete row.__weekDate);
