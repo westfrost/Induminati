@@ -229,5 +229,16 @@
     "holdetid": "0",
     "tryk": "1",
     "bemaerkning": "JP 2meter presse\nHusk glat teflon og prægemåtte"
+  },
+  {
+    "id": 22,
+    "baandtype": "Polysprint TFL-15E20",
+    "kategori": "PU",
+    "vareNr": "60318",
+    "tempOver": "190",
+    "tempUnder": "190",
+    "holdetid": "5",
+    "tryk": "1,5",
+    "bemaerkning": "Samles med det dyre teflontape.\nRødhætte temperaturer"
   }
 ]
