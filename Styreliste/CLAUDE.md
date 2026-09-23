@@ -9,7 +9,7 @@
 **Formål:** Beregner placering af styrelister (guide rails) på et transportbånd og producerer et opmålt SVG-diagram (set oppefra), et valgfrit tværsnit, en afmærkningstabel, en måltabel og en printbar arbejdsseddel (A4 landscape, én side).
 
 ## UI (parametre-panel)
-- **Båndbredde**, **Antal styrelister** (1–20), **Styrelistebredde**. Båndbredde/listebredde har `<datalist>`-forslag (`#beltPresets`, `#guidePresets`) — værdierne er gættede standardmål og kan frit rettes til firmaets egne.
+- **Båndbredde**, **Antal styrelister** (1–20), **Styrelistebredde**. Styrelistebredde har `<datalist>`-forslag (`#guidePresets`) med de mest almindelige lister: 6, 8, 10, 13, 17 mm (oplyst af brugeren). Båndbredde har bevidst **ingen** forslag — brugeren ønskede det ikke.
 - **Afstand angives som** (kun synlig ved 2+ lister) — segmenteret radiogruppe (`name="mode"`, global `mode`):
   - `cc` — én C/C-afstand for alle par (felt `#cc`).
   - `kk` — ønsket K/K-lysåbning (felt `#kk`); C/C = K/K + listebredde (omvendt beregning).
