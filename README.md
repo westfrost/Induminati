@@ -17,7 +17,7 @@ Ingen build-step, ingen framework, ingen backend. Hvert værktøj er én selvst�
 | Mappe | Værktøj | Beskrivelse |
 |---|---|---|
 | `Opskæring/` | Opskæringsberegner | Opskæring af transportbånd fra moderrulle. Lægger en 3-trins guillotineplan (tværsnit → længdesnit → kap) der bruger mindst mulig rullelængde, håndterer flere moderruller og dorn-pakning, og udskriver arbejdsseddel. Kan uploade en lagerliste (.xlsx) og selv vælge færrest mulige ruller herfra til at dække ordren — manuelle ruller kan stadig tastes ind ved siden af. |
-| `Styreliste/` | Styreliste Beregner | Beregn placering og mål for styrelister på transportbånd (C/C, K/K, individuel eller jævn fordeling) med opmålt diagram, afmærkningstabel og printbar arbejdsseddel. |
+| `Styreliste/` | Styreliste Beregner | Beregn placering og mål for styrelister (V-profiler) på bagsiden af transportbånd (C/C, K/K, individuel eller jævn fordeling) med opmålt diagram, afmærkningstabel og printbar arbejdsseddel. |
 | `DXF/` | DXF → NCP Konverter | Konverter DXF-filer til NCP-format til vandskæring og CNC. |
 | `Baanddb/` | Bånd & Medbringer DB | Opslagsdatabase over bånd- og medbringertyper med søgning og GitHub-sync. |
 | `Ordrer/` | Ordreliste-værktøj | Renser og sammenligner "Frigivne produktionsordrer"-eksporter fra BC dag for dag. |

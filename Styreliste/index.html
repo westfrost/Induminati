@@ -256,8 +256,6 @@
     margin-bottom: 18px;
   }
   .diagram-wrap svg { width: 100%; height: auto; }
-  .section-wrap { min-height: 0; }
-  .section-wrap[hidden] { display: none; }
 
   svg { display: block; }
 
@@ -367,7 +365,6 @@
     .output-panel { border: none; padding: 0; }
     .diagram-wrap { border: none; padding: 0 0 6px; min-height: 0; margin-bottom: 8px; background: none; break-inside: avoid; }
     .diagram-wrap svg { max-height: 70mm; min-width: 0; }
-    .section-wrap svg { max-height: 20mm; }
     .diagram-wrap line:not(.ext) { stroke-width: 1.6px; }
     .tables { grid-template-columns: 1fr 1fr; gap: 18px; }
     .measurements-table { font-size: 9.5pt; margin-bottom: 0; }
@@ -402,12 +399,12 @@
       <rect x="3" y="9" width="14" height="2" fill="#0B4F79"/>
     </svg>
   </div>
-  <h1>Styreliste Beregner<span class="sub">Transportbånd layout</span></h1>
+  <h1>Styreliste Beregner<span class="sub">Bagside af transportbånd</span></h1>
   <a class="btn-home" href="../index.html">← Forside</a>
 </header>
 
 <datalist id="guidePresets">
-  <option value="6"><option value="8"><option value="10"><option value="13"><option value="17">
+  <option value="6">K6</option><option value="8">K8</option><option value="10">K10</option><option value="13">K13</option><option value="17">K17</option>
 </datalist>
 
 <div class="layout">
@@ -435,9 +432,9 @@
       <label>Afstand angives som</label>
       <div class="seg" role="radiogroup">
         <input type="radio" name="mode" id="m-cc"  value="cc" checked><label for="m-cc"  title="Samme center-til-center afstand mellem alle lister">C/C</label>
-        <input type="radio" name="mode" id="m-kk"  value="kk"><label for="m-kk"  title="Ønsket lysåbning mellem listerne — C/C regnes ud">K/K</label>
+        <input type="radio" name="mode" id="m-kk"  value="kk"><label for="m-kk"  title="Ønsket afstand mellem listernes kanter — C/C regnes ud">K/K</label>
         <input type="radio" name="mode" id="m-ind" value="ind"><label for="m-ind" title="Forskellige C/C afstande mellem hvert par">Indiv.</label>
-        <input type="radio" name="mode" id="m-eq"  value="eq"><label for="m-eq"  title="Lige store baner — også ud mod båndkanterne">Jævnt</label>
+        <input type="radio" name="mode" id="m-eq"  value="eq"><label for="m-eq"  title="Lige store afstande mellem lister og ud til båndkanterne">Jævnt</label>
       </div>
     </div>
 
@@ -448,9 +445,9 @@
     </div>
 
     <div class="field" id="kkField" hidden>
-      <label for="kk">K/K-åbning <span class="unit">mm</span></label>
+      <label for="kk">K/K afstand <span class="unit">mm</span></label>
       <input type="text" inputmode="decimal" autocomplete="off" id="kk" placeholder="fx 80">
-      <div class="field-hint">Ønsket lysåbning mellem listerne (fx produktbredde + luft). C/C regnes ud automatisk.</div>
+      <div class="field-hint">Kant-til-kant afstand mellem nabolister. C/C regnes ud automatisk.</div>
     </div>
 
     <div class="field" id="indField" hidden>
@@ -460,7 +457,7 @@
     </div>
 
     <div class="field" id="eqInfo" hidden>
-      <div class="field-hint">Listerne fordeles, så alle baner — også de to yderste mod båndkanterne — får samme bredde.</div>
+      <div class="field-hint">Listerne fordeles jævnt, så afstanden mellem listerne og ud til båndkanterne er den samme.</div>
     </div>
 
     <div class="field" id="edgeField">
@@ -469,11 +466,6 @@
       <div class="field-hint" id="edgeHint">Fra venstre båndkant til listens venstre kant — lad stå tomt for at centrere</div>
     </div>
 
-    <div class="field">
-      <label for="guideHeight">Styrelistehøjde <span class="unit">mm</span> <span style="text-transform:none;letter-spacing:0">(valgfri)</span></label>
-      <input type="text" inputmode="decimal" autocomplete="off" id="guideHeight" placeholder="fx 40">
-      <div class="field-hint">Viser et tværsnit af båndet under diagrammet</div>
-    </div>
 
     <details class="wo" id="woDetails">
       <summary>Arbejdsseddel (valgfrit)</summary>
@@ -507,7 +499,6 @@
     <div class="diagram-wrap" id="diagramWrap">
       <div class="placeholder">Indtast parametre</div>
     </div>
-    <div class="diagram-wrap section-wrap" id="sectionWrap" hidden></div>
     <div id="warnWrap"></div>
     <div id="tableWrap"></div>
   </div>
@@ -518,7 +509,7 @@
 const $ = id => document.getElementById(id);
 const EPS = 1e-6;
 const FIELDS = {
-  b: 'beltWidth', n: 'numGuides', w: 'guideWidth', h: 'guideHeight', e: 'edgeDist',
+  b: 'beltWidth', n: 'numGuides', w: 'guideWidth', e: 'edgeDist',
   cc: 'cc', kk: 'kk', ind: 'ccList', o: 'woOrder', l: 'woLine', i: 'woInit'
 };
 const MODES = ['cc', 'kk', 'ind', 'eq'];
@@ -580,8 +571,6 @@ function compute() {
   else if (!(w > 0)) return { error: 'Ugyldig styrelistebredde.' };
   if (need.length) return { missing: 'Indtast ' + need.join(', ') };
 
-  const h = num(raw('guideHeight'));
-  if (raw('guideHeight') !== '' && !(h > 0)) return { error: 'Ugyldig styrelistehøjde.' };
   const e = num(raw('edgeDist'));
   if (raw('edgeDist') !== '' && isNaN(e)) return { error: 'Ugyldig afstand til kant.' };
 
@@ -600,9 +589,9 @@ function compute() {
       spacings = Array(n - 1).fill(cc);
       input.cc = cc;
     } else if (effMode === 'kk') {
-      if (raw('kk') === '') return { missing: 'Angiv K/K-åbning' };
+      if (raw('kk') === '') return { missing: 'Angiv K/K afstand' };
       const kk = num(raw('kk'));
-      if (isNaN(kk) || kk < 0) return { error: 'Ugyldig K/K-åbning.' };
+      if (isNaN(kk) || kk < 0) return { error: 'Ugyldig K/K afstand.' };
       spacings = Array(n - 1).fill(kk + w);
       input.kk = kk;
     } else if (effMode === 'ind') {
@@ -640,7 +629,7 @@ function compute() {
   if (effMode === 'eq' && lane < -EPS) warnings.unshift(`Der er ikke plads til ${n} lister á ${fmt(w)} mm på et ${fmt(B)} mm bånd`);
 
   return {
-    B, n, w, h, e, mode: effMode, centered: isNaN(e), spacings, centers, guides, lane, input, warnings,
+    B, n, w, e, mode: effMode, centered: isNaN(e), spacings, centers, guides, lane, input, warnings,
     ok: warnings.length === 0
   };
 }
@@ -655,8 +644,6 @@ function update() {
 
   if (r.error || r.missing) {
     $('diagramWrap').innerHTML = `<div class="placeholder">${esc(r.missing || 'Ret fejlen i parametrene')}</div>`;
-    $('sectionWrap').hidden = true;
-    $('sectionWrap').innerHTML = '';
     $('warnWrap').innerHTML = '';
     $('tableWrap').innerHTML = '';
     $('printHead').innerHTML = '';
@@ -665,9 +652,6 @@ function update() {
   }
 
   $('diagramWrap').innerHTML = renderDiagram(r);
-  const sec = renderSection(r);
-  $('sectionWrap').hidden = !sec;
-  $('sectionWrap').innerHTML = sec;
   $('warnWrap').innerHTML = r.warnings.length
     ? `<div class="warn-box"><strong>Advarsel</strong><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></div>`
     : '';
@@ -725,7 +709,7 @@ function dimSeg(s, y, t, fs) {
   return g;
 }
 
-// Fælles x-akse for diagram og tværsnit (medtager lister der rager uden for båndet)
+// x-akse for diagrammet (medtager lister der rager uden for båndet)
 function xAxis(r, SVG_W, PAD_L, PAD_R) {
   const { B, n, guides } = r;
   const xmin = Math.min(0, guides[0].l), xmax = Math.max(B, guides[n - 1].r);
@@ -861,50 +845,20 @@ function renderDiagram(r) {
   let lx = bx;
   if (n > 1) {
     out += `<circle cx="${lx + 4}" cy="${legendY - 3}" r="4" fill="${K.acc}"/>
-      <text x="${lx + 12}" y="${legendY}" ${F} font-size="9" fill="${K.acc}">Kant til kant (lysåbning)</text>`;
-    lx += 168;
+      <text x="${lx + 12}" y="${legendY}" ${F} font-size="9" fill="${K.acc}">Kant til kant</text>`;
+    lx += 110;
     out += `<circle cx="${lx + 4}" cy="${legendY - 3}" r="4" fill="${K.dark}"/>
       <text x="${lx + 12}" y="${legendY}" ${F} font-size="9" fill="${K.dark}">Center / center</text>`;
     lx += 108;
   }
-  out += `<text x="${lx}" y="${legendY}" ${F} font-size="9" fill="${K.muted}">POS = center målt fra venstre båndkant · alle mål i mm</text>`;
+  out += `<text x="${lx}" y="${legendY}" ${F} font-size="9" fill="${K.muted}">Set fra båndets bagside · POS = center målt fra venstre båndkant · mm</text>`;
 
   return `<svg viewBox="0 0 ${SVG_W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:${SVG_W}px" role="img" aria-label="Diagram over styrelister">${out}</svg>`;
 }
 
-// ── Tværsnit (kun når højde er angivet) ──────────────────────────────────────
-function renderSection(r) {
-  if (!(r.h > 0)) return '';
-  const { B, w, h, guides } = r;
-  const SVG_W = 760, PAD_L = 46, PAD_R = 26;
-  const { scale, tx } = xAxis(r, SVG_W, PAD_L, PAD_R);
-  const bx = tx(0), br = tx(B), K = COL, F = 'font-family="IBM Plex Mono,monospace"';
-
-  let hp = h * scale, note = '';
-  if (hp < 14) { hp = 14; note = ' — højde ikke målfast (forstørret)'; }
-  else if (hp > 90) { hp = 90; note = ' — højde ikke målfast (formindsket)'; }
-
-  const baseY = 30 + hp, beltT = 9, H = baseY + beltT + 10;
-  let out = `<text x="4" y="12" ${F} font-size="9" font-weight="600" fill="${K.muted}">TVÆRSNIT${note}</text>`;
-  out += `<rect x="${bx}" y="${baseY}" width="${br - bx}" height="${beltT}" fill="#DCE6EE" stroke="#93A9B8" stroke-width="1.2" rx="2"/>`;
-  for (const g of guides) {
-    out += `<rect x="${tx(g.l)}" y="${baseY - hp}" width="${Math.max(1.5, w * scale)}" height="${hp}" fill="${g.flag ? K.red : K.dark}" opacity="0.85"/>`;
-  }
-  // Højdemål til venstre for liste 1
-  const x = tx(guides[0].l) - 10, yt = baseY - hp;
-  out += `
-    <line x1="${x - 4}" y1="${yt}" x2="${x + 4}" y2="${yt}" stroke="${K.dim}" stroke-width="1.2"/>
-    <line x1="${x - 4}" y1="${baseY}" x2="${x + 4}" y2="${baseY}" stroke="${K.dim}" stroke-width="1.2"/>
-    <line x1="${x}" y1="${yt}" x2="${x}" y2="${baseY}" stroke="${K.dim}" stroke-width="1.2"/>
-    <polygon points="${x},${yt} ${x - 2.5},${yt + 5} ${x + 2.5},${yt + 5}" fill="${K.dim}"/>
-    <polygon points="${x},${baseY} ${x - 2.5},${baseY - 5} ${x + 2.5},${baseY - 5}" fill="${K.dim}"/>
-    <text x="${x - 5}" y="${(yt + baseY) / 2}" transform="rotate(-90 ${x - 5} ${(yt + baseY) / 2})" text-anchor="middle" ${F} font-size="10" font-weight="600" fill="${K.dim}">${fmt(h)}</text>`;
-  return `<svg viewBox="0 0 ${SVG_W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:${SVG_W}px" role="img" aria-label="Tværsnit af bånd med styrelister">${out}</svg>`;
-}
-
 // ── Tabeller ─────────────────────────────────────────────────────────────────
 function renderTables(r) {
-  const { B, n, w, h, guides } = r;
+  const { B, n, w, guides } = r;
   const status = r.ok ? `<span class="badge ok">OK</span>` : `<span class="badge warn">Advarsel</span>`;
 
   // Afmærkningstabel: absolutte positioner fra venstre båndkant
@@ -936,9 +890,8 @@ function renderTables(r) {
   }
   rows += `<tr class="${gn.outR > EPS ? 'warn' : ''}"><td><span class="dot none"></span>Liste ${n} → båndkant</td><td class="v strong">${fmt(B - gn.r)} mm</td></tr>`;
   if (n > 1) rows += `<tr><td>Samlet C/C 1→${n}</td><td class="v">${fmt(gn.c - g0.c)} mm</td></tr>`;
-  if (r.mode === 'eq') rows += `<tr><td>Banebredde (alle ${n + 1} baner)</td><td class="v">${fmt(r.lane)} mm</td></tr>`;
+  if (r.mode === 'eq') rows += `<tr><td>Afstand mellem lister og til kant</td><td class="v">${fmt(r.lane)} mm</td></tr>`;
   rows += `<tr><td>Styrelistebredde</td><td class="v">${fmt(w)} mm</td></tr>`;
-  if (h > 0) rows += `<tr><td>Styrelistehøjde</td><td class="v">${fmt(h)} mm</td></tr>`;
   rows += `<tr><td>Båndbredde</td><td class="v">${fmt(B)} mm</td></tr>`;
 
   return `
@@ -969,7 +922,7 @@ function renderPrintHead(r) {
     cc:  `C/C ${fmt(r.input.cc)} mm`,
     kk:  `K/K ${fmt(r.input.kk)} mm`,
     ind: `C/C ${(r.input.list || []).map(fmt).join(' / ')} mm`,
-    eq:  'Lige store baner'
+    eq:  'Jævnt fordelt'
   }[r.mode];
   const place = r.mode === 'eq' ? 'Jævnt fordelt' : (r.centered ? 'Centreret' : `${fmt(r.e)} mm fra venstre kant`);
   const cell = (l, v, cls = '') => `<div class="${cls}"><span class="ph-l">${l}</span><span class="ph-v">${esc(v)}</span></div>`;
@@ -981,7 +934,7 @@ function renderPrintHead(r) {
     ${cell('Initialer', raw('woInit'))}
     ${cell('Status', r.ok ? 'OK' : 'ADVARSEL — se nedenfor')}
     ${cell('Båndbredde', fmt(r.B) + ' mm')}
-    ${cell('Lister', `${r.n} × ${fmt(r.w)} mm${r.h > 0 ? ' × h ' + fmt(r.h) : ''}`)}
+    ${cell('Lister', `${r.n} × ${fmt(r.w)} mm`)}
     ${cell('Afstand', method)}
     ${cell('Placering', place)}`;
 }
@@ -1050,6 +1003,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !(e.target
 loadState();
 update();
 </script>
-<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v2.0 &middot; 23-09-2026</div>
+<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v2.1 &middot; 23-09-2026</div>
 </body>
 </html>
