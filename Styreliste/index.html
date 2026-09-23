@@ -21,6 +21,10 @@
     --muted:        #5F7C90;
     --red:          #D64545;
     --green:        #2E9E52;
+    /* Semantisk advarselsfarve (ikke brand) */
+    --warn-bg:      #FFF6E5;
+    --warn-border:  #F0C36D;
+    --warn-text:    #8A5A00;
   }
 
   body {
@@ -74,17 +78,18 @@
   /* ── Layout ── */
   .layout {
     width: 100%;
-    max-width: 960px;
+    max-width: 1040px;
     margin: 32px auto 0;
     padding: 0 20px;
     display: grid;
-    grid-template-columns: 270px 1fr;
+    grid-template-columns: 280px minmax(0, 1fr);
     gap: 22px;
     align-items: start;
   }
 
-  @media (max-width: 680px) {
-    .layout { grid-template-columns: 1fr; }
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: minmax(0, 1fr); margin-top: 18px; padding: 0 12px; }
+    header { padding: 14px 16px; }
   }
 
   /* ── Panels ── */
@@ -103,9 +108,19 @@
     margin-bottom: 18px;
     padding-bottom: 9px;
     border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .panel-title .live {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: .5px;
+    color: var(--green);
   }
 
   .field { margin-bottom: 16px; }
+  .field[hidden] { display: none; }
 
   label {
     display: block;
@@ -115,8 +130,9 @@
     color: var(--muted);
     margin-bottom: 5px;
   }
+  label .unit { color: var(--dark); }
 
-  input[type="number"] {
+  .field input {
     width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
@@ -126,12 +142,11 @@
     font-weight: 600;
     padding: 9px 11px;
     outline: none;
+    border-radius: 0;
     transition: border-color 0.15s, background 0.15s;
-    -moz-appearance: textfield;
   }
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-  input[type="number"]:focus { border-color: var(--dark); background: #fff; }
+  .field input:focus { border-color: var(--dark); background: #fff; }
+  .field input.small { font-size: 0.85rem; padding: 7px 10px; }
 
   .field-hint {
     font-size: 0.62rem;
@@ -141,21 +156,47 @@
     line-height: 1.4;
   }
 
-  .btn {
-    width: 100%;
-    background: var(--dark);
-    color: #fff;
-    border: none;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.25rem;
-    letter-spacing: 2px;
-    padding: 13px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    margin-top: 6px;
+  /* Segmenteret valg af afstandsmetode */
+  .seg {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--border);
+    background: var(--bg);
   }
-  .btn:hover { background: var(--accent); }
-  .btn:active { transform: scale(0.98); }
+  .field .seg input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .seg label {
+    margin: 0;
+    text-align: center;
+    padding: 8px 2px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    letter-spacing: .5px;
+    transition: background .15s, color .15s;
+  }
+  .seg label:last-of-type { border-right: none; }
+  .seg label:hover { background: var(--surface2); color: var(--dark); }
+  .seg input:checked + label { background: var(--dark); color: #fff; }
+  .seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  details.wo {
+    margin: 4px 0 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+  details.wo summary {
+    cursor: pointer;
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  details.wo summary:hover { color: var(--dark); }
+  details.wo .field { margin-bottom: 10px; }
 
   .btn-outline {
     width: 100%;
@@ -168,10 +209,14 @@
     letter-spacing: .5px;
     padding: 8px 14px;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 8px;
     transition: background 0.15s, border-color 0.15s;
   }
   .btn-outline:hover { background: var(--surface2); border-color: var(--dark); }
+  .btn-primary { background: var(--dark); color: #fff; border-color: var(--dark); }
+  .btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-row .btn-outline { margin-top: 8px; }
   .btn-print { display: none; }
 
   .error-msg {
@@ -183,11 +228,20 @@
     line-height: 1.5;
   }
 
+  .kbd-hint { font-size: 0.58rem; color: var(--muted); margin-top: 6px; letter-spacing: .3px; }
+
   /* ── Output ── */
   .output-panel {
     background: var(--surface);
     border: 1px solid var(--border);
     padding: 22px;
+    min-width: 0;
+  }
+  @media (max-width: 720px) {
+    .output-panel, .panel { padding: 16px; }
+    /* På mobil ville diagrammet skaleres ulæseligt småt — rul det i stedet vandret inde i boksen */
+    .diagram-wrap { min-height: 0; overflow-x: auto; justify-content: flex-start; }
+    .diagram-wrap svg { min-width: 600px; }
   }
 
   .diagram-wrap {
@@ -197,11 +251,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 18px 8px;
+    padding: 14px 8px;
     min-height: 220px;
-    margin-bottom: 22px;
-    overflow-x: auto;
+    margin-bottom: 18px;
   }
+  .diagram-wrap svg { width: 100%; height: auto; }
+  .section-wrap { min-height: 0; }
+  .section-wrap[hidden] { display: none; }
 
   svg { display: block; }
 
@@ -214,17 +270,32 @@
     text-transform: uppercase;
   }
 
+  .warn-box {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-left: 4px solid var(--warn-border);
+    color: var(--warn-text);
+    font-size: 0.72rem;
+    line-height: 1.6;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+  }
+  .warn-box strong { display: block; letter-spacing: 1px; text-transform: uppercase; font-size: 0.66rem; margin-bottom: 2px; }
+  .warn-box ul { list-style: none; }
+  .warn-box li::before { content: '⚠ '; }
+
   /* ── Table ── */
+  .table-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .table-section-title {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 1rem;
     letter-spacing: 2px;
     color: var(--muted);
     text-transform: uppercase;
-    margin-bottom: 10px;
-    padding-bottom: 7px;
-    border-bottom: 1px solid var(--border);
   }
+  .table-sub { font-size: 0.6rem; color: var(--muted); letter-spacing: .3px; }
+
+  .tables { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
 
   .measurements-table {
     width: 100%;
@@ -242,39 +313,36 @@
     padding: 7px 10px;
     border-bottom: 1px solid var(--border);
     background: var(--surface2);
+    font-weight: 600;
   }
+  .measurements-table th.v { text-align: right; }
 
   .measurements-table td {
     padding: 8px 10px;
     border-bottom: 1px solid #E9EFF5;
     font-weight: 500;
   }
-
-  .measurements-table td:last-child {
-    font-weight: 700;
-    text-align: right;
-    color: var(--dark);
-  }
-
-  .measurements-table tr.highlight td {
-    background: var(--surface2);
-    color: var(--dark);
-  }
-
-  .measurements-table tr.highlight td:last-child {
-    color: var(--dark);
-  }
-
-  .measurements-table tr.warn td {
-    background: rgba(214,69,69,.08);
-    color: var(--red);
-  }
-
-  .measurements-table tr.warn td:last-child {
-    color: var(--red);
-  }
-
+  .measurements-table td.v { text-align: right; font-weight: 600; white-space: nowrap; }
+  .measurements-table td.v.strong { font-weight: 700; color: var(--dark); }
   .measurements-table tr:last-child td { border-bottom: none; }
+
+  .measurements-table tr.warn td { background: rgba(214,69,69,.07); color: var(--red); }
+  .measurements-table tr.warn td.v.strong { color: var(--red); }
+
+  .gnum {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid var(--dark); color: var(--dark);
+    font-size: 0.66rem; font-weight: 700;
+  }
+  tr.warn .gnum { border-color: var(--red); color: var(--red); }
+
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+  .dot.kk { background: var(--accent); }
+  .dot.cc { background: var(--dark); }
+  .dot.none { background: transparent; border: 1px solid var(--border); }
+  tr.kk td { background: #FEF4EA; }
+  tr.kk td.v { color: var(--accent-hover); }
 
   .badge {
     display: inline-block;
@@ -283,20 +351,43 @@
     border-radius: 2px;
     letter-spacing: 1px;
     text-transform: uppercase;
-    margin-left: 8px;
     vertical-align: middle;
   }
   .badge.ok   { background: rgba(46,158,82,.12);  border: 1px solid rgba(46,158,82,.3);  color: var(--green); }
-  .badge.warn { background: rgba(214,69,69,.1);   border: 1px solid rgba(214,69,69,.3);   color: var(--red); }
+  .badge.warn { background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text); }
+
+  /* ── Print-hoved (kun ved udskrift) ── */
+  .print-head { display: none; }
 
   @media print {
-    @page { size: A4 landscape; margin: 12mm; }
-    body { padding-bottom: 0; }
+    @page { size: A4 landscape; margin: 10mm; }
+    body { padding-bottom: 0; background: #fff; min-height: 0; }
     header, .panel, .btn-print, .version-footer { display: none !important; }
     .layout { display: block; max-width: 100%; margin: 0; padding: 0; }
     .output-panel { border: none; padding: 0; }
-    .diagram-wrap { border: none; padding: 0 0 10px; min-height: 0; margin-bottom: 14px; overflow: visible; background: none; }
-    svg { max-width: 100%; height: auto; }
+    .diagram-wrap { border: none; padding: 0 0 6px; min-height: 0; margin-bottom: 8px; background: none; break-inside: avoid; }
+    .diagram-wrap svg { max-height: 70mm; min-width: 0; }
+    .section-wrap svg { max-height: 20mm; }
+    .diagram-wrap line:not(.ext) { stroke-width: 1.6px; }
+    .tables { grid-template-columns: 1fr 1fr; gap: 18px; }
+    .measurements-table { font-size: 9.5pt; margin-bottom: 0; }
+    .measurements-table td { padding: 3px 8px; }
+    .table-head { margin-bottom: 4px; }
+    tr.kk td, .measurements-table th, tr.warn td, .dot, .gnum, .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .warn-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin-bottom: 8px; padding: 6px 10px; }
+
+    .print-head {
+      display: grid;
+      grid-template-columns: 2.2fr repeat(4, 1fr);
+      border: 1.5px solid var(--text);
+      margin-bottom: 8px;
+      font-size: 9pt;
+    }
+    .print-head > div { padding: 5px 8px; border-right: 1px solid var(--text); border-bottom: 1px solid var(--text); }
+    .print-head > div:nth-child(5n) { border-right: none; }
+    .print-head .ph-title { font-family: 'Bebas Neue', sans-serif; font-size: 17pt; letter-spacing: 1.5px; color: var(--dark); display: flex; align-items: center; }
+    .print-head .ph-l { display: block; font-size: 6.5pt; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+    .print-head .ph-v { font-weight: 600; font-size: 10pt; min-height: 1.2em; }
   }
 </style>
 </head>
@@ -315,407 +406,655 @@
   <a class="btn-home" href="../index.html">← Forside</a>
 </header>
 
+<datalist id="beltPresets">
+  <option value="300"><option value="400"><option value="500"><option value="600">
+  <option value="650"><option value="800"><option value="1000"><option value="1200">
+</datalist>
+<datalist id="guidePresets">
+  <option value="10"><option value="12"><option value="15"><option value="20">
+  <option value="25"><option value="30"><option value="40">
+</datalist>
+
 <div class="layout">
 
   <!-- Input -->
   <div class="panel">
-    <div class="panel-title">Parametre</div>
+    <div class="panel-title">Parametre <span class="live">● opdateres live</span></div>
 
     <div class="field">
-      <label>Båndbredde <span style="color:var(--dark)">mm</span></label>
-      <input type="number" id="beltWidth" min="1" placeholder="fx 500">
+      <label for="beltWidth">Båndbredde <span class="unit">mm</span></label>
+      <input type="text" inputmode="decimal" autocomplete="off" id="beltWidth" list="beltPresets" placeholder="fx 500">
     </div>
 
     <div class="field">
-      <label>Antal styrelister</label>
-      <input type="number" id="numGuides" min="1" max="20" placeholder="fx 2">
+      <label for="numGuides">Antal styrelister</label>
+      <input type="text" inputmode="numeric" autocomplete="off" id="numGuides" placeholder="fx 2">
     </div>
 
     <div class="field">
-      <label>Styrelistebredde <span style="color:var(--dark)">mm</span></label>
-      <input type="number" id="guideWidth" min="1" placeholder="fx 20">
+      <label for="guideWidth">Styrelistebredde <span class="unit">mm</span></label>
+      <input type="text" inputmode="decimal" autocomplete="off" id="guideWidth" list="guidePresets" placeholder="fx 20">
+    </div>
+
+    <div class="field" id="modeField" hidden>
+      <label>Afstand angives som</label>
+      <div class="seg" role="radiogroup">
+        <input type="radio" name="mode" id="m-cc"  value="cc" checked><label for="m-cc"  title="Samme center-til-center afstand mellem alle lister">C/C</label>
+        <input type="radio" name="mode" id="m-kk"  value="kk"><label for="m-kk"  title="Ønsket lysåbning mellem listerne — C/C regnes ud">K/K</label>
+        <input type="radio" name="mode" id="m-ind" value="ind"><label for="m-ind" title="Forskellige C/C afstande mellem hvert par">Indiv.</label>
+        <input type="radio" name="mode" id="m-eq"  value="eq"><label for="m-eq"  title="Lige store baner — også ud mod båndkanterne">Jævnt</label>
+      </div>
+    </div>
+
+    <div class="field" id="ccField" hidden>
+      <label for="cc">C/C afstand <span class="unit">mm</span></label>
+      <input type="text" inputmode="decimal" autocomplete="off" id="cc" placeholder="fx 100">
+      <div class="field-hint">Center-til-center afstand mellem nabolister</div>
+    </div>
+
+    <div class="field" id="kkField" hidden>
+      <label for="kk">K/K-åbning <span class="unit">mm</span></label>
+      <input type="text" inputmode="decimal" autocomplete="off" id="kk" placeholder="fx 80">
+      <div class="field-hint">Ønsket lysåbning mellem listerne (fx produktbredde + luft). C/C regnes ud automatisk.</div>
+    </div>
+
+    <div class="field" id="indField" hidden>
+      <label for="ccList">C/C afstande <span class="unit">mm</span></label>
+      <input type="text" autocomplete="off" id="ccList" placeholder="fx 80; 120; 80">
+      <div class="field-hint" id="indHint">Én afstand pr. par, adskilt af ; eller mellemrum</div>
+    </div>
+
+    <div class="field" id="eqInfo" hidden>
+      <div class="field-hint">Listerne fordeles, så alle baner — også de to yderste mod båndkanterne — får samme bredde.</div>
+    </div>
+
+    <div class="field" id="edgeField">
+      <label for="edgeDist">Afstand til venstre kant <span class="unit">mm</span></label>
+      <input type="text" inputmode="decimal" autocomplete="off" id="edgeDist" placeholder="tom = centreret">
+      <div class="field-hint" id="edgeHint">Fra venstre båndkant til listens venstre kant — lad stå tomt for at centrere</div>
     </div>
 
     <div class="field">
-      <label id="ccLabel">C/C afstand <span style="color:var(--dark)">mm</span></label>
-      <input type="number" id="cc" min="0" placeholder="fx 100">
-      <div class="field-hint" id="ccHint">Center-til-center afstand mellem styrelisterne</div>
+      <label for="guideHeight">Styrelistehøjde <span class="unit">mm</span> <span style="text-transform:none;letter-spacing:0">(valgfri)</span></label>
+      <input type="text" inputmode="decimal" autocomplete="off" id="guideHeight" placeholder="fx 40">
+      <div class="field-hint">Viser et tværsnit af båndet under diagrammet</div>
     </div>
 
-    <button class="btn" onclick="calculate()">Beregn</button>
-    <button class="btn-outline" id="resetBtn" onclick="resetForm()">↺ Nulstil</button>
-    <button class="btn-outline btn-print" id="printBtn" onclick="doPrint()">⎙ Udskriv</button>
+    <details class="wo" id="woDetails">
+      <summary>Arbejdsseddel (valgfrit)</summary>
+      <div class="field">
+        <label for="woOrder">Ordrenr.</label>
+        <input type="text" class="small" autocomplete="off" id="woOrder">
+      </div>
+      <div class="field">
+        <label for="woLine">Bånd / linje</label>
+        <input type="text" class="small" autocomplete="off" id="woLine">
+      </div>
+      <div class="field">
+        <label for="woInit">Initialer</label>
+        <input type="text" class="small" autocomplete="off" id="woInit">
+      </div>
+    </details>
+
+    <button class="btn-outline btn-primary btn-print" id="printBtn" onclick="window.print()">⎙ Udskriv arbejdsseddel</button>
+    <div class="btn-row">
+      <button class="btn-outline" id="linkBtn" onclick="copyLink()">🔗 Del link</button>
+      <button class="btn-outline" id="resetBtn" onclick="resetForm()">↺ Nulstil</button>
+    </div>
+    <div class="kbd-hint">Esc nulstiller · linket gemmer alle indtastninger</div>
 
     <div class="error-msg" id="errorMsg"></div>
   </div>
 
   <!-- Output -->
   <div class="output-panel">
+    <div class="print-head" id="printHead"></div>
     <div class="diagram-wrap" id="diagramWrap">
-      <div class="placeholder">Indtast parametre og tryk beregn</div>
+      <div class="placeholder">Indtast parametre</div>
     </div>
+    <div class="diagram-wrap section-wrap" id="sectionWrap" hidden></div>
+    <div id="warnWrap"></div>
     <div id="tableWrap"></div>
   </div>
 
 </div>
 
 <script>
-// ── Update label based on numGuides ──────────────────────────────────────────
-document.getElementById('numGuides').addEventListener('input', updateCCLabel);
+const $ = id => document.getElementById(id);
+const EPS = 1e-6;
+const FIELDS = {
+  b: 'beltWidth', n: 'numGuides', w: 'guideWidth', h: 'guideHeight', e: 'edgeDist',
+  cc: 'cc', kk: 'kk', ind: 'ccList', o: 'woOrder', l: 'woLine', i: 'woInit'
+};
+const MODES = ['cc', 'kk', 'ind', 'eq'];
+const LS_KEY = 'styreliste.v2';
+const COL = {
+  dark: '#0B4F79', acc: '#E8791E', dim: '#17324A', muted: '#5F7C90',
+  red: '#D64545', ext: '#B9CAD6', guideTop: '#073B57', redTop: '#963030'
+};
+let mode = 'cc';
 
-function updateCCLabel() {
-  const n = parseInt(document.getElementById('numGuides').value) || 0;
-  const lbl  = document.getElementById('ccLabel');
-  const hint = document.getElementById('ccHint');
-  if (n <= 1) {
-    lbl.innerHTML  = 'Afstand til kant <span style="color:var(--dark)">mm</span>';
-    hint.textContent = 'Afstand fra venstre båndkant til styrelistekant — lad stå tomt for at centrere';
-  } else {
-    lbl.innerHTML  = 'C/C afstand <span style="color:var(--dark)">mm</span>';
-    hint.textContent = 'Center-til-center afstand mellem styrelisterne';
+// ── Hjælpere ─────────────────────────────────────────────────────────────────
+// Accepterer både komma og punktum som decimaltegn. Tom streng → NaN.
+function num(str) {
+  const s = String(str == null ? '' : str).trim().replace(/,/g, '.');
+  return s === '' ? NaN : Number(s);
+}
+function raw(id) { return $(id).value.trim(); }
+
+function fmt(n) {
+  if (!isFinite(n)) return '—';
+  if (Math.abs(n) < 1e-9) n = 0;
+  return parseFloat(n.toFixed(2)).toString().replace('.', ',');
+}
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+function pad(n) { return String(n).padStart(2, '0'); }
+
+// ── Synlighed af felter ──────────────────────────────────────────────────────
+function updateVisibility() {
+  const n = num(raw('numGuides'));
+  const multi = n >= 2;
+  $('modeField').hidden = !multi;
+  $('ccField').hidden   = !(multi && mode === 'cc');
+  $('kkField').hidden   = !(multi && mode === 'kk');
+  $('indField').hidden  = !(multi && mode === 'ind');
+  $('eqInfo').hidden    = !(multi && mode === 'eq');
+  $('edgeField').hidden = multi && mode === 'eq';
+  $('edgeHint').textContent = multi
+    ? 'Fra venstre båndkant til liste 1\'s venstre kant — lad stå tomt for at centrere listerne på båndet'
+    : 'Fra venstre båndkant til listens venstre kant — lad stå tomt for at centrere';
+  if (multi && Number.isInteger(n)) {
+    const k = n - 1;
+    $('indHint').textContent = `Angiv ${k} afstand${k === 1 ? '' : 'e'} (1→2${k > 1 ? ', 2→3' : ''}${k > 2 ? ' …' : ''}), adskilt af ; eller mellemrum`;
   }
 }
-updateCCLabel();
 
-// ── Main calculation ─────────────────────────────────────────────────────────
-function calculate() {
-  const beltWidth  = parseFloat(document.getElementById('beltWidth').value);
-  const numGuides  = parseInt(document.getElementById('numGuides').value);
-  const guideWidth = parseFloat(document.getElementById('guideWidth').value);
-  const ccVal      = parseFloat(document.getElementById('cc').value);
-  const errEl      = document.getElementById('errorMsg');
-  errEl.textContent = '';
+// ── Beregning ────────────────────────────────────────────────────────────────
+// Returnerer { missing }, { error } eller et fuldt resultat.
+function compute() {
+  const need = [];
+  const B = num(raw('beltWidth')), n = num(raw('numGuides')), w = num(raw('guideWidth'));
+  if (raw('beltWidth') === '') need.push('båndbredde');
+  else if (!(B > 0)) return { error: 'Ugyldig båndbredde.' };
+  if (raw('numGuides') === '') need.push('antal styrelister');
+  else if (!Number.isInteger(n) || n < 1) return { error: 'Antal styrelister skal være et helt tal ≥ 1.' };
+  else if (n > 20) return { error: 'Max 20 styrelister.' };
+  if (raw('guideWidth') === '') need.push('styrelistebredde');
+  else if (!(w > 0)) return { error: 'Ugyldig styrelistebredde.' };
+  if (need.length) return { missing: 'Indtast ' + need.join(', ') };
 
-  if (isNaN(beltWidth)  || beltWidth  <= 0) { errEl.textContent = 'Ugyldig båndbredde.';        return; }
-  if (isNaN(numGuides)  || numGuides  <  1) { errEl.textContent = 'Ugyldigt antal styrelister.'; return; }
-  if (numGuides > 20)                       { errEl.textContent = 'Max 20 styrelister.';         return; }
-  if (isNaN(guideWidth) || guideWidth <= 0) { errEl.textContent = 'Ugyldig styrelistebredde.';   return; }
-  if (numGuides > 1 && (isNaN(ccVal) || ccVal <= 0)) { errEl.textContent = 'Ugyldig C/C afstand.'; return; }
+  const h = num(raw('guideHeight'));
+  if (raw('guideHeight') !== '' && !(h > 0)) return { error: 'Ugyldig styrelistehøjde.' };
+  const e = num(raw('edgeDist'));
+  if (raw('edgeDist') !== '' && isNaN(e)) return { error: 'Ugyldig afstand til kant.' };
 
-  const beltCenter = beltWidth / 2;
-  let guideCenters = [];
+  const effMode = n === 1 ? 'single' : mode;
+  let spacings = [], centers = [], lane = NaN, input = {};
 
-  if (numGuides === 1) {
-    // If cc field is empty, place guide in center
-    if (isNaN(ccVal) || document.getElementById('cc').value === '') {
-      const center = beltWidth / 2;
-      guideCenters = [center];
+  if (effMode === 'eq') {
+    lane = (B - n * w) / (n + 1);
+    for (let i = 0; i < n; i++) centers.push(lane + w / 2 + i * (lane + w));
+    spacings = Array(n - 1).fill(lane + w);
+  } else {
+    if (effMode === 'cc') {
+      if (raw('cc') === '') return { missing: 'Angiv C/C afstand' };
+      const cc = num(raw('cc'));
+      if (!(cc > 0)) return { error: 'Ugyldig C/C afstand.' };
+      spacings = Array(n - 1).fill(cc);
+      input.cc = cc;
+    } else if (effMode === 'kk') {
+      if (raw('kk') === '') return { missing: 'Angiv K/K-åbning' };
+      const kk = num(raw('kk'));
+      if (isNaN(kk) || kk < 0) return { error: 'Ugyldig K/K-åbning.' };
+      spacings = Array(n - 1).fill(kk + w);
+      input.kk = kk;
+    } else if (effMode === 'ind') {
+      if (raw('ccList') === '') return { missing: `Angiv ${n - 1} C/C afstand${n - 1 === 1 ? '' : 'e'}` };
+      const parts = raw('ccList').split(/[;\s\/]+/).filter(Boolean).map(num);
+      if (parts.some(v => !(v > 0))) return { error: 'Ugyldig værdi i C/C afstandene.' };
+      if (parts.length !== n - 1) return { error: `Der skal være præcis ${n - 1} C/C afstand${n - 1 === 1 ? '' : 'e'} — fandt ${parts.length}.` };
+      spacings = parts;
+      input.list = parts;
+    }
+    const span = spacings.reduce((a, b) => a + b, 0);
+    const first = isNaN(e) ? B / 2 - span / 2 : e + w / 2;
+    centers = [first];
+    for (const s of spacings) centers.push(centers[centers.length - 1] + s);
+  }
+
+  // Analyse pr. liste
+  const guides = centers.map((c, i) => ({
+    i, c, l: c - w / 2, r: c + w / 2,
+    outL: Math.max(0, -(c - w / 2)),
+    outR: Math.max(0, c + w / 2 - B),
+    ovPrev: 0, ovNext: 0
+  }));
+  for (let i = 0; i < n - 1; i++) {
+    const ov = guides[i].r - guides[i + 1].l;
+    if (ov > EPS) { guides[i].ovNext = ov; guides[i + 1].ovPrev = ov; }
+  }
+  const warnings = [];
+  guides.forEach(g => {
+    g.flag = g.outL > EPS || g.outR > EPS || g.ovPrev > EPS || g.ovNext > EPS;
+    if (g.outL > EPS) warnings.push(`Liste ${g.i + 1} rager ${fmt(g.outL)} mm ud over venstre båndkant`);
+    if (g.outR > EPS) warnings.push(`Liste ${g.i + 1} rager ${fmt(g.outR)} mm ud over højre båndkant`);
+    if (g.ovNext > EPS) warnings.push(`Liste ${g.i + 1} og ${g.i + 2} overlapper med ${fmt(g.ovNext)} mm`);
+  });
+  if (effMode === 'eq' && lane < -EPS) warnings.unshift(`Der er ikke plads til ${n} lister á ${fmt(w)} mm på et ${fmt(B)} mm bånd`);
+
+  return {
+    B, n, w, h, e, mode: effMode, centered: isNaN(e), spacings, centers, guides, lane, input, warnings,
+    ok: warnings.length === 0
+  };
+}
+
+// ── Opdatér alt ──────────────────────────────────────────────────────────────
+function update() {
+  updateVisibility();
+  saveState();
+  const r = compute();
+  const errEl = $('errorMsg');
+  errEl.textContent = r.error || '';
+
+  if (r.error || r.missing) {
+    $('diagramWrap').innerHTML = `<div class="placeholder">${esc(r.missing || 'Ret fejlen i parametrene')}</div>`;
+    $('sectionWrap').hidden = true;
+    $('sectionWrap').innerHTML = '';
+    $('warnWrap').innerHTML = '';
+    $('tableWrap').innerHTML = '';
+    $('printHead').innerHTML = '';
+    $('printBtn').style.display = 'none';
+    return;
+  }
+
+  $('diagramWrap').innerHTML = renderDiagram(r);
+  const sec = renderSection(r);
+  $('sectionWrap').hidden = !sec;
+  $('sectionWrap').innerHTML = sec;
+  $('warnWrap').innerHTML = r.warnings.length
+    ? `<div class="warn-box"><strong>Advarsel</strong><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></div>`
+    : '';
+  $('tableWrap').innerHTML = renderTables(r);
+  $('printHead').innerHTML = renderPrintHead(r);
+  $('printBtn').style.display = 'block';
+}
+
+// ── Label-placering ──────────────────────────────────────────────────────────
+// Grådig fordeling af labels på "etager", så de aldrig overlapper hinanden.
+function stackTiers(items) {
+  const order = items.map((_, i) => i).sort((a, b) => items[a].m - items[b].m);
+  const last = [], tiers = [];
+  for (const i of order) {
+    const { m, hw } = items[i];
+    let t = 0;
+    while (last[t] !== undefined && last[t] > m - hw) t++;
+    last[t] = m + hw;
+    tiers[i] = t;
+  }
+  return tiers;
+}
+
+// En målelinje-række. Etage 0 = over linjen, 1 = under, 2 = over (højere), 3 = under (lavere) …
+function dimRow(segs, fs) {
+  const tiers = stackTiers(segs.map(s => ({ m: (s.x1 + s.x2) / 2, hw: s.label.length * fs * 0.3 + 3 })));
+  let maxA = -1, maxB = -1;
+  tiers.forEach(t => { const lv = t >> 1; if (t % 2 === 0) maxA = Math.max(maxA, lv); else maxB = Math.max(maxB, lv); });
+  return {
+    up:   maxA >= 0 ? 8 + 12 * maxA + fs * 0.8 : 6,
+    down: maxB >= 0 ? 11 + fs * 0.8 + 12 * maxB : 6,
+    render: y => segs.map((s, i) => dimSeg(s, y, tiers[i], fs)).join('')
+  };
+}
+
+function dimSeg(s, y, t, fs) {
+  const a = Math.min(s.x1, s.x2), b = Math.max(s.x1, s.x2), c = s.color, m = (a + b) / 2, len = b - a;
+  let g = `<line x1="${a}" y1="${y - 5}" x2="${a}" y2="${y + 5}" stroke="${c}" stroke-width="1.2"/>`;
+  if (len >= 0.5) {
+    g += `<line x1="${b}" y1="${y - 5}" x2="${b}" y2="${y + 5}" stroke="${c}" stroke-width="1.2"/>`;
+    if (len >= 14) {
+      g += `<line x1="${a}" y1="${y}" x2="${b}" y2="${y}" stroke="${c}" stroke-width="1.2"/>
+            <polygon points="${a},${y} ${a + 5},${y - 2.5} ${a + 5},${y + 2.5}" fill="${c}"/>
+            <polygon points="${b},${y} ${b - 5},${y - 2.5} ${b - 5},${y + 2.5}" fill="${c}"/>`;
     } else {
-      // ccVal = distance from left belt edge to guide EDGE → convert to center
-      const center = ccVal + guideWidth / 2;
-      guideCenters = [center];
-    }
-  } else {
-    // ccVal = center-to-center between adjacent guides, symmetric around belt center
-    const totalSpan    = (numGuides - 1) * ccVal;
-    const firstCenter  = beltCenter - totalSpan / 2;
-    for (let i = 0; i < numGuides; i++) {
-      guideCenters.push(firstCenter + i * ccVal);
+      // For smalt til pile indeni → pile udefra
+      g += `<line x1="${a - 11}" y1="${y}" x2="${b + 11}" y2="${y}" stroke="${c}" stroke-width="1.2"/>
+            <polygon points="${a},${y} ${a - 5},${y - 2.5} ${a - 5},${y + 2.5}" fill="${c}"/>
+            <polygon points="${b},${y} ${b + 5},${y - 2.5} ${b + 5},${y + 2.5}" fill="${c}"/>`;
     }
   }
-
-  // Validate
-  let valid = true;
-  for (const gc of guideCenters) {
-    if (gc - guideWidth / 2 < 0 || gc + guideWidth / 2 > beltWidth) valid = false;
-  }
-  // Check overlap between guides
-  let overlap = false;
-  for (let i = 0; i < guideCenters.length - 1; i++) {
-    const gap = guideCenters[i + 1] - guideCenters[i] - guideWidth;
-    if (gap < 0) overlap = true;
-  }
-
-  const problems = [];
-  if (!valid)  problems.push('rager uden for båndet');
-  if (overlap) problems.push('overlapper hinanden');
-  if (problems.length) errEl.textContent = 'Advarsel: styrelister ' + problems.join(' og ') + '.';
-
-  renderDiagram(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap);
-  renderTable(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap);
-  document.getElementById('printBtn').style.display = 'block';
+  const lv = t >> 1, above = t % 2 === 0;
+  const ly = above ? y - 6 - 12 * lv : y + 8 + fs * 0.8 + 12 * lv;
+  g += `<text x="${m}" y="${ly}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="${fs}" font-weight="600" fill="${c}">${esc(s.label)}</text>`;
+  return g;
 }
 
-// ── Diagram ──────────────────────────────────────────────────────────────────
-function renderDiagram(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap) {
-  const wrap   = document.getElementById('diagramWrap');
-  const SVG_W  = 720;
-  const PAD_L  = 36; const PAD_R = 36;
-  const drawW  = SVG_W - PAD_L - PAD_R;
-  const scale  = drawW / beltWidth;
-  const beltH  = 56;
-  const beltY  = 90;
+// Fælles x-akse for diagram og tværsnit (medtager lister der rager uden for båndet)
+function xAxis(r, SVG_W, PAD_L, PAD_R) {
+  const { B, n, guides } = r;
+  const xmin = Math.min(0, guides[0].l), xmax = Math.max(B, guides[n - 1].r);
+  const scale = (SVG_W - PAD_L - PAD_R) / (xmax - xmin);
+  return { scale, tx: x => PAD_L + (x - xmin) * scale };
+}
 
-  // Rows of dimension lines below belt
-  const DIM_ROW1 = beltY + beltH + 28;  // edge margins + guide widths
-  const DIM_ROW2 = DIM_ROW1 + 28;        // kant-til-kant
-  const DIM_ROW3 = DIM_ROW2 + 28;        // C/C
-  const SVG_H    = DIM_ROW3 + 36;
+// ── Diagram (set oppefra) ────────────────────────────────────────────────────
+function renderDiagram(r) {
+  const { B, n, w, guides } = r;
+  const SVG_W = 760, PAD_L = 46, PAD_R = 26;
+  const { scale, tx } = xAxis(r, SVG_W, PAD_L, PAD_R);
+  const bx = tx(0), br = tx(B), bcx = tx(B / 2);
+  const K = COL, F = 'font-family="IBM Plex Mono,monospace"';
+  let cur = 4;
 
-  const beltX    = PAD_L;
-  const beltR    = beltX + drawW;
-  const beltCx   = beltX + drawW / 2;
+  // Top: båndbredde
+  const top = dimRow([{ x1: bx, x2: br, label: `BÅND ${fmt(B)} mm`, color: K.muted }], 11);
+  const topY = cur + top.up; cur = topY + top.down + 4;
 
-  const C_DARK   = '#0B4F79';
-  const C_ACC    = '#E8791E';
-  const C_DIM    = '#17324A';
-  const C_KTK    = '#E8791E';   // kant-til-kant highlight colour
-  const C_CC     = '#0B4F79';
-  const C_MUTED  = '#5F7C90';
-  const C_GUIDE  = valid && !overlap ? '#0B4F79' : '#D64545';
-  const C_GUIDE_TOP = valid && !overlap ? '#073B57' : '#963030';
+  // Nummer-cirkler over listerne
+  const numT = stackTiers(guides.map(g => ({ m: tx(g.c), hw: 10 })));
+  const L = Math.max(...numT) + 1;
+  const numBase = cur; cur += 19 * L + 6;
 
-  // ── Belt ──
-  const beltParts = `
-    <defs>
+  // Bånd
+  const beltY = cur + 10, beltH = 56, gTop = beltY - 10, gBot = beltY + beltH + 10;
+  cur = gBot + 18;
+
+  // Række 1: kantafstande + listebredde (på liste 1)
+  const g0 = guides[0], gn = guides[n - 1], rEdge = B - gn.r;
+  const R1 = dimRow([
+    { x1: bx, x2: tx(g0.l), label: fmt(g0.l), color: g0.l < -EPS ? K.red : K.dim },
+    { x1: tx(g0.l), x2: tx(g0.r), label: fmt(w), color: K.muted },
+    { x1: tx(gn.r), x2: br, label: fmt(rEdge), color: rEdge < -EPS ? K.red : K.dim }
+  ], 10.5);
+  const y1 = cur + R1.up; cur = y1 + R1.down + 8;
+
+  // Række 2+3: K/K og C/C
+  let R2, R3, y2, y3;
+  if (n > 1) {
+    const s2 = [], s3 = [];
+    for (let i = 0; i < n - 1; i++) {
+      const a = guides[i], b = guides[i + 1], kk = b.l - a.r;
+      s2.push({ x1: tx(a.r), x2: tx(b.l), label: fmt(kk), color: kk < -EPS ? K.red : K.acc });
+      s3.push({ x1: tx(a.c), x2: tx(b.c), label: fmt(b.c - a.c), color: K.dark });
+    }
+    R2 = dimRow(s2, 10.5); y2 = cur + R2.up; cur = y2 + R2.down + 8;
+    R3 = dimRow(s3, 10.5); y3 = cur + R3.up; cur = y3 + R3.down + 8;
+  }
+
+  // Række 4: afmærkning — center målt fra venstre kant (lodrette tal)
+  const y4 = cur + 6;
+  const ordLabels = guides.map(g => fmt(g.c));
+  const maxLen = Math.max(1, ...ordLabels.map(s => s.length));
+  cur = y4 + 10 + maxLen * 6.2 + 10;
+  const legendY = cur + 6;
+  const H = legendY + 10;
+
+  let out = `<defs>
       <pattern id="bp" width="20" height="${beltH}" patternUnits="userSpaceOnUse">
         <rect width="20" height="${beltH}" fill="#DCE6EE"/>
         <line x1="0" y1="0" x2="20" y2="${beltH}" stroke="#CBD9E3" stroke-width="1"/>
       </pattern>
-    </defs>
-    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="${beltH}" fill="url(#bp)" rx="3"/>
-    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="4" fill="#AEC1CC" rx="2"/>
-    <rect x="${beltX}" y="${beltY}" width="${drawW}" height="${beltH}" fill="none" stroke="#93A9B8" stroke-width="1.5" rx="3"/>
-  `;
+      <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="6" height="6" fill="rgba(214,69,69,.25)"/>
+        <line x1="0" y1="0" x2="0" y2="6" stroke="#D64545" stroke-width="2"/>
+      </pattern>
+    </defs>`;
 
-  // ── Guide rects ──
-  let guides = '';
-  for (const gc of guideCenters) {
-    const gx = beltX + gc * scale;
-    const gw = guideWidth * scale;
-    guides += `
-      <rect x="${gx - gw/2}" y="${beltY - 10}" width="${gw}" height="${beltH + 20}"
-            fill="${C_GUIDE}" opacity="0.82" rx="1"/>
-      <rect x="${gx - gw/2}" y="${beltY - 10}" width="${gw}" height="3"
-            fill="${C_GUIDE_TOP}" rx="1"/>
-    `;
+  // Hjælpelinjer (tegnes først, så de ligger bagved)
+  const ext = (x, ya, yb) => `<line class="ext" x1="${x}" y1="${ya}" x2="${x}" y2="${yb}" stroke="${K.ext}" stroke-width="0.8" stroke-dasharray="2,3"/>`;
+  out += ext(bx, topY, y4) + ext(br, topY, y1);
+  for (const g of guides) {
+    const yEdge = n > 1 ? y2 : y1;
+    out += ext(tx(g.l), gBot, yEdge) + ext(tx(g.r), gBot, yEdge) + ext(tx(g.c), gBot, y4);
   }
 
-  // ── Helper functions ──
-  const tx  = x => beltX + x * scale;
+  // Bånd
+  out += `
+    <rect x="${bx}" y="${beltY}" width="${br - bx}" height="${beltH}" fill="url(#bp)" rx="3"/>
+    <rect x="${bx}" y="${beltY}" width="${br - bx}" height="4" fill="#AEC1CC" rx="2"/>
+    <rect x="${bx}" y="${beltY}" width="${br - bx}" height="${beltH}" fill="none" stroke="#93A9B8" stroke-width="1.5" rx="3"/>
+    <line x1="${bcx}" y1="${beltY - 4}" x2="${bcx}" y2="${beltY + beltH + 4}" stroke="#93A9B8" stroke-width="1" stroke-dasharray="6,3,1,3"/>
+    <text x="${bcx + 3}" y="${beltY + beltH - 4}" ${F} font-size="8" fill="#93A9B8">CL</text>`;
 
-  function arrowLine(x1, x2, y, label, color, labelY) {
-    if (Math.abs(x2 - x1) < 2) return '';
-    const mx  = (x1 + x2) / 2;
-    const ly  = labelY !== undefined ? labelY : y - 9;
-    const aw  = 5;
-    return `
-      <line x1="${x1}" y1="${y-5}" x2="${x1}" y2="${y+5}" stroke="${color}" stroke-width="1.2"/>
-      <line x1="${x2}" y1="${y-5}" x2="${x2}" y2="${y+5}" stroke="${color}" stroke-width="1.2"/>
-      <line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${color}" stroke-width="1.2"/>
-      <polygon points="${x1},${y} ${x1+aw},${y-2.5} ${x1+aw},${y+2.5}" fill="${color}"/>
-      <polygon points="${x2},${y} ${x2-aw},${y-2.5} ${x2-aw},${y+2.5}" fill="${color}"/>
-      <text x="${mx}" y="${ly}" text-anchor="middle"
-            font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600"
-            fill="${color}">${label}</text>
-    `;
+  // Styrelister
+  for (const g of guides) {
+    const gx = tx(g.l), gw = Math.max(1.5, w * scale);
+    out += `
+      <rect x="${gx}" y="${gTop}" width="${gw}" height="${gBot - gTop}" fill="${g.flag ? K.red : K.dark}" opacity="0.85" rx="1"/>
+      <rect x="${gx}" y="${gTop}" width="${gw}" height="3" fill="${g.flag ? K.redTop : K.guideTop}" rx="1"/>`;
+  }
+  // Overlap-zoner
+  for (let i = 0; i < n - 1; i++) {
+    const a = guides[i], b = guides[i + 1];
+    if (a.ovNext > EPS) out += `<rect x="${tx(b.l)}" y="${gTop - 3}" width="${tx(a.r) - tx(b.l)}" height="${gBot - gTop + 6}" fill="url(#hatch)" stroke="#D64545" stroke-width="1"/>`;
+  }
+  // Dele uden for båndet
+  for (const g of guides) {
+    if (g.outL > EPS) out += `<rect x="${tx(g.l)}" y="${gTop - 3}" width="${bx - tx(g.l)}" height="${gBot - gTop + 6}" fill="url(#hatch)" stroke="#D64545" stroke-width="1"/>`;
+    if (g.outR > EPS) out += `<rect x="${br}" y="${gTop - 3}" width="${tx(g.r) - br}" height="${gBot - gTop + 6}" fill="url(#hatch)" stroke="#D64545" stroke-width="1"/>`;
   }
 
-  // ── Top dim: total belt width ──
-  const topY   = beltY - 36;
-  const topDim = `
-    <line x1="${beltX}" y1="${topY-5}" x2="${beltX}" y2="${topY+5}" stroke="${C_MUTED}" stroke-width="1.2"/>
-    <line x1="${beltR}" y1="${topY-5}" x2="${beltR}" y2="${topY+5}" stroke="${C_MUTED}" stroke-width="1.2"/>
-    <line x1="${beltX}" y1="${topY}" x2="${beltR}" y2="${topY}" stroke="${C_MUTED}" stroke-width="1.2"/>
-    <polygon points="${beltX},${topY} ${beltX+5},${topY-2.5} ${beltX+5},${topY+2.5}" fill="${C_MUTED}"/>
-    <polygon points="${beltR},${topY} ${beltR-5},${topY-2.5} ${beltR-5},${topY+2.5}" fill="${C_MUTED}"/>
-    <text x="${beltCx}" y="${topY - 9}" text-anchor="middle"
-          font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600"
-          fill="${C_MUTED}">BÅND ${fmt(beltWidth)} mm</text>
-  `;
+  // Nummer-cirkler
+  guides.forEach((g, i) => {
+    const cx = tx(g.c), cy = numBase + 9 + 19 * (L - 1 - numT[i]);
+    const col = g.flag ? K.red : K.dark;
+    if (gTop - (cy + 8.5) > 1) out += `<line x1="${cx}" y1="${cy + 8.5}" x2="${cx}" y2="${gTop}" stroke="${col}" stroke-width="0.8" opacity="0.5"/>`;
+    out += `<circle cx="${cx}" cy="${cy}" r="8.5" fill="#fff" stroke="${col}" stroke-width="1.5"/>
+      <text x="${cx}" y="${cy + 3.5}" text-anchor="middle" ${F} font-size="${i >= 9 ? 8.5 : 10}" font-weight="700" fill="${col}">${i + 1}</text>`;
+  });
 
-  // ── Guide width annotations (small ticks above each guide) ──
-  let guideWidthAnnot = '';
-  for (const gc of guideCenters) {
-    const gx = tx(gc);
-    const gw = guideWidth * scale;
-    guideWidthAnnot += `
-      <line x1="${gx-gw/2}" y1="${beltY-16}" x2="${gx-gw/2}" y2="${beltY-22}" stroke="${C_DIM}" stroke-width="1"/>
-      <line x1="${gx+gw/2}" y1="${beltY-16}" x2="${gx+gw/2}" y2="${beltY-22}" stroke="${C_DIM}" stroke-width="1"/>
-      <line x1="${gx-gw/2}" y1="${beltY-19}" x2="${gx+gw/2}" y2="${beltY-19}" stroke="${C_DIM}" stroke-width="1"/>
-      <text x="${gx}" y="${beltY-24}" text-anchor="middle"
-            font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_DIM}">⌀${fmt(guideWidth)}</text>
-    `;
+  // Mål
+  out += top.render(topY);
+  out += R1.render(y1);
+  if (n > 1) {
+    out += `<text x="4" y="${y2 + 3}" ${F} font-size="9" font-weight="600" fill="${K.acc}">K/K</text>` + R2.render(y2);
+    out += `<text x="4" y="${y3 + 3}" ${F} font-size="9" font-weight="600" fill="${K.dark}">C/C</text>` + R3.render(y3);
   }
 
-  // ── Row 1: edge → first guide left edge, last guide right edge → belt end ──
-  const firstLeftEdge  = tx(guideCenters[0] - guideWidth / 2);
-  const lastRightEdge  = tx(guideCenters[guideCenters.length - 1] + guideWidth / 2);
-  const edgeToFirst    = guideCenters[0] - guideWidth / 2;
-  const lastToEdge     = beltWidth - guideCenters[guideCenters.length - 1] - guideWidth / 2;
+  // Afmærkning (ordinatmål fra venstre kant)
+  out += `<line x1="${bx}" y1="${y4}" x2="${Math.max(bx, tx(gn.c))}" y2="${y4}" stroke="${K.muted}" stroke-width="1"/>
+    <circle cx="${bx}" cy="${y4}" r="2.5" fill="${K.muted}"/>
+    <text x="4" y="${y4 + 3}" ${F} font-size="9" font-weight="600" fill="${K.muted}">POS</text>`;
+  guides.forEach((g, i) => {
+    const x = tx(g.c), col = g.flag ? K.red : K.dim;
+    out += `<line x1="${x}" y1="${y4 - 5}" x2="${x}" y2="${y4 + 5}" stroke="${col}" stroke-width="1.2"/>
+      <text x="${x + 3.5}" y="${y4 + 9}" transform="rotate(-90 ${x + 3.5} ${y4 + 9})" text-anchor="end" ${F} font-size="10" font-weight="600" fill="${col}">${ordLabels[i]}</text>`;
+  });
 
-  let row1 = '';
-  row1 += arrowLine(beltX, firstLeftEdge, DIM_ROW1, fmt(edgeToFirst) + ' mm', C_DIM);
-  row1 += arrowLine(lastRightEdge, beltR, DIM_ROW1, fmt(lastToEdge) + ' mm', C_DIM);
-
-  // ── Row 2: kant-til-kant between each pair of adjacent guides ──
-  let row2 = '';
-  let ktkLabel = '';
-  if (numGuides > 1) {
-    // Label left of diagram
-    ktkLabel = `
-      <text x="${beltX - 4}" y="${DIM_ROW2 + 4}" text-anchor="end"
-            font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_KTK}"
-            font-weight="600">K/K</text>
-    `;
-    for (let i = 0; i < guideCenters.length - 1; i++) {
-      const x1  = tx(guideCenters[i] + guideWidth / 2);
-      const x2  = tx(guideCenters[i + 1] - guideWidth / 2);
-      const ktk = guideCenters[i + 1] - guideCenters[i] - guideWidth;
-      row2 += arrowLine(x1, x2, DIM_ROW2, fmt(ktk) + ' mm', C_KTK);
-    }
-  } else {
-    // For single guide: show distance from each edge to belt edge (already in row1)
-    // Show guide center position instead
-    const cx = tx(guideCenters[0]);
-    ktkLabel = '';
-    row2 = `
-      <line x1="${cx}" y1="${beltY - 10}" x2="${cx}" y2="${DIM_ROW2}" stroke="${C_ACC}" stroke-width="1" stroke-dasharray="3,3"/>
-      <text x="${cx}" y="${DIM_ROW2 + 4}" text-anchor="middle"
-            font-family="IBM Plex Mono,monospace" font-size="10" font-weight="600"
-            fill="${C_ACC}">Center: ${fmt(guideCenters[0])} mm</text>
-    `;
+  // Signaturforklaring
+  let lx = bx;
+  if (n > 1) {
+    out += `<circle cx="${lx + 4}" cy="${legendY - 3}" r="4" fill="${K.acc}"/>
+      <text x="${lx + 12}" y="${legendY}" ${F} font-size="9" fill="${K.acc}">Kant til kant (lysåbning)</text>`;
+    lx += 168;
+    out += `<circle cx="${lx + 4}" cy="${legendY - 3}" r="4" fill="${K.dark}"/>
+      <text x="${lx + 12}" y="${legendY}" ${F} font-size="9" fill="${K.dark}">Center / center</text>`;
+    lx += 108;
   }
+  out += `<text x="${lx}" y="${legendY}" ${F} font-size="9" fill="${K.muted}">POS = center målt fra venstre båndkant · alle mål i mm</text>`;
 
-  // ── Row 3: C/C between each pair of adjacent guides ──
-  let row3 = '';
-  let ccLabel = '';
-  if (numGuides > 1) {
-    ccLabel = `
-      <text x="${beltX - 4}" y="${DIM_ROW3 + 4}" text-anchor="end"
-            font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_CC}"
-            font-weight="600">C/C</text>
-    `;
-    for (let i = 0; i < guideCenters.length - 1; i++) {
-      const x1 = tx(guideCenters[i]);
-      const x2 = tx(guideCenters[i + 1]);
-      // Draw center lines up through guides
-      row3 += `
-        <line x1="${x1}" y1="${beltY}" x2="${x1}" y2="${DIM_ROW3}" stroke="${C_CC}" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
-        <line x1="${x2}" y1="${beltY}" x2="${x2}" y2="${DIM_ROW3}" stroke="${C_CC}" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
-      `;
-      row3 += arrowLine(x1, x2, DIM_ROW3, fmt(ccVal) + ' mm', C_CC);
-    }
-  }
-
-  // ── Center line of belt (subtle) ──
-  const centerLine = `
-    <line x1="${beltCx}" y1="${beltY}" x2="${beltCx}" y2="${beltY + beltH}"
-          stroke="#93A9B8" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>
-  `;
-
-  // ── Legend ──
-  const legendY = SVG_H - 14;
-  const legend = numGuides > 1 ? `
-    <circle cx="${beltX + 8}" cy="${legendY}" r="4" fill="${C_KTK}"/>
-    <text x="${beltX + 16}" y="${legendY + 4}" font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_KTK}">Kant til kant</text>
-    <circle cx="${beltX + 110}" cy="${legendY}" r="4" fill="${C_CC}"/>
-    <text x="${beltX + 118}" y="${legendY + 4}" font-family="IBM Plex Mono,monospace" font-size="9" fill="${C_CC}">Center / Center</text>
-  ` : '';
-
-  const svg = `<svg width="${SVG_W}" height="${SVG_H}" xmlns="http://www.w3.org/2000/svg">
-    ${beltParts}
-    ${centerLine}
-    ${guides}
-    ${topDim}
-    ${guideWidthAnnot}
-    ${row1}
-    ${ktkLabel}${row2}
-    ${ccLabel}${row3}
-    ${legend}
-  </svg>`;
-
-  wrap.innerHTML = svg;
+  return `<svg viewBox="0 0 ${SVG_W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:${SVG_W}px" role="img" aria-label="Diagram over styrelister">${out}</svg>`;
 }
 
-// ── Table ────────────────────────────────────────────────────────────────────
-function renderTable(beltWidth, numGuides, guideWidth, ccVal, guideCenters, valid, overlap) {
-  const tableWrap = document.getElementById('tableWrap');
-  const status = (!valid || overlap)
-    ? `<span class="badge warn">Advarsel</span>`
-    : `<span class="badge ok">OK</span>`;
+// ── Tværsnit (kun når højde er angivet) ──────────────────────────────────────
+function renderSection(r) {
+  if (!(r.h > 0)) return '';
+  const { B, w, h, guides } = r;
+  const SVG_W = 760, PAD_L = 46, PAD_R = 26;
+  const { scale, tx } = xAxis(r, SVG_W, PAD_L, PAD_R);
+  const bx = tx(0), br = tx(B), K = COL, F = 'font-family="IBM Plex Mono,monospace"';
 
+  let hp = h * scale, note = '';
+  if (hp < 14) { hp = 14; note = ' — højde ikke målfast (forstørret)'; }
+  else if (hp > 90) { hp = 90; note = ' — højde ikke målfast (formindsket)'; }
+
+  const baseY = 30 + hp, beltT = 9, H = baseY + beltT + 10;
+  let out = `<text x="4" y="12" ${F} font-size="9" font-weight="600" fill="${K.muted}">TVÆRSNIT${note}</text>`;
+  out += `<rect x="${bx}" y="${baseY}" width="${br - bx}" height="${beltT}" fill="#DCE6EE" stroke="#93A9B8" stroke-width="1.2" rx="2"/>`;
+  for (const g of guides) {
+    out += `<rect x="${tx(g.l)}" y="${baseY - hp}" width="${Math.max(1.5, w * scale)}" height="${hp}" fill="${g.flag ? K.red : K.dark}" opacity="0.85"/>`;
+  }
+  // Højdemål til venstre for liste 1
+  const x = tx(guides[0].l) - 10, yt = baseY - hp;
+  out += `
+    <line x1="${x - 4}" y1="${yt}" x2="${x + 4}" y2="${yt}" stroke="${K.dim}" stroke-width="1.2"/>
+    <line x1="${x - 4}" y1="${baseY}" x2="${x + 4}" y2="${baseY}" stroke="${K.dim}" stroke-width="1.2"/>
+    <line x1="${x}" y1="${yt}" x2="${x}" y2="${baseY}" stroke="${K.dim}" stroke-width="1.2"/>
+    <polygon points="${x},${yt} ${x - 2.5},${yt + 5} ${x + 2.5},${yt + 5}" fill="${K.dim}"/>
+    <polygon points="${x},${baseY} ${x - 2.5},${baseY - 5} ${x + 2.5},${baseY - 5}" fill="${K.dim}"/>
+    <text x="${x - 5}" y="${(yt + baseY) / 2}" transform="rotate(-90 ${x - 5} ${(yt + baseY) / 2})" text-anchor="middle" ${F} font-size="10" font-weight="600" fill="${K.dim}">${fmt(h)}</text>`;
+  return `<svg viewBox="0 0 ${SVG_W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:${SVG_W}px" role="img" aria-label="Tværsnit af bånd med styrelister">${out}</svg>`;
+}
+
+// ── Tabeller ─────────────────────────────────────────────────────────────────
+function renderTables(r) {
+  const { B, n, w, h, guides } = r;
+  const status = r.ok ? `<span class="badge ok">OK</span>` : `<span class="badge warn">Advarsel</span>`;
+
+  // Afmærkningstabel: absolutte positioner fra venstre båndkant
+  let mark = '';
+  for (const g of guides) {
+    mark += `<tr class="${g.flag ? 'warn' : ''}">
+      <td><span class="gnum">${g.i + 1}</span></td>
+      <td class="v">${fmt(g.l)}</td>
+      <td class="v strong">${fmt(g.c)}</td>
+      <td class="v">${fmt(g.r)}</td></tr>`;
+  }
+
+  // Måltabel: afstande
   let rows = '';
-
-  // Belt edge → first guide left edge
-  const edgeToFirst = guideCenters[0] - guideWidth / 2;
-  rows += `<tr><td>Båndkant → Styreliste 1 (venstre kant)</td><td>${fmt(edgeToFirst)} mm</td></tr>`;
-
-  if (numGuides > 1) {
-    // For each pair: kant-til-kant + C/C
-    for (let i = 0; i < guideCenters.length - 1; i++) {
-      const ktk = guideCenters[i + 1] - guideCenters[i] - guideWidth;
-      const cc  = guideCenters[i + 1] - guideCenters[i];
-      const pairLabel = numGuides === 2
-        ? ''
-        : ` (${i+1}→${i+2})`;
-
-      rows += `<tr class="highlight"><td>Kant til kant${pairLabel}</td><td>${fmt(ktk)} mm</td></tr>`;
-      rows += `<tr><td>C/C${pairLabel}</td><td>${fmt(cc)} mm</td></tr>`;
-    }
+  const g0 = guides[0], gn = guides[n - 1];
+  rows += `<tr class="${g0.outL > EPS ? 'warn' : ''}"><td><span class="dot none"></span>Båndkant → liste 1</td><td class="v strong">${fmt(g0.l)} mm</td></tr>`;
+  // Ens afstande (fra 3 lister) samles i én række, så tabellen ikke bliver lang
+  const allEqual = n > 2 && r.spacings.every(s => Math.abs(s - r.spacings[0]) < EPS);
+  if (allEqual) {
+    const kk = r.spacings[0] - w, ov = guides.some(g => g.ovNext > EPS);
+    rows += `<tr class="${ov ? 'warn' : 'kk'}"><td><span class="dot kk"></span>K/K (alle ${n - 1} par)</td><td class="v strong">${fmt(kk)} mm</td></tr>`;
+    rows += `<tr><td><span class="dot cc"></span>C/C (alle ${n - 1} par)</td><td class="v strong">${fmt(r.spacings[0])} mm</td></tr>`;
   } else {
-    // Single guide
-    rows += `<tr><td>Styreliste centerposition</td><td>${fmt(guideCenters[0])} mm</td></tr>`;
+    for (let i = 0; i < n - 1; i++) {
+      const a = guides[i], b = guides[i + 1], kk = b.l - a.r;
+      rows += `<tr class="${a.ovNext > EPS ? 'warn' : 'kk'}"><td><span class="dot kk"></span>K/K ${i + 1}→${i + 2}</td><td class="v strong">${fmt(kk)} mm</td></tr>`;
+      rows += `<tr><td><span class="dot cc"></span>C/C ${i + 1}→${i + 2}</td><td class="v strong">${fmt(b.c - a.c)} mm</td></tr>`;
+    }
   }
+  rows += `<tr class="${gn.outR > EPS ? 'warn' : ''}"><td><span class="dot none"></span>Liste ${n} → båndkant</td><td class="v strong">${fmt(B - gn.r)} mm</td></tr>`;
+  if (n > 1) rows += `<tr><td>Samlet C/C 1→${n}</td><td class="v">${fmt(gn.c - g0.c)} mm</td></tr>`;
+  if (r.mode === 'eq') rows += `<tr><td>Banebredde (alle ${n + 1} baner)</td><td class="v">${fmt(r.lane)} mm</td></tr>`;
+  rows += `<tr><td>Styrelistebredde</td><td class="v">${fmt(w)} mm</td></tr>`;
+  if (h > 0) rows += `<tr><td>Styrelistehøjde</td><td class="v">${fmt(h)} mm</td></tr>`;
+  rows += `<tr><td>Båndbredde</td><td class="v">${fmt(B)} mm</td></tr>`;
 
-  // Last guide right edge → belt end
-  const lastToEdge = beltWidth - guideCenters[guideCenters.length - 1] - guideWidth / 2;
-  rows += `<tr><td>Styreliste ${numGuides} (højre kant) → Båndkant</td><td>${fmt(lastToEdge)} mm</td></tr>`;
-
-  // Guide width
-  rows += `<tr><td>Styrelistebredde</td><td>${fmt(guideWidth)} mm</td></tr>`;
-
-  // Total belt width
-  rows += `<tr><td>Båndbredde</td><td>${fmt(beltWidth)} mm</td></tr>`;
-
-  // Overlap check
-  if (overlap) {
-    rows += `<tr class="warn"><td colspan="2">⚠ Styrelister overlapper hinanden</td></tr>`;
-  }
-  if (!valid) {
-    rows += `<tr class="warn"><td colspan="2">⚠ Styreliste(r) rager uden for båndet</td></tr>`;
-  }
-
-  tableWrap.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-      <span class="table-section-title" style="margin:0;border:none;padding:0">Mål</span>
-      ${status}
-    </div>
-    <table class="measurements-table">
-      <thead><tr><th>Beskrivelse</th><th style="text-align:right">Værdi</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div style="font-size:0.62rem;color:var(--muted);margin-top:4px">
-      Fremhævet = kant til kant &nbsp;|&nbsp; Almindelig = C/C
-    </div>
-  `;
+  return `
+    <div class="tables">
+      <div>
+        <div class="table-head"><span class="table-section-title">Afmærkning</span><span class="table-sub">mm fra venstre båndkant</span></div>
+        <table class="measurements-table">
+          <thead><tr><th>#</th><th class="v">Venstre kant</th><th class="v">Center</th><th class="v">Højre kant</th></tr></thead>
+          <tbody>${mark}</tbody>
+        </table>
+      </div>
+      <div>
+        <div class="table-head"><span class="table-section-title">Mål</span>${status}</div>
+        <table class="measurements-table">
+          <thead><tr><th>Beskrivelse</th><th class="v">Værdi</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
 }
 
-// ── Print ────────────────────────────────────────────────────────────────────
-function doPrint() { window.print(); }
+// ── Print-hoved (arbejdsseddel) ──────────────────────────────────────────────
+function renderPrintHead(r) {
+  const d = new Date();
+  const date = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
+  const method = {
+    single: '—',
+    cc:  `C/C ${fmt(r.input.cc)} mm`,
+    kk:  `K/K ${fmt(r.input.kk)} mm`,
+    ind: `C/C ${(r.input.list || []).map(fmt).join(' / ')} mm`,
+    eq:  'Lige store baner'
+  }[r.mode];
+  const place = r.mode === 'eq' ? 'Jævnt fordelt' : (r.centered ? 'Centreret' : `${fmt(r.e)} mm fra venstre kant`);
+  const cell = (l, v, cls = '') => `<div class="${cls}"><span class="ph-l">${l}</span><span class="ph-v">${esc(v)}</span></div>`;
+  return `
+    <div class="ph-title">Styreliste — arbejdsseddel</div>
+    ${cell('Dato', date)}
+    ${cell('Ordrenr.', raw('woOrder'))}
+    ${cell('Bånd / linje', raw('woLine'))}
+    ${cell('Initialer', raw('woInit'))}
+    ${cell('Status', r.ok ? 'OK' : 'ADVARSEL — se nedenfor')}
+    ${cell('Båndbredde', fmt(r.B) + ' mm')}
+    ${cell('Lister', `${r.n} × ${fmt(r.w)} mm${r.h > 0 ? ' × h ' + fmt(r.h) : ''}`)}
+    ${cell('Afstand', method)}
+    ${cell('Placering', place)}`;
+}
 
-// ── Reset ────────────────────────────────────────────────────────────────────
+// ── Gem / hent tilstand (URL + localStorage) ─────────────────────────────────
+function getState() {
+  const s = {};
+  for (const [k, id] of Object.entries(FIELDS)) { const v = raw(id); if (v !== '') s[k] = v; }
+  if (mode !== 'cc') s.m = mode;
+  return s;
+}
+function saveState() {
+  const s = getState();
+  try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (e) {}
+  try {
+    const qs = new URLSearchParams(s).toString();
+    history.replaceState(null, '', qs ? '?' + qs : location.pathname);
+  } catch (e) {}
+}
+function applyState(s) {
+  for (const [k, id] of Object.entries(FIELDS)) $(id).value = s && s[k] != null ? s[k] : '';
+  setMode(s && MODES.includes(s.m) ? s.m : 'cc');
+  if (s && (s.o || s.l || s.i)) $('woDetails').open = true;
+}
+function loadState() {
+  let s = null;
+  const p = new URLSearchParams(location.search);
+  if ([...p.keys()].some(k => k in FIELDS || k === 'm')) s = Object.fromEntries(p);
+  else { try { s = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) {} }
+  applyState(s);
+}
+function setMode(m) {
+  mode = m;
+  const el = $('m-' + m);
+  if (el) el.checked = true;
+}
+
+async function copyLink() {
+  const btn = $('linkBtn'), url = location.href;
+  try {
+    await navigator.clipboard.writeText(url);
+    btn.textContent = '✓ Kopieret';
+  } catch (e) {
+    window.prompt('Kopiér linket:', url);
+  }
+  setTimeout(() => { btn.textContent = '🔗 Del link'; }, 1600);
+}
+
+// ── Nulstil ──────────────────────────────────────────────────────────────────
 function resetForm() {
-  document.querySelectorAll('input[type=number]').forEach(el => el.value = '');
-  document.getElementById('errorMsg').textContent = '';
-  document.getElementById('diagramWrap').innerHTML = '<div class="placeholder">Indtast parametre og tryk beregn</div>';
-  document.getElementById('tableWrap').innerHTML = '';
-  document.getElementById('printBtn').style.display = 'none';
-  updateCCLabel();
-  document.getElementById('beltWidth').focus();
+  applyState(null);
+  $('woDetails').open = false;
+  try { localStorage.removeItem(LS_KEY); } catch (e) {}
+  update();
+  $('beltWidth').focus();
 }
 
-// ── Format ───────────────────────────────────────────────────────────────────
-function fmt(n) {
-  if (isNaN(n)) return '—';
-  return parseFloat(n.toFixed(3)).toString();
-}
+// ── Events ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.panel input').forEach(el => {
+  if (el.name === 'mode') el.addEventListener('change', () => { setMode(el.value); update(); });
+  else el.addEventListener('input', update);
+});
+// Esc nulstiller — men ikke i felter med forslagsliste, hvor Esc lukker listen
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !(e.target.list)) resetForm(); });
 
-// ── Enter key ────────────────────────────────────────────────────────────────
-document.querySelectorAll('input').forEach(el =>
-  el.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); })
-);
+loadState();
+update();
 </script>
-<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v1.4 &middot; 19-07-2026</div>
+<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v2.0 &middot; 23-09-2026</div>
 </body>
 </html>
