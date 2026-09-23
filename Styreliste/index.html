@@ -148,6 +148,26 @@
   .field input:focus { border-color: var(--dark); background: #fff; }
   .field input.small { font-size: 0.85rem; padding: 7px 10px; }
 
+  /* Dropdown med faste forslag — viser altid ALLE værdier (browserens datalist filtrerer efter feltets indhold) */
+  .combo { position: relative; }
+  .combo::after {
+    content: '▾'; position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); pointer-events: none; font-size: 0.8rem;
+  }
+  .combo input { padding-right: 30px; }
+  .combo-list {
+    position: absolute; left: 0; right: 0; top: 100%; z-index: 20;
+    background: #fff; border: 1px solid var(--dark); border-top: none;
+    list-style: none; max-height: 240px; overflow-y: auto;
+    box-shadow: 0 6px 16px rgba(11,79,121,.15);
+  }
+  .combo-list li {
+    padding: 8px 11px; font-size: 1rem; font-weight: 600; cursor: pointer; color: var(--text);
+  }
+  .combo-list li:hover, .combo-list li.active { background: var(--surface2); color: var(--dark); }
+  .combo-list li.current { color: var(--accent-hover); }
+  .combo-list li.current::after { content: ' ✓'; }
+
   .field-hint {
     font-size: 0.62rem;
     color: var(--muted);
@@ -403,9 +423,6 @@
   <a class="btn-home" href="../index.html">← Forside</a>
 </header>
 
-<datalist id="guidePresets">
-  <option value="6"><option value="8"><option value="10"><option value="13"><option value="17">
-</datalist>
 
 <div class="layout">
 
@@ -425,7 +442,13 @@
 
     <div class="field">
       <label for="guideWidth">Styrelistebredde <span class="unit">mm</span></label>
-      <input type="text" inputmode="decimal" autocomplete="off" id="guideWidth" list="guidePresets" placeholder="fx 10">
+      <div class="combo">
+        <input type="text" inputmode="decimal" autocomplete="off" id="guideWidth" placeholder="fx 10"
+               role="combobox" aria-expanded="false" aria-controls="guideList">
+        <ul class="combo-list" id="guideList" role="listbox" hidden>
+          <li role="option" data-v="6">6</li><li role="option" data-v="8">8</li><li role="option" data-v="10">10</li><li role="option" data-v="13">13</li><li role="option" data-v="17">17</li>
+        </ul>
+      </div>
     </div>
 
     <div class="field" id="modeField" hidden>
@@ -997,12 +1020,53 @@ document.querySelectorAll('.panel input').forEach(el => {
   if (el.name === 'mode') el.addEventListener('change', () => { setMode(el.value); update(); });
   else el.addEventListener('input', update);
 });
-// Esc nulstiller — men ikke i felter med forslagsliste, hvor Esc lukker listen
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !(e.target.list)) resetForm(); });
+// Esc nulstiller (en åben dropdown fanger selv Esc og lukker bare listen)
+document.addEventListener('keydown', e => { if (e.key === 'Escape') resetForm(); });
+
+// ── Dropdown med faste forslag ───────────────────────────────────────────────
+function initCombo(input, list) {
+  const items = [...list.querySelectorAll('li')];
+  let active = -1;
+  const isOpen = () => !list.hidden;
+  const mark = () => items.forEach((li, i) => {
+    li.classList.toggle('active', i === active);
+    li.classList.toggle('current', num(li.dataset.v) === num(input.value));
+  });
+  const open = () => { list.hidden = false; input.setAttribute('aria-expanded', 'true'); mark(); };
+  const close = () => { list.hidden = true; active = -1; input.setAttribute('aria-expanded', 'false'); };
+  const pick = li => { input.value = li.dataset.v; close(); update(); };
+
+  input.addEventListener('focus', open);
+  input.addEventListener('click', open);
+  input.addEventListener('blur', close);
+  input.addEventListener('input', mark);
+  list.addEventListener('mousedown', e => e.preventDefault()); // behold fokus i feltet
+  list.addEventListener('click', e => { const li = e.target.closest('li'); if (li) pick(li); });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen()) open();
+      if (active < 0) {
+        const cur = items.findIndex(li => num(li.dataset.v) === num(input.value));
+        active = cur >= 0 ? cur : (e.key === 'ArrowDown' ? 0 : items.length - 1);
+      } else {
+        active = (active + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      }
+      mark();
+    } else if (e.key === 'Enter' && isOpen() && active >= 0) {
+      e.preventDefault();
+      pick(items[active]);
+    } else if (e.key === 'Escape' && isOpen()) {
+      e.stopPropagation();
+      close();
+    }
+  });
+}
+initCombo($('guideWidth'), $('guideList'));
 
 loadState();
 update();
 </script>
-<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v2.2 &middot; 23-09-2026</div>
+<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v2.3 &middot; 23-09-2026</div>
 </body>
 </html>
