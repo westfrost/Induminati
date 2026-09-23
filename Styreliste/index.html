@@ -291,7 +291,6 @@
     color: var(--muted);
     text-transform: uppercase;
   }
-  .table-sub { font-size: 0.6rem; color: var(--muted); letter-spacing: .3px; }
 
   .tables { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
 
@@ -898,7 +897,7 @@ function renderTables(r) {
   return `
     <div class="tables">
       <div>
-        <div class="table-head"><span class="table-section-title">Afmærkning</span><span class="table-sub">mm</span></div>
+        <div class="table-head"><span class="table-section-title">Afmærkning</span></div>
         <table class="measurements-table">
           <thead><tr><th>#</th><th class="v">Venstre kant<small>fra venstre båndkant</small></th><th class="v">Center<small>fra venstre båndkant</small></th><th class="v">Højre kant<small>fra højre båndkant</small></th></tr></thead>
           <tbody>${mark}</tbody>
