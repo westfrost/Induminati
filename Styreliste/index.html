@@ -314,6 +314,7 @@
     font-weight: 600;
   }
   .measurements-table th.v { text-align: right; }
+  .measurements-table th small { display: block; font-size: 0.54rem; letter-spacing: .3px; text-transform: none; font-weight: 500; margin-top: 2px; }
 
   .measurements-table td {
     padding: 8px 10px;
@@ -868,7 +869,7 @@ function renderTables(r) {
       <td><span class="gnum">${g.i + 1}</span></td>
       <td class="v">${fmt(g.l)}</td>
       <td class="v strong">${fmt(g.c)}</td>
-      <td class="v">${fmt(g.r)}</td></tr>`;
+      <td class="v">${fmt(B - g.r)}</td></tr>`;
   }
 
   // Måltabel: afstande
@@ -897,9 +898,9 @@ function renderTables(r) {
   return `
     <div class="tables">
       <div>
-        <div class="table-head"><span class="table-section-title">Afmærkning</span><span class="table-sub">mm fra venstre båndkant</span></div>
+        <div class="table-head"><span class="table-section-title">Afmærkning</span><span class="table-sub">mm</span></div>
         <table class="measurements-table">
-          <thead><tr><th>#</th><th class="v">Venstre kant</th><th class="v">Center</th><th class="v">Højre kant</th></tr></thead>
+          <thead><tr><th>#</th><th class="v">Venstre kant<small>fra venstre båndkant</small></th><th class="v">Center<small>fra venstre båndkant</small></th><th class="v">Højre kant<small>fra højre båndkant</small></th></tr></thead>
           <tbody>${mark}</tbody>
         </table>
       </div>
@@ -1003,6 +1004,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !(e.target
 loadState();
 update();
 </script>
-<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v2.1 &middot; 23-09-2026</div>
+<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v2.2 &middot; 23-09-2026</div>
 </body>
 </html>
