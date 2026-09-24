@@ -16,7 +16,7 @@ Ingen build-step, ingen framework, ingen backend. Hvert værktøj er én selvst�
 
 | Mappe | Værktøj | Beskrivelse |
 |---|---|---|
-| `Opskæring/` | Opskæringsberegner | Opskæring af transportbånd fra moderrulle. Lægger en 3-trins guillotineplan (tværsnit → længdesnit → kap) der bruger mindst mulig rullelængde, håndterer flere moderruller og dorn-pakning, og udskriver arbejdsseddel. Kan uploade en lagerliste (.xlsx) og selv vælge færrest mulige ruller herfra til at dække ordren — manuelle ruller kan stadig tastes ind ved siden af. |
+| `Opskæring/` | Opskæringsberegner | Opskæring af transportbånd fra moderrulle. Lægger en 3-trins guillotineplan (tværsnit → længdesnit → kap), håndterer flere moderruller, dorn-pakning og en minimumsbredde for rester. En indbygget optimering afprøver hundredvis af planvarianter (hurtig/normal/grundig) og vælger den med færrest manglende bånd, færrest ruller, mindst spild og færrest knivopstillinger — aldrig dårligere end grundberegningen. Viser en interaktiv tegning pr. rulle (farve pr. båndmål, værktøjstip, målestok), udskriver arbejdsseddel med tegning og har en skæretilstand trin for trin til tablet ved maskinen. Kan uploade en lagerliste (.xlsx) og selv vælge færrest mulige ruller herfra til at dække ordren — manuelle ruller kan stadig tastes ind ved siden af. Motoren kan testes med `node Opskæring/motortest.js`. |
 | `Styreliste/` | Styreliste Beregner | Beregn placering og mål for styrelister på transportbånd. |
 | `DXF/` | DXF → NCP Konverter | Konverter DXF-filer til NCP-format til vandskæring og CNC. |
 | `Baanddb/` | Bånd & Medbringer DB | Opslagsdatabase over bånd- og medbringertyper med søgning og GitHub-sync. |

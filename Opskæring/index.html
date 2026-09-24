@@ -113,6 +113,201 @@
   .hist-empty{font-size:12px;color:var(--muted);text-align:center;padding:18px 0;font-family:'DM Mono',monospace}
   .btn-clear-hist{background:none;border:1.5px solid var(--border);border-radius:5px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s}
   .btn-clear-hist:hover{border-color:var(--rust);color:var(--rust)}
+
+  /* --- Foldbare indstillingskort --- */
+  details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;flex-wrap:wrap;user-select:none;margin:-22px;padding:18px 22px;border-radius:8px}
+  details.fold>summary::-webkit-details-marker{display:none}
+  details.fold>summary:hover{background:#F8FBFD}
+  details.fold>summary h2{margin:0;padding:0;border:none}
+  details.fold>summary .fold-sum{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text);margin-left:auto;text-align:right}
+  details.fold>summary::after{content:'';width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-4px 4px 0 2px;transition:transform .15s;flex-shrink:0}
+  details.fold[open]>summary{margin-bottom:0;border-bottom:1px solid var(--border);border-radius:8px 8px 0 0}
+  details.fold[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+  details.fold[open]>summary .fold-sum{color:var(--muted)}
+  details.fold>.fold-body{padding-top:18px}
+
+  /* --- Optimeringsniveau --- */
+  .seg{display:inline-flex;border:1.5px solid var(--border);border-radius:6px;overflow:hidden;background:var(--smoke)}
+  .seg button,.seg label{border:none;background:none;font:inherit;font-size:12.5px;font-weight:500;color:var(--muted);padding:8px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:1px;transition:background .15s,color .15s}
+  .seg button+button,.seg label+label{border-left:1.5px solid var(--border)}
+  .seg button.on,.seg label.on,.seg label:has(input:checked){background:var(--steel);color:#fff}
+  .seg label input{position:absolute;opacity:0;pointer-events:none}
+  .seg label small{font-size:10.5px;font-weight:400;opacity:.8;font-family:'DM Mono',monospace}
+  .seg label:focus-within{outline:2px solid var(--rust);outline-offset:-2px}
+  .seg-skala button{padding:5px 11px;font-size:11.5px}
+
+  /* --- Fremdrift under optimering --- */
+  .calc-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .opt-progress{display:none;flex:1;min-width:240px;align-items:center;gap:12px}
+  .op-main{flex:1;min-width:0}
+  .op-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+  .op-bar span{display:block;height:100%;width:0;background:var(--rust);border-radius:3px;transition:width .15s}
+  .op-text{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:6px}
+  .op-stop{background:none;border:1.5px solid var(--border);border-radius:5px;padding:7px 12px;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;white-space:nowrap}
+  .op-stop:hover{border-color:var(--rust);color:var(--rust)}
+
+  /* --- Resultat --- */
+  .opt-banner{display:flex;gap:14px;align-items:flex-start;background:var(--light);border:1px solid var(--border);border-left:4px solid var(--sky);border-radius:8px;padding:14px 18px;font-size:13px;line-height:1.55}
+  .opt-banner.improved{border-left-color:var(--green)}
+  .ob-icon{width:26px;height:26px;border-radius:50%;background:var(--sky);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;font-family:Georgia,serif}
+  .opt-banner.improved .ob-icon{background:var(--green);font-family:'Inter',sans-serif}
+  .ob-stats{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:4px;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}
+  .ob-stats b{color:var(--text);font-weight:600}
+  .ob-stats s{opacity:.7}
+  .card-danger{border-color:var(--danger);background:var(--danger-bg)}
+  .card-danger h2{color:var(--danger);border-color:var(--danger-border)}
+  .danger-text{font-size:13px;color:var(--danger);margin-bottom:14px}
+  table.mini{width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace}
+  table.mini th{text-align:left;color:#B23A3A;padding:6px 8px;border-bottom:1px solid var(--danger-border)}
+  table.mini td{padding:5px 8px}
+  .mono-list{font-family:'DM Mono',monospace;font-size:13px;line-height:1.8}
+  .card-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .card-head h2{margin:0;padding:0;border:none;flex:1}
+  .result-actions{display:flex;gap:12px;flex-wrap:wrap}
+  .btn-step{background:var(--light);color:var(--steel);border:1.5px solid var(--steel);border-radius:6px;padding:12px 24px;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s}
+  .btn-step:hover{background:#E5F1FA}
+
+  /* Udnyttelse pr. rulle: bånd / spild / rest som andel af hele rullen */
+  .util{margin-bottom:16px}
+  .util-bar{display:flex;gap:2px;height:14px;border-radius:4px;overflow:hidden;background:var(--light)}
+  .util-bar span{display:block;min-width:2px}
+  .util-bar .u-net{background:var(--sky)}
+  .util-bar .u-waste{background:repeating-linear-gradient(135deg,#B5C4D0 0 1.5px,#F4F7FA 1.5px 5px);box-shadow:inset 0 0 0 1px #B5C4D0}
+  .util-bar .u-rest{background:var(--green-bg);box-shadow:inset 0 0 0 1px var(--green)}
+  .util-legend{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px;font-family:'DM Mono',monospace;font-size:11.5px;color:var(--muted)}
+  .util-legend b{color:var(--text);font-weight:600}
+  .sw{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+  .sw-net{background:var(--sky)}
+  .sw-waste{background:repeating-linear-gradient(135deg,#B5C4D0 0 1px,#F4F7FA 1px 4px);box-shadow:inset 0 0 0 1px #B5C4D0}
+  .sw-rest{background:var(--green-bg);box-shadow:inset 0 0 0 1px var(--green)}
+  .sw-dorn{background:repeating-linear-gradient(90deg,#6C8EA8 0 3px,#fff 3px 4px)}
+
+  /* Farve pr. båndmål (samme i tegning, tabel og på arbejdssedlen) */
+  .chip{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);vertical-align:-1px;margin-right:6px;flex-shrink:0}
+  .chip.t1{background-image:radial-gradient(rgba(255,255,255,.95) 1px,transparent 1.4px);background-size:4px 4px}
+  .chip.t2{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.9) 0 1px,transparent 1px 4px)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text)}
+  .lg-item{display:inline-flex;align-items:center;white-space:nowrap}
+  .lg-item em{font-style:normal;color:var(--muted);margin-left:4px}
+
+  /* Tabel ↔ tegning */
+  table.cut tbody tr{transition:box-shadow .12s}
+  table.cut tr.hl td{box-shadow:inset 0 0 0 9999px rgba(232,121,30,.10)}
+  table.cut tr.hl td:first-child{box-shadow:inset 3px 0 0 var(--rust),inset 0 0 0 9999px rgba(232,121,30,.10)}
+  @keyframes flash{0%,40%{box-shadow:inset 0 0 0 9999px rgba(232,121,30,.32)}100%{box-shadow:inset 0 0 0 9999px rgba(232,121,30,0)}}
+  table.cut tr.flash td{animation:flash 1.4s ease-out}
+
+  /* Værktøjstip i tegningen */
+  .canvas-wrap{position:relative}
+  .vis-tip{display:none;position:absolute;z-index:5;pointer-events:none;background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:0 6px 20px rgba(11,79,121,.16);padding:9px 12px;font-size:12px;min-width:190px;max-width:280px}
+  .tip-where{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+  .tip-head{font-weight:600;color:var(--steel);margin-bottom:6px;font-family:'DM Mono',monospace}
+  .tip-head.tip-green{color:var(--green)}
+  .tip-row{display:flex;justify-content:space-between;gap:12px;font-family:'DM Mono',monospace;font-size:11.5px;line-height:1.6}
+  .tip-row span{color:var(--muted)}
+  .tip-row b{font-weight:500;color:var(--text)}
+
+  /* --- Skæretilstand --- */
+  body.no-scroll{overflow:hidden}
+  .step-overlay{position:fixed;inset:0;z-index:50;background:var(--smoke);display:flex;flex-direction:column}
+  .step-overlay[hidden]{display:none}
+  .st-top{background:var(--steel);color:#fff;display:flex;align-items:center;gap:14px;padding:12px 20px}
+  .st-top h3{font-size:15px;font-weight:600;flex:1}
+  .st-count{font-family:'DM Mono',monospace;font-size:13px;color:#CFE3EE}
+  .st-close{background:none;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;width:40px;height:40px;font-size:22px;cursor:pointer;line-height:1}
+  .st-close:hover{border-color:var(--rust)}
+  .st-bar{height:5px;background:#D7E3EC}
+  .st-bar span{display:block;height:100%;background:var(--rust);transition:width .2s}
+  .st-dots{display:flex;gap:6px;flex-wrap:wrap;padding:12px 20px 0;max-width:1100px;width:100%;margin:0 auto}
+  .st-dot{min-width:30px;height:30px;border-radius:15px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;padding:0 8px}
+  .st-dot.ok{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+  .st-dot.cur{border-color:var(--rust);color:var(--text);box-shadow:0 0 0 2px rgba(232,121,30,.25)}
+  .st-body{flex:1;overflow:auto;padding:16px 20px 24px;max-width:1100px;width:100%;margin:0 auto}
+  .st-roll{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);margin-bottom:14px}
+  .st-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,420px);gap:22px;align-items:start}
+  .st-main{display:flex;flex-direction:column;gap:14px}
+  .st-block{display:flex;gap:14px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 18px}
+  .st-no{width:32px;height:32px;border-radius:50%;background:var(--steel);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+  .st-lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px}
+  .st-big{font-family:'DM Mono',monospace;font-size:34px;font-weight:500;color:var(--steel);line-height:1.2}
+  .st-meta{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);margin-top:6px}
+  .st-green{color:var(--green);font-weight:600}
+  .st-knives{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .st-knives span{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;background:#FCEADA;border:1.5px solid var(--rust);color:var(--text);border-radius:6px;padding:4px 12px}
+  .st-knives em{font-size:14px;color:var(--muted)}
+  .st-strips{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .st-strip{border:1px solid var(--border);border-radius:6px;overflow:hidden}
+  .st-strip.dorn{border-color:var(--rust)}
+  .st-strip-head{display:flex;align-items:center;gap:10px;background:#E5F1FA;padding:7px 12px;font-family:'DM Mono',monospace;font-size:14px}
+  .st-strip-no{background:var(--steel);color:#fff;border-radius:4px;padding:1px 8px;font-size:12px}
+  .st-strip-pos{margin-left:auto;color:var(--muted);font-size:12px}
+  .st-strip-body{padding:9px 12px;font-family:'DM Mono',monospace;font-size:14px}
+  .st-vis{position:sticky;top:0;background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px}
+  .st-vis canvas{max-width:100%}
+  .st-foot{display:flex;gap:12px;padding:12px 20px;background:#fff;border-top:1px solid var(--border);justify-content:space-between}
+  .st-foot button{font-size:17px;font-weight:600;border-radius:8px;padding:14px 26px;cursor:pointer;min-height:56px}
+  .st-prev{background:#fff;border:1.5px solid var(--border);color:var(--text)}
+  .st-prev:disabled{opacity:.4;cursor:default}
+  .st-next{background:var(--rust);border:none;color:#fff;flex:1;max-width:420px}
+  .st-next:hover{background:var(--rust-dark)}
+  .st-end{text-align:center;max-width:620px;margin:30px auto}
+  .st-end-icon{width:64px;height:64px;border-radius:50%;background:var(--green);color:#fff;font-size:34px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .st-end h3{font-size:22px;color:var(--steel);margin-bottom:6px}
+  .st-end p{color:var(--muted);margin-bottom:18px}
+  .st-rests{list-style:none;text-align:left;display:flex;flex-direction:column;gap:8px}
+  .st-rests li{background:#fff;border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:14px}
+  .chip-rest{display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--green-bg);box-shadow:inset 0 0 0 1.5px var(--green);margin-right:8px;vertical-align:-1px}
+
+  /* --- Smal skærm --- */
+  @media (max-width:760px){
+    .st-grid{grid-template-columns:1fr}
+    .st-vis{position:static;order:-1}
+    .st-big{font-size:28px}
+  }
+  @media (max-width:640px){
+    header{padding:14px 16px}
+    main{padding:18px 12px 48px;gap:16px}
+    .card{padding:16px}
+    details.fold>summary{margin:-16px;padding:14px 16px}
+    details.fold>.fold-body{padding-top:16px}
+    details.fold>summary .fold-sum{margin-left:0;text-align:left;flex-basis:100%;order:3}
+    .field{min-width:0}
+    .input-row .field{max-width:none !important;flex-basis:100%}
+    .canvas-wrap{padding:8px}
+    .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .sum-card{padding:10px 12px}
+    .sum-card .sc-val{font-size:15px}
+    /* Skæreplanen som kort i stedet for en bred tabel */
+    table.cut thead{display:none}
+    table.cut,table.cut tbody,table.cut tr,table.cut td{display:block;width:100%}
+    table.cut tr{display:grid;grid-template-columns:auto auto 1fr;gap:2px 12px;padding:10px 12px;border-bottom:1px solid var(--border)}
+    table.cut tr:last-child{border-bottom:none}
+    table.cut td{padding:0;border:none;background:none !important}
+    table.cut tr.dorn{background:var(--dorn-bg)}
+    table.cut tr.siderest{background:#FAFAF8}
+    table.cut tr.langrest{background:var(--green-bg)}
+    table.cut td.c-pos{color:var(--muted)}
+    table.cut td.c-w{text-align:right;font-weight:600}
+    table.cut td.c-content{grid-column:1/-1;margin-top:4px}
+    .sec-meta{margin-left:0;flex-basis:100%}
+    .st-top{padding:10px 12px}
+    .st-body{padding:12px}
+    .st-dots{padding:10px 12px 0}
+    .st-foot{padding:10px 12px}
+    .st-foot button{padding:12px 16px;font-size:16px}
+    .btn-print,.btn-step{width:100%;justify-content:center}
+  }
+  /* Touchskærm (tablet ved maskinen): større felter og knapper */
+  @media (pointer:coarse){
+    .field input{font-size:16px;min-height:46px}
+    .btn-del{width:46px;height:46px}
+    .btn-add{padding:13px 14px}
+    .btn-calc{padding:15px 30px}
+    .hist-item{padding:14px}
+    .hist-del{width:38px;height:38px}
+    .toggle input{width:22px;height:22px}
+    .seg label,.seg button{padding:11px 16px}
+  }
 </style>
 </head>
 <body>
@@ -172,42 +367,64 @@
     </button>
   </div>
 
-  <div class="card">
-    <h2>Tillæg og begrænsninger</h2>
-    <div class="input-row">
-      <div class="field" style="max-width:180px"><label>Buffer pr. bånd</label><input type="number" id="buffer" min="0" step="any" placeholder="0" value="0"></div>
-      <div class="field" style="max-width:260px"><label>Maks strimler pr. båndbredde</label><input type="number" id="max-strimler" min="1" step="1" placeholder="Ingen begrænsning"></div>
+  <details class="card fold" id="fold-tillaeg">
+    <summary><h2>Tillæg og begrænsninger</h2><span class="fold-sum" id="sum-tillaeg"></span></summary>
+    <div class="fold-body">
+      <div class="input-row">
+        <div class="field" style="max-width:180px"><label for="buffer">Buffer pr. bånd</label><input type="number" id="buffer" min="0" step="any" placeholder="0" value="0"></div>
+        <div class="field" style="max-width:260px"><label for="max-strimler">Maks strimler pr. båndbredde</label><input type="number" id="max-strimler" min="1" step="1" placeholder="Ingen begrænsning"></div>
+        <div class="field" style="max-width:200px"><label for="min-restbredde">Min. restbredde</label><input type="number" id="min-restbredde" min="0" step="any" placeholder="Ingen grænse"></div>
+      </div>
+      <div class="hint">
+        <b>Buffer</b> lægges til hvert bånds længde før opskæring — kaplængden bliver længde + buffer.<br>
+        <b>Maks strimler pr. båndbredde</b> begrænser hvor mange strimler af <em>samme</em> bredde der må ligge side om side i én række. Tom = ingen begrænsning.<br>
+        <b>Min. restbredde</b>: en rest smallere end dette regnes som spild. Rullens sidste række forlænges kun ud til rullens ende (så den ubrugte bredde bliver en lang rest), hvis resten bliver mindst så bred — ellers bliver resten af rullen liggende som en hel moderrulle i fuld bredde. Tom = ingen grænse.
+      </div>
     </div>
-    <div class="hint">
-      <b>Buffer</b> lægges til hvert bånds længde før opskæring — kaplængden bliver længde + buffer.<br>
-      <b>Maks strimler pr. båndbredde</b> begrænser hvor mange strimler af <em>samme</em> bredde der må ligge side om side i én række. Tom = ingen begrænsning.
-    </div>
-  </div>
+  </details>
 
-  <div class="card">
-    <h2>Dorn — pak bånd i bredden</h2>
-    <label class="toggle"><input type="checkbox" id="dorn-on"> Brug dorn-pakning</label>
-    <div class="input-row">
-      <div class="field" style="max-width:200px">
-        <label>Skæretillæg pr. dorn</label>
-        <input type="number" id="dorn-tillaeg" min="0" step="any" placeholder="fx 10" value="0">
+  <details class="card fold" id="fold-dorn">
+    <summary><h2>Dorn — pak bånd i bredden</h2><span class="fold-sum" id="sum-dorn"></span></summary>
+    <div class="fold-body">
+      <label class="toggle"><input type="checkbox" id="dorn-on"> Brug dorn-pakning</label>
+      <div class="input-row">
+        <div class="field" style="max-width:200px">
+          <label for="dorn-tillaeg">Skæretillæg pr. dorn</label>
+          <input type="number" id="dorn-tillaeg" min="0" step="any" placeholder="fx 10" value="0">
+        </div>
+        <div class="field" style="max-width:200px">
+          <label for="dorn-maxbredde">Maks bredde pr. dorn</label>
+          <input type="number" id="dorn-maxbredde" min="1" step="any" placeholder="700" value="700">
+        </div>
+        <div class="field" style="max-width:220px">
+          <label for="dorn-maxlaengde">Maks bånd-længde for dorn</label>
+          <input type="number" id="dorn-maxlaengde" min="1" step="any" placeholder="5500" value="5500">
+        </div>
       </div>
-      <div class="field" style="max-width:200px">
-        <label>Maks bredde pr. dorn</label>
-        <input type="number" id="dorn-maxbredde" min="1" step="any" placeholder="700" value="700">
-      </div>
-      <div class="field" style="max-width:220px">
-        <label>Maks bånd-længde for dorn</label>
-        <input type="number" id="dorn-maxlaengde" min="1" step="any" placeholder="5500" value="5500">
-      </div>
+      <div class="hint">Bånd der er kortere end "Maks bånd-længde" og findes i mindst to identiske eksemplarer (samme bredde og længde) skæres ud som én bred strimmel, der bagefter deles på dorn. Strimlens bredde = antal bånd × båndbredde + skæretillæg, dog højst "Maks bredde pr. dorn". Optimeringen kan vælge færre bånd pr. dorn, hvis det giver mindre spild.</div>
     </div>
-    <div class="hint">Bånd der er kortere end "Maks bånd-længde" og findes i mindst to identiske eksemplarer (samme bredde og længde) skæres ud som én bred strimmel, der bagefter deles på dorn. Strimlens bredde = antal bånd × båndbredde + skæretillæg, dog højst "Maks bredde pr. dorn".</div>
-  </div>
+  </details>
+
+  <details class="card fold" id="fold-opt">
+    <summary><h2>Optimering</h2><span class="fold-sum" id="sum-opt"></span></summary>
+    <div class="fold-body">
+      <div class="seg" role="radiogroup" aria-label="Optimeringsniveau">
+        <label><input type="radio" name="opt-niveau" value="hurtig">Hurtig<small>ca. 1 sek.</small></label>
+        <label><input type="radio" name="opt-niveau" value="normal" checked>Normal<small>få sek.</small></label>
+        <label><input type="radio" name="opt-niveau" value="grundig">Grundig<small>op til 20 sek.</small></label>
+      </div>
+      <div class="hint">Beregneren regner først planen som hidtil og afprøver derefter hundredvis af varianter — eksakt fyldning af strimlerne, andre rækkelængder, fremsyn, færre bånd pr. dorn, omlægning af planens sidste del — og vælger den bedste: færrest manglende bånd, så færrest moderruller, så mindst spild, så færrest knivopstillinger. Resultatet bliver aldrig dårligere end grundberegningen, og samme input giver samme plan. Beregningen kan stoppes undervejs, og den bedste plan indtil da bruges.</div>
+    </div>
+  </details>
 
   <div class="msg-box" id="error-box"></div>
   <div class="msg-box" id="warn-box"></div>
-  <div class="input-row">
+  <div class="calc-row">
     <button class="btn-calc" id="btn-calc">Beregn opskæring</button>
+    <div class="opt-progress" id="opt-progress" role="status" aria-live="polite">
+      <div class="op-main"><div class="op-bar"><span></span></div><div class="op-text"></div></div>
+      <button class="op-stop" type="button">Stop og vis bedste</button>
+    </div>
   </div>
   <div id="result"></div>
 
@@ -219,6 +436,14 @@
     <div class="history-list" id="history-list"></div>
   </div>
 </main>
+
+<div class="step-overlay" id="step-mode" hidden role="dialog" aria-modal="true" aria-label="Skæretilstand">
+  <div class="st-top"><h3>Skæretilstand</h3><span class="st-count"></span><button class="st-close" type="button" title="Luk (Esc)" aria-label="Luk">×</button></div>
+  <div class="st-bar"><span></span></div>
+  <div class="st-dots"></div>
+  <div class="st-body"></div>
+  <div class="st-foot"><button class="st-prev" type="button">← Forrige</button><button class="st-next" type="button">Udført — næste →</button></div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -315,6 +540,10 @@ function readRows(list, cls, label) {
   return { rows, errors };
 }
 
+// ---- MOTOR START ----
+// Alt herfra og ned til "MOTOR SLUT" er ren beregning uden DOM-adgang, så
+// motoren også kan køres og testes uden for browseren (fx i Node).
+
 // ============================================================
 // Emner ("units")
 //
@@ -325,22 +554,27 @@ function readRows(list, cls, label) {
 // ============================================================
 let _uid = 0;
 
-function buildUnits(bandRows, buffer, dorn) {
+// `dornCap` (valgfri, kun optimeringen bruger den) er et Map fra
+// "bredde længde" til et loft over antal bånd pr. dorn for netop den gruppe
+// — 1 betyder "ingen dorn for denne gruppe". Uden den opfører funktionen sig
+// præcis som altid: så mange bånd pr. dorn som dorn-bredden tillader.
+function buildUnits(bandRows, buffer, dorn, dornCap) {
   const groups = new Map();
   for (const r of bandRows) {
-    const key = r.b + ' ' + r.l;
+    const key = r.b + ' ' + r.l;
     if (!groups.has(key)) groups.set(key, { b: r.b, l: r.l, qty: 0 });
     groups.get(key).qty += r.qty;
   }
 
   const units = [];
-  for (const g of groups.values()) {
+  for (const [key, g] of groups) {
     const cutLen = g.l + buffer;
     const mkBand = () => ({ b: g.b, origL: g.l, len: cutLen });
 
     let perDorn = 0;
     if (dorn.on && g.qty >= 2 && g.l <= dorn.maxL) {
       perDorn = Math.floor((dorn.maxW - dorn.tillaeg) / g.b);
+      if (dornCap && dornCap.has(key)) perDorn = Math.min(perDorn, dornCap.get(key));
       if (perDorn < 2) perDorn = 0;
     }
 
@@ -370,6 +604,22 @@ function buildUnits(bandRows, buffer, dorn) {
   return units;
 }
 
+// Hvor mange bånd der højst kan ligge på én dorn for hver bånd-gruppe, der
+// overhovedet kan dorn-pakkes — bruges af optimeringen til at afprøve færre
+// bånd pr. dorn end maksimum.
+function dornGrupper(bandRows, dorn) {
+  if (!dorn.on) return [];
+  const groups = new Map();
+  for (const r of bandRows) {
+    const key = r.b + ' ' + r.l;
+    if (!groups.has(key)) groups.set(key, { key, b: r.b, l: r.l, qty: 0 });
+    groups.get(key).qty += r.qty;
+  }
+  return [...groups.values()]
+    .map(g => ({ key: g.key, max: g.qty >= 2 && g.l <= dorn.maxL ? Math.min(g.qty, Math.floor((dorn.maxW - dorn.tillaeg) / g.b)) : 0 }))
+    .filter(g => g.max >= 2);
+}
+
 // Deler en dorn tilbage i enkeltbånd (bruges når dornen ikke kan placeres).
 function explodeUnit(u) {
   if (u.kind !== 'dorn') return [u];
@@ -392,11 +642,30 @@ const netAreaOf = u => u.bands.reduce((s, b) => s + b.b * b.len, 0);
 // strimler, og den H der giver den bedste arealudnyttelse vindes. Målet er
 // at bruge så lidt af rullens LÆNGDE som muligt — det er den eneste knappe
 // ressource, da rullebredden er givet.
+//
+// Alle trin tager en strategi `S`. GRUND er den oprindelige, deterministiske
+// algoritme (uændret siden v3.6); optimeringen længere nede afprøver mange
+// andre strategier og beholder den bedste plan, men starter altid med GRUND
+// — så resultatet aldrig bliver dårligere end grundberegningen.
 // ============================================================
 const CAND_LIMIT = 90;
 
+const GRUND = Object.freeze({
+  rng: null,         // tilfældighedskilde (kun når noise > 0)
+  exact: false,      // strimmel fyldes eksakt (delsum) i stedet for længste-først
+  rowDP: false,      // rækkens strimler vælges ved knapsack i stedet for greedy
+  alpha: 0,          // >0: foretræk brede strimler først, <0: smalle
+  beta: 0,           // 0: række scores på absolut spild, 1: på spild-andel
+  noise: 0,          // tilfældig støj på scorerne (0–0,3)
+  candLimit: CAND_LIMIT,
+  lookahead: 0,      // >1: afprøv de K bedste rækker ved at regne planen færdig
+  frieH: false,      // tillad rækker kortere end det længste resterende emne
+  subsetMerge: false // læg rækker sammen hvis den enes knivopstilling er en delmængde
+});
+
 // Én strimmel af bredde w fyldes med emner ende mod ende, længste først.
-function fillColumn(list, used, cap) {
+function fillColumn(list, used, cap, S) {
+  if (S && S.exact) return fillColumnExact(list, used, cap);
   const items = [];
   let len = 0, added = true;
   while (added) {
@@ -413,11 +682,63 @@ function fillColumn(list, used, cap) {
   return { items, len };
 }
 
+// Som fillColumn, men finder den kombination af emner der fylder strimlen
+// MEST muligt op (delsum-problemet), fx 5000 + 5000 i en 10000-strimmel
+// frem for 6000 alene. Søgningen starter med præcis det længste-først-valg,
+// så den aldrig giver en dårligere strimmel end fillColumn, og er afgrænset
+// til et fast antal knuder, så den altid er hurtig.
+function fillColumnExact(list, used, cap) {
+  const groups = [];
+  for (const u of list) {
+    if (used.has(u.id) || u.len > cap + EPS) continue;
+    const g = groups.find(x => Math.abs(x.len - u.len) < EPS);
+    if (g) g.units.push(u); else groups.push({ len: u.len, units: [u] });
+  }
+  groups.sort((a, b) => b.len - a.len);
+  const n = groups.length;
+  const suffix = new Array(n + 1).fill(0);
+  for (let i = n - 1; i >= 0; i--) suffix[i] = suffix[i + 1] + groups[i].len * groups[i].units.length;
+
+  const cnt = new Array(n).fill(0);
+  let best = 0, bestCnt = cnt.slice(), nodes = 0;
+  const dfs = (i, sum) => {
+    if (sum > best + EPS) { best = sum; bestCnt = cnt.slice(); }
+    if (i === n || best >= cap - EPS || ++nodes > 4000) return;
+    if (sum + suffix[i] <= best + EPS) return;
+    const g = groups[i];
+    const maxK = Math.min(g.units.length, Math.floor((cap - sum + EPS) / g.len));
+    for (let k = maxK; k >= 0; k--) {
+      cnt[i] = k;
+      dfs(i + 1, sum + k * g.len);
+      if (best >= cap - EPS) break;
+    }
+    cnt[i] = 0;
+  };
+  dfs(0, 0);
+
+  const items = [];
+  groups.forEach((g, i) => { for (let k = 0; k < bestCnt[i]; k++) items.push(g.units[k]); });
+  return { items, len: items.reduce((s, u) => s + u.len, 0) };
+}
+
+// Afslutter en række: strimler med samme bredde lægges ved siden af
+// hinanden, så knivene står samlet og operatøren får alle bånd af samme
+// bredde i træk. Rækken kappes kun så lang som den længste strimmel.
+function finishSection(cols, B) {
+  if (!cols.length) return null;
+  cols.sort((a, b) => b.w - a.w || b.filled - a.filled);
+  const len = Math.max(...cols.map(c => c.filled));
+  let x = 0, area = 0;
+  for (const c of cols) { c.x = x; x += c.w; c.rest = len - c.filled; area += c.w * c.filled; }
+  return { len, cols, area, widthUsed: x, sideRest: B - x };
+}
+
 // Fylder én række af bredde B med strimler, hvor ingen strimmel må være
 // længere end H. Strimlerne vælges marginalt: den bredde hvis næste
 // strimmel kan fyldes med mest længde vinder, fordi arealgevinsten pr.
 // forbrugt rullebredde netop er den fyldte længde.
-function fillSection(units, B, H, maxPerWidth) {
+function fillSection(units, B, H, maxPerWidth, S) {
+  S = S || GRUND;
   const byW = new Map();
   for (const u of units) {
     if (u.len > H + EPS || u.w > B + EPS) continue;
@@ -426,39 +747,93 @@ function fillSection(units, B, H, maxPerWidth) {
   }
   for (const arr of byW.values()) arr.sort((a, b) => b.len - a.len);
 
+  if (S.rowDP) return finishSection(fillRowKnapsack(byW, B, H, maxPerWidth, S), B);
+
   const used = new Set(), wCount = new Map(), cols = [];
-  let wRem = B, area = 0;
+  let wRem = B;
 
   for (;;) {
     let pick = null;
     for (const [w, list] of byW) {
       if (w > wRem + EPS) continue;
       if (maxPerWidth && (wCount.get(w) || 0) >= maxPerWidth) continue;
-      const c = fillColumn(list, used, H);
+      const c = fillColumn(list, used, H, S);
       if (c.len <= 0) continue;
-      if (!pick || c.len > pick.len + EPS || (Math.abs(c.len - pick.len) < EPS && w > pick.w))
-        pick = { w, len: c.len, items: c.items };
+      let sc = c.len;
+      if (S.alpha) sc *= Math.pow(w, S.alpha);
+      if (S.noise) sc *= 1 + S.noise * (S.rng() * 2 - 1);
+      if (!pick || sc > pick.sc + EPS || (Math.abs(sc - pick.sc) < EPS && w > pick.w))
+        pick = { w, sc, len: c.len, items: c.items };
     }
     if (!pick) break;
 
     pick.items.forEach(u => used.add(u.id));
     cols.push({ w: pick.w, items: pick.items, filled: pick.len });
-    area += pick.w * pick.len;
     wRem -= pick.w;
     wCount.set(pick.w, (wCount.get(pick.w) || 0) + 1);
   }
 
-  if (!cols.length) return null;
+  return finishSection(cols, B);
+}
 
-  // Strimler med samme bredde skal ligge ved siden af hinanden, så knivene
-  // står samlet og operatøren får alle bånd af samme bredde i træk.
-  cols.sort((a, b) => b.w - a.w || b.filled - a.filled);
+// Rækken fyldt som et knapsack-problem: for hver bredde fyldes strimlerne én
+// ad gangen (1., 2., 3. strimmel …), og derefter vælges det antal strimler
+// pr. bredde, der samlet dækker mest areal inden for rullens bredde. Den
+// greedy udgave kan fx tage en 600-strimmel og så ikke have plads til to
+// 500'ere i en 1000-rulle — det kan denne ikke fejle på.
+function fillRowKnapsack(byW, B, H, maxPerWidth, S) {
+  const used = new Set();
+  const groups = [];
+  for (const [w, list] of byW) {
+    let maxN = Math.floor((B + EPS) / w);
+    if (maxPerWidth) maxN = Math.min(maxN, maxPerWidth);
+    const strips = [];
+    for (let k = 0; k < maxN; k++) {
+      const c = fillColumn(list, used, H, S);
+      if (c.len <= 0) break;
+      c.items.forEach(u => used.add(u.id));
+      strips.push({ w, items: c.items, filled: c.len });
+    }
+    if (strips.length) groups.push({ w, wi: Math.ceil(w - 1e-9), strips });
+  }
+  if (!groups.length) return [];
 
-  // Rækken kappes kun så lang som den længste strimmel faktisk blev.
-  const len = Math.max(...cols.map(c => c.filled));
-  let x = 0;
-  for (const c of cols) { c.x = x; x += c.w; c.rest = len - c.filled; }
-  return { len, cols, area, widthUsed: B - wRem, sideRest: wRem };
+  // Heltals-bredder (rundet op, så summen aldrig overskrider B), delt med
+  // deres største fælles divisor for at holde tabellen lille.
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  let g = 0;
+  for (const gr of groups) g = gcd(g, gr.wi);
+  const cap = Math.floor(Math.floor(B + 1e-9) / g);
+  for (const gr of groups) gr.u = gr.wi / g;
+
+  let dp = new Float64Array(cap + 1).fill(-1);
+  dp[0] = 0;
+  const choice = groups.map(() => new Int16Array(cap + 1));
+  groups.forEach((gr, gi) => {
+    const pref = [0];
+    for (const s of gr.strips) pref.push(pref[pref.length - 1] + s.w * s.filled);
+    const nd = new Float64Array(cap + 1).fill(-1);
+    for (let c = 0; c <= cap; c++) {
+      if (dp[c] < 0) continue;
+      for (let k = 0; k < pref.length; k++) {
+        const nc = c + k * gr.u;
+        if (nc > cap) break;
+        const v = dp[c] + pref[k];
+        if (v > nd[nc] + EPS) { nd[nc] = v; choice[gi][nc] = k; }
+      }
+    }
+    dp = nd;
+  });
+
+  let bestC = 0;
+  for (let c = 1; c <= cap; c++) if (dp[c] > dp[bestC] + EPS) bestC = c;
+  const cols = [];
+  for (let gi = groups.length - 1, c = bestC; gi >= 0; gi--) {
+    const k = choice[gi][c];
+    for (let i = 0; i < k; i++) cols.push(groups[gi].strips[i]);
+    c -= k * groups[gi].u;
+  }
+  return cols;
 }
 
 // Kandidat-rækkelængder = de længder en strimmel rent faktisk kan ramme
@@ -497,49 +872,101 @@ function candidateLengths(units, minH, maxH, limit) {
   return out;
 }
 
-function bestSection(units, B, maxLen, maxPerWidth) {
+// Den bedste række, eller (med topK) de topK bedste forskellige rækker.
+function bestSection(units, B, maxLen, maxPerWidth, S, topK) {
+  S = S || GRUND;
   const usable = units.filter(u => u.w <= B + EPS && u.len <= maxLen + EPS);
-  if (!usable.length) return null;
+  if (!usable.length) return topK ? [] : null;
 
   // Rækken skal altid rumme det længste resterende emne — ellers udskydes
   // det bare til en dyrere række senere.
-  const minH = Math.max(...usable.map(u => u.len));
+  // (Optimeringen afprøver også at slække dette via S.frieH.)
+  const minH = S.frieH ? Math.min(...usable.map(u => u.len)) : Math.max(...usable.map(u => u.len));
   let best = null;
-  for (const H of candidateLengths(usable, minH, maxLen, CAND_LIMIT)) {
-    const s = fillSection(usable, B, H, maxPerWidth);
+  const all = [];
+  for (const H of candidateLengths(usable, minH, maxLen, S.candLimit || CAND_LIMIT)) {
+    const s = fillSection(usable, B, H, maxPerWidth, S);
     if (!s) continue;
     // Det samlede båndareal er givet, så "mindst muligt spild i denne række"
     // er præcis det samme mål som "mindst muligt af rullens længde brugt i
     // alt" — derfor scores på absolut spild, ikke på udnyttelsesprocent.
+    // (Optimeringen afprøver også spild-andel via S.beta.)
     s.waste = s.len * B - s.area;
-    s.eff = s.area / (s.len * B);
+    s.score = s.waste;
+    if (S.beta) s.score /= Math.pow(s.len * B, S.beta);
+    if (S.noise && s.score > 0) s.score *= 1 + S.noise * (S.rng() * 2 - 1);
+    if (topK) all.push(s);
     // Mindst spild først. Ved samme spild vinder den LÆNGSTE række: den har
     // pr. definition fået mere materiale med (areal = længde × bredde −
     // spild), og den sparer en knivopstilling, fordi bånd der ellers ville
     // blive kappet i hver sin række nu ligger i forlængelse af hinanden.
     if (!best
-      || s.waste < best.waste - EPS
-      || (Math.abs(s.waste - best.waste) < EPS && s.len > best.len + EPS)) best = s;
+      || s.score < best.score - EPS
+      || (Math.abs(s.score - best.score) < EPS && s.len > best.len + EPS)) best = s;
   }
-  return best;
+  if (!topK) return best;
+
+  all.sort((a, b) => (Math.abs(a.score - b.score) < EPS ? b.len - a.len : a.score - b.score));
+  const seen = new Set(), out = [];
+  for (const s of all) {
+    const sig = s.len + ':' + s.cols.map(c => c.w + '/' + c.items.map(u => u.id).join(',')).join('|');
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    out.push(s);
+    if (out.length >= topK) break;
+  }
+  return out;
 }
 
-function placePass(rolls, pool, maxPerWidth) {
+const placedIds = sec => {
+  const placed = new Set();
+  for (const c of sec.cols) for (const u of c.items) placed.add(u.id);
+  return placed;
+};
+
+function placePass(rolls, pool, maxPerWidth, S, ctx) {
+  S = S || GRUND;
   let remaining = pool;
-  for (const roll of rolls) {
+  for (let ri = 0; ri < rolls.length; ri++) {
+    const roll = rolls[ri];
     while (remaining.length) {
       const avail = roll.len - roll.usedLen;
       if (avail <= EPS) break;
-      const sec = bestSection(remaining, roll.w, avail, maxPerWidth);
+      const sec = S.lookahead > 1 && ctx
+        ? lookaheadSection(rolls, ri, remaining, maxPerWidth, S, ctx)
+        : bestSection(remaining, roll.w, avail, maxPerWidth, S);
       if (!sec) break;
       roll.sections.push(sec);
       roll.usedLen += sec.len;
-      const placed = new Set();
-      for (const c of sec.cols) for (const u of c.items) placed.add(u.id);
+      const placed = placedIds(sec);
       remaining = remaining.filter(u => !placed.has(u.id));
     }
   }
   return remaining;
+}
+
+// Fremsyn: i stedet for blindt at tage den række der ser bedst ud lige nu,
+// regnes hele planen færdig for hver af de K bedste kandidat-rækker, og den
+// række vælges, hvis FÆRDIGE plan er bedst. Fanger fx at en lidt dårligere
+// række nu giver en langt bedre sidste række (og rest) senere.
+function lookaheadSection(rolls, ri, remaining, maxPerWidth, S, ctx) {
+  const roll = rolls[ri];
+  const cands = bestSection(remaining, roll.w, roll.len - roll.usedLen, maxPerWidth, S, S.lookahead);
+  if (!cands.length) return null;
+  if (cands.length === 1) return cands[0];
+  const inner = { ...S, lookahead: 0 };
+  let best = null, bestM = null;
+  for (const sec of cands) {
+    const sim = rolls.map(r => ({ ...r, sections: r.sections.slice() }));
+    sim[ri].sections.push(sec);
+    sim[ri].usedLen += sec.len;
+    const placed = placedIds(sec);
+    let rest = placePass(sim, remaining.filter(u => !placed.has(u.id)), maxPerWidth, inner, null);
+    rest = mergeAndRefill(sim, rest, maxPerWidth, inner, null);
+    const m = planMetrics(sim.filter(r => r.sections.length).map(r => forlaengSidsteRaekkeForLaengsteRest(r, ctx.minRestW)), rest);
+    if (!bestM || cmpMetrics(m, bestM) < 0) { best = sec; bestM = m; }
+  }
+  return best;
 }
 
 // Rækker med samme knivopstilling lægges i forlængelse af hinanden.
@@ -598,24 +1025,69 @@ function mergeSameLayoutSections(roll) {
   return true;
 }
 
-function attemptPlan(rollDefs, units, maxPerWidth) {
+// Som mergeSameLayoutSections, men for rækker hvor den enes strimmelbredder
+// er en DELMÆNGDE af den andens (fx 400+400 ind i 400+400+200): den mindre
+// rækkes strimler kappes i forlængelse af de tilsvarende strimler i den
+// større række. Heller ikke det kan koste rullelængde eller give mere spild
+// (det areal, der før var siderest i den mindre række, bliver længderest i
+// den større), men det sparer et tværsnit og en knivopstilling. Kun i brug
+// under optimeringen (S.subsetMerge).
+function mergeSubsetLayouts(roll) {
+  const count = sec => { const m = new Map(); for (const c of sec.cols) m.set(c.w, (m.get(c.w) || 0) + 1); return m; };
+  const isSub = (a, b) => { for (const [w, n] of a) if ((b.get(w) || 0) < n) return false; return true; };
+  let changed = false;
+  for (let again = true; again;) {
+    again = false;
+    const secs = roll.sections;
+    outer:
+    for (let i = 0; i < secs.length; i++) {
+      for (let j = 0; j < secs.length; j++) {
+        if (i === j) continue;
+        const big = secs[i], small = secs[j];
+        if (big.cols.length < small.cols.length || !isSub(count(small), count(big))) continue;
+        const slots = big.cols.map(c => ({ w: c.w, items: c.items.slice(), filled: c.filled }));
+        for (const c of [...small.cols].sort((a, b) => b.filled - a.filled)) {
+          const target = slots.filter(sl => sl.w === c.w).reduce((m, sl) => sl.filled < m.filled ? sl : m);
+          target.items.push(...c.items);
+          target.filled += c.filled;
+        }
+        const merged = finishSection(slots, roll.w);
+        const at = Math.min(i, j);
+        roll.sections = secs.filter((_, k) => k !== i && k !== j);
+        roll.sections.splice(at, 0, merged);
+        roll.usedLen = roll.sections.reduce((s, sec) => s + sec.len, 0);
+        changed = again = true;
+        break outer;
+      }
+    }
+  }
+  return changed;
+}
+
+// Sammenlægningen kan frigøre rullelængde, så der forsøges placeret igen
+// så længe der både er emner tilbage og noget at vinde.
+function mergeAndRefill(rolls, leftovers, maxPerWidth, S, ctx) {
+  for (let i = 0; i < 3; i++) {
+    let changed = false;
+    for (const roll of rolls) if (mergeSameLayoutSections(roll)) changed = true;
+    if (S && S.subsetMerge) for (const roll of rolls) if (mergeSubsetLayouts(roll)) changed = true;
+    if (!changed || !leftovers.length) break;
+    const before = leftovers.length;
+    leftovers = placePass(rolls, leftovers, maxPerWidth, S, ctx);
+    if (leftovers.length === before) break;
+  }
+  return leftovers;
+}
+
+function attemptPlan(rollDefs, units, maxPerWidth, S, ctx) {
   const rolls = rollDefs.map((r, i) => ({ idx: i, w: r.w, len: r.len, kode: r.kode || '', beskrivelse: r.beskrivelse || '', sections: [], usedLen: 0 }));
   const maxW = Math.max(...rolls.map(r => r.w));
   const maxL = Math.max(...rolls.map(r => r.len));
   // Dorne der slet ikke kan ligge på nogen rulle deles op med det samme.
   const pool = units.flatMap(u => (u.w > maxW + EPS || u.len > maxL + EPS) ? explodeUnit(u) : [u]);
 
-  // Sammenlægningen kan frigøre rullelængde, så der forsøges placeret igen
-  // så længe der både er emner tilbage og noget at vinde.
-  let leftovers = placePass(rolls, pool, maxPerWidth);
-  for (let i = 0; i < 3; i++) {
-    let changed = false;
-    for (const roll of rolls) if (mergeSameLayoutSections(roll)) changed = true;
-    if (!changed || !leftovers.length) break;
-    const before = leftovers.length;
-    leftovers = placePass(rolls, leftovers, maxPerWidth);
-    if (leftovers.length === before) break;
-  }
+  let leftovers = placePass(rolls, pool, maxPerWidth, S, ctx);
+  leftovers = mergeAndRefill(rolls, leftovers, maxPerWidth, S, ctx);
   return { rolls, leftovers };
 }
 
@@ -625,21 +1097,6 @@ function planScore(p) {
 }
 const betterPlan = (a, b) => a[0] !== b[0] ? a[0] < b[0] : a[1] < b[1] - EPS;
 
-// Længde vejer tungere end bredde for den rest, der bliver tilbage: kan
-// rullens sidste række ikke bruge hele bredden, forlænges den længdesnittet
-// helt ud til rullens fysiske ende i stedet for at stoppe ved præcis det,
-// rækken selv skal bruge. Uden dette ville den ubrugte bredde blive et kort,
-// ubrugeligt "siderest"-udfald ved siden af rækken, OG resten af rullen
-// derefter stå som en separat, urørt (men kortere) moderrulle for sig selv —
-// to stykker, hvor det ene reelt går til spilde. Ved i stedet at lade
-// længdesnittet fortsætte hele vejen ud får man ét sammenhængende, smallere
-// men længere reststykke, som er langt federe råvare til en senere ordre end
-// et kort udfald. Kun den SIDSTE række på en rulle kan gøre dette — alle
-// tidligere rækkers siderest er allerede afgrænset af rækken efter og er
-// dermed et selvstændigt kort udfaldsstykke, uanset hvad. `roll.langRest`
-// gemmer bredde/længde på det reelt reststykke, så `rollStats` kan holde det
-// ude af spild-regnskabet (se dér) — uden det ville arealet blive talt som
-// spildt materiale, selvom det er en brugbar rest.
 // Samler den sidste rækkes strimler af samme bredde i færre, længere
 // strimler, når rækken alligevel skal forlænges (se funktionen nedenfor).
 // Emnerne flyttes ikke ud af rækken — kun om på færre strimler af hver
@@ -665,11 +1122,35 @@ function packForMinWidth(cols, capLen) {
   return packed;
 }
 
-function forlaengSidsteRaekkeForLaengsteRest(roll) {
+// Længde vejer tungere end bredde for den rest, der bliver tilbage: kan
+// rullens sidste række ikke bruge hele bredden, forlænges den længdesnittet
+// helt ud til rullens fysiske ende i stedet for at stoppe ved præcis det,
+// rækken selv skal bruge. Uden dette ville den ubrugte bredde blive et kort,
+// ubrugeligt "siderest"-udfald ved siden af rækken, OG resten af rullen
+// derefter stå som en separat, urørt (men kortere) moderrulle for sig selv —
+// to stykker, hvor det ene reelt går til spilde. Ved i stedet at lade
+// længdesnittet fortsætte hele vejen ud får man ét sammenhængende, smallere
+// men længere reststykke, som er langt federe råvare til en senere ordre end
+// et kort udfald. Kun den SIDSTE række på en rulle kan gøre dette — alle
+// tidligere rækkers siderest er allerede afgrænset af rækken efter og er
+// dermed et selvstændigt kort udfaldsstykke, uanset hvad. `roll.langRest`
+// gemmer bredde/længde på det reelt reststykke, så `rollStats` kan holde det
+// ude af spild-regnskabet (se dér) — uden det ville arealet blive talt som
+// spildt materiale, selvom det er en brugbar rest.
+//
+// Minimumsbredde (`minRestW`, "Min. restbredde" i UI, 0 = ingen grænse):
+// bliver resten smallere end det, er den ikke en brugbar rest, og så
+// forlænges rækken IKKE — rullens hale forbliver i stedet en urørt
+// moderrulle i fuld bredde, og den smalle siderest er almindeligt spild.
+//
+// Funktionen ændrer ikke `roll` — den returnerer en ny rulle (med en kopi af
+// sidste række), så fremsynet i optimeringen kan vurdere færdige planer
+// uden at ødelægge de rækker, der deles mellem forsøgene.
+function forlaengSidsteRaekkeForLaengsteRest(roll, minRestW) {
   const tail = roll.len - roll.usedLen;
-  if (tail <= EPS || !roll.sections.length) return;
-  const last = roll.sections[roll.sections.length - 1];
-  if (last.sideRest <= EPS) return;
+  if (tail <= EPS || !roll.sections.length) return roll;
+  const lastOrig = roll.sections[roll.sections.length - 1];
+  if (lastOrig.sideRest <= EPS) return roll;
 
   // Bånd der lige nu ligger i hver sin lige brede strimmel kan ofte lægges i
   // forlængelse af hinanden i én strimmel i stedet. Det ændrer ingenting
@@ -679,27 +1160,35 @@ function forlaengSidsteRaekkeForLaengsteRest(roll) {
   // uanset hvor langt rækken ender med at blive. Færre, smallere strimler er
   // derfor altid mindst lige så godt; prøv det altid, og behold kun
   // resultatet hvis det rent faktisk bruger mindre bredde end i forvejen.
-  const available = last.len + tail;
-  const packed = packForMinWidth(last.cols, available);
+  const available = lastOrig.len + tail;
+  let cols = lastOrig.cols, widthUsed = lastOrig.widthUsed, area = lastOrig.area;
+  const packed = packForMinWidth(lastOrig.cols, available);
   const packedWidth = packed.reduce((s, c) => s + c.w, 0);
-  if (packedWidth < last.widthUsed - EPS) {
+  if (packedWidth < widthUsed - EPS) {
     packed.sort((a, b) => b.w - a.w || b.filled - a.filled);
     let x = 0;
     for (const c of packed) { c.x = x; x += c.w; }
-    last.cols = packed;
-    last.area = packed.reduce((s, c) => s + c.w * c.filled, 0);
-    last.widthUsed = packedWidth;
-    last.sideRest = roll.w - packedWidth;
+    cols = packed;
+    area = packed.reduce((s, c) => s + c.w * c.filled, 0);
+    widthUsed = packedWidth;
   }
+  const sideRest = roll.w - widthUsed;
+  if (minRestW > 0 && sideRest < minRestW - EPS) return roll;
 
-  last.len += tail;
-  for (const c of last.cols) c.rest = last.len - c.filled;
-  roll.usedLen = roll.len;
-  roll.langRest = { w: last.sideRest, len: last.len };
+  const len = available;
+  const last = { ...lastOrig, len, area, widthUsed, sideRest, cols: cols.map(c => ({ ...c, rest: len - c.filled })) };
+  return {
+    ...roll,
+    sections: [...roll.sections.slice(0, -1), last],
+    usedLen: roll.len,
+    langRest: { w: sideRest, len }
+  };
 }
 
-function planCutting(rollDefs, units, maxPerWidth) {
-  let best = attemptPlan(rollDefs, units, maxPerWidth);
+function planCutting(rollDefs, units, maxPerWidth, S, ctx) {
+  S = S || GRUND;
+  ctx = ctx || { minRestW: 0 };
+  let best = attemptPlan(rollDefs, units, maxPerWidth, S, ctx);
   let bestScore = planScore(best);
 
   // Kan noget ikke placeres, deles de dorn-grupper op der drillede, og hele
@@ -716,25 +1205,249 @@ function planCutting(rollDefs, units, maxPerWidth) {
     });
     if (!split) break;
     cur = next;
-    const cand = attemptPlan(rollDefs, cur, maxPerWidth);
+    const cand = attemptPlan(rollDefs, cur, maxPerWidth, S, ctx);
     const score = planScore(cand);
     if (betterPlan(score, bestScore)) { best = cand; bestScore = score; }
   }
 
-  const usedRolls = best.rolls.filter(r => r.sections.length);
   // Anvendes først på den endeligt valgte plan — aldrig undervejs i
   // attemptPlan/placePass, som regner `avail = roll.len - roll.usedLen` for
   // at vide, om mere kan placeres på rullen. Skete forlængelsen tidligere,
   // ville den spærre for al senere fyldning af rullen i samme attemptPlan-
   // kald, selvom der reelt var mere tilbage at placere.
-  usedRolls.forEach(forlaengSidsteRaekkeForLaengsteRest);
+  const usedRolls = best.rolls.filter(r => r.sections.length)
+    .map(r => forlaengSidsteRaekkeForLaengsteRest(r, ctx.minRestW));
 
   return {
     rolls: usedRolls,
     unusedRolls: best.rolls.filter(r => !r.sections.length),
-    leftovers: best.leftovers
+    leftovers: best.leftovers,
+    // Planen før forlængelsen af sidste række — optimeringens lokale
+    // søgning (omlaegPlan) bygger videre på den.
+    raw: best
   };
 }
+
+// Lokal søgning: behold planens første rækker (op til et tilfældigt
+// snitpunkt) og læg resten af planen om med en anden strategi. Grådige valg
+// tidligt i planen låser de senere fast; her bliver de sene valg afprøvet
+// igen, uden at de gode tidlige rækker skal findes forfra.
+function omlaegPlan(raw, maxPerWidth, S, ctx, rng) {
+  const positions = [];
+  raw.rolls.forEach((r, ri) => { for (let si = 0; si <= r.sections.length; si++) positions.push([ri, si]); });
+  if (!positions.length) return null;
+  const [cutR, cutS] = positions[Math.floor(rng() * positions.length)];
+
+  const remaining = [];
+  const rolls = raw.rolls.map((r, ri) => {
+    const keep = ri < cutR ? r.sections.length : ri === cutR ? cutS : 0;
+    for (const sec of r.sections.slice(keep)) for (const c of sec.cols) remaining.push(...c.items);
+    const sections = r.sections.slice(0, keep);
+    return { ...r, sections, usedLen: sections.reduce((s, sec) => s + sec.len, 0) };
+  });
+  remaining.push(...raw.leftovers);
+  if (!remaining.length) return null;
+
+  let leftovers = placePass(rolls, remaining, maxPerWidth, S, ctx);
+  leftovers = mergeAndRefill(rolls, leftovers, maxPerWidth, S, ctx);
+  return {
+    rolls: rolls.filter(r => r.sections.length).map(r => forlaengSidsteRaekkeForLaengsteRest(r, ctx.minRestW)),
+    unusedRolls: rolls.filter(r => !r.sections.length),
+    leftovers,
+    raw: { rolls, leftovers }
+  };
+}
+
+// ============================================================
+// Vurdering af en færdig plan
+//
+// Rækkefølge (vigtigst først):
+//   1. færrest bånd der ikke kunne placeres
+//   2. færrest moderruller taget i brug
+//   3. mindst spild (areal; bevarede rester tæller IKKE som spild)
+//   4. færrest rækker (tværsnit / knivopstillinger)
+//   5. færrest strimler (længdesnit)
+// Spild inden for 0,2 % af båndarealet regnes som lige godt, så en plan
+// med praktisk talt samme spild men færre knivopstillinger foretrækkes.
+// ============================================================
+const SPILD_TOLERANCE = 0.002;
+
+function planMetrics(rolls, leftovers) {
+  let waste = 0, net = 0, rows = 0, strips = 0, used = 0, usedLen = 0, restArea = 0;
+  for (const r of rolls) {
+    if (!r.sections.length) continue;
+    used++;
+    let n = 0;
+    for (const sec of r.sections) {
+      rows++;
+      strips += sec.cols.length;
+      for (const c of sec.cols) for (const u of c.items) n += netAreaOf(u);
+    }
+    const lr = r.langRest ? r.langRest.w * r.langRest.len : r.w * (r.len - r.usedLen);
+    waste += r.len * r.w - lr - n;
+    restArea += lr;
+    net += n;
+    usedLen += r.usedLen;
+  }
+  const lost = leftovers.reduce((s, u) => s + u.bands.length, 0);
+  return { lost, rolls: used, waste: Math.max(0, waste), net, rows, strips, usedLen, restArea };
+}
+
+function cmpMetrics(a, b) {
+  if (a.lost !== b.lost) return a.lost - b.lost;
+  if (a.rolls !== b.rolls) return a.rolls - b.rolls;
+  const tol = Math.max(a.net, b.net) * SPILD_TOLERANCE;
+  if (Math.abs(a.waste - b.waste) > tol) return a.waste - b.waste;
+  if (a.rows !== b.rows) return a.rows - b.rows;
+  if (a.strips !== b.strips) return a.strips - b.strips;
+  return a.waste - b.waste;
+}
+
+// ============================================================
+// Optimering
+//
+// Grundberegningen er grådig: den tager hver gang den række, der ser bedst
+// ud lige nu, uden at kunne se hvad det koster senere. Optimeringen regner
+// derfor planen igen og igen med forskellige strategier (eksakt fyldning af
+// strimler, knapsack på rækkebredden, andre scoringer, fremsyn, færre bånd
+// pr. dorn, og lidt kontrolleret tilfældighed) og beholder den bedste færdige
+// plan efter cmpMetrics. Forsøg 0 er altid GRUND, så resultatet aldrig bliver
+// dårligere end grundberegningen.
+//
+// Tilfældigheden er seedet ud fra input, så samme input giver samme plan.
+// Funktionen er en generator: den giver kontrollen tilbage efter hvert
+// forsøg, så UI'et kan vise fremdrift og lade brugeren stoppe tidligt.
+// ============================================================
+const OPT_NIVEAUER = {
+  hurtig:  { iter: 60,   ms: 1200 },
+  normal:  { iter: 300,  ms: 8000 },
+  grundig: { iter: 1500, ms: 20000 }
+};
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function hashString(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+// Faste strategier afprøves først (i denne rækkefølge), derefter tilfældige.
+const FASTE_STRATEGIER = [
+  { exact: true },
+  { rowDP: true },
+  { exact: true, rowDP: true },
+  { beta: 1 },
+  { beta: 0.5, exact: true },
+  { alpha: 1 },
+  { alpha: 0.5, exact: true, rowDP: true },
+  { alpha: -0.5, exact: true },
+  { candLimit: 250, exact: true },
+  { lookahead: 3, exact: true },
+  { lookahead: 3, exact: true, rowDP: true },
+  { lookahead: 5, exact: true, rowDP: true, candLimit: 150 },
+  { frieH: true, exact: true },
+  { frieH: true, lookahead: 3, exact: true },
+  { frieH: true, exact: true, subsetMerge: true },
+  { exact: true, subsetMerge: true, lookahead: 3 }
+];
+
+function tilfaeldigStrategi(rng, best, grupper) {
+  // Halvdelen af tiden: små variationer omkring den bedste plan hidtil.
+  if (best.S !== GRUND && rng() < 0.45) {
+    return { S: { ...best.S, rng, noise: 0.02 + rng() * 0.15, lookahead: 0 }, dornCap: best.dornCap };
+  }
+  const S = {
+    ...GRUND, rng,
+    exact: rng() < 0.7,
+    rowDP: rng() < 0.4,
+    alpha: rng() < 0.4 ? rng() * 1.6 - 0.5 : 0,
+    beta: rng() < 0.4 ? rng() : 0,
+    noise: rng() < 0.85 ? rng() * 0.3 : 0,
+    candLimit: [60, 90, 150, 250][Math.floor(rng() * 4)],
+    lookahead: rng() < 0.15 ? 2 + Math.floor(rng() * 3) : 0,
+    frieH: rng() < 0.25,
+    subsetMerge: rng() < 0.6
+  };
+  let dornCap = null;
+  if (grupper.length && rng() < 0.35) {
+    dornCap = new Map();
+    for (const g of grupper) if (rng() < 0.5) dornCap.set(g.key, 1 + Math.floor(rng() * g.max));
+  }
+  return { S, dornCap };
+}
+
+const nuMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
+// inp: { rollDefs, bandRows, buffer, dorn, maxPerWidth, minRestW, niveau }
+function* optimerOpskaering(inp) {
+  const cfg = OPT_NIVEAUER[inp.niveau] || OPT_NIVEAUER.normal;
+  const ctx = { minRestW: inp.minRestW || 0 };
+  const t0 = nuMs();
+  const seed = hashString(JSON.stringify([inp.rollDefs.map(r => [r.w, r.len]), inp.bandRows.map(r => [r.qty, r.b, r.l]),
+    inp.buffer, inp.dorn, inp.maxPerWidth, ctx.minRestW]));
+
+  const baseUnits = buildUnits(inp.bandRows, inp.buffer, inp.dorn);
+  const basePlan = planCutting(inp.rollDefs, baseUnits, inp.maxPerWidth, GRUND, ctx);
+  const baseM = planMetrics(basePlan.rolls, basePlan.leftovers);
+  let best = { plan: basePlan, m: baseM, S: GRUND, dornCap: null, iter: 0 };
+
+  // Nedre grænse: så få ruller som arealet tillader, intet spild, én række
+  // pr. rulle. Nås den, kan intet blive bedre, og søgningen stopper.
+  const totalNet = baseUnits.reduce((s, u) => s + netAreaOf(u), 0);
+  let minRolls = 0;
+  for (let acc = 0; minRolls < inp.rollDefs.length && acc < totalNet - EPS; minRolls++)
+    acc += inp.rollDefs[minRolls].w * inp.rollDefs[minRolls].len;
+  const perfekt = m => m.lost === 0 && m.rolls <= minRolls && m.waste <= totalNet * 1e-9 && m.rows <= m.rolls;
+
+  const grupper = dornGrupper(inp.bandRows, inp.dorn);
+  let iter = 1;
+  // Fremdrift efter n afprøvede varianter, inkl. den bedste plan indtil nu,
+  // så UI'et kan stoppe søgningen når som helst og bruge den.
+  const status = n => ({ iter: n, total: cfg.iter, best: best.m, base: baseM, plan: best.plan, foundAt: best.iter, ms: nuMs() - t0 });
+  yield status(iter);
+
+  for (; iter < cfg.iter; iter++) {
+    if (perfekt(best.m) || nuMs() - t0 > cfg.ms) break;
+    // Står søgningen stille længe, er der ikke mere at hente.
+    if (iter - best.iter > Math.max(120, cfg.iter * 0.5)) break;
+
+    const rng = mulberry32((seed + iter * 0x9E3779B1) >>> 0);
+    let S, dornCap = null, plan = null;
+    const fi = iter - 1;
+    if (fi < FASTE_STRATEGIER.length) {
+      S = { ...GRUND, ...FASTE_STRATEGIER[fi], rng };
+    } else if (rng() < 0.5) {
+      // Lokal søgning omkring den bedste plan hidtil.
+      S = { ...GRUND, rng, exact: rng() < 0.8, rowDP: rng() < 0.4, alpha: rng() < 0.3 ? rng() * 1.6 - 0.5 : 0,
+        beta: rng() < 0.3 ? rng() : 0, noise: rng() * 0.25, candLimit: [90, 150, 250][Math.floor(rng() * 3)],
+        lookahead: rng() < 0.3 ? 2 + Math.floor(rng() * 3) : 0, frieH: rng() < 0.25, subsetMerge: rng() < 0.6 };
+      dornCap = best.dornCap;
+      plan = omlaegPlan(best.plan.raw, inp.maxPerWidth, S, ctx, rng);
+      S = best.S;
+    } else {
+      ({ S, dornCap } = tilfaeldigStrategi(rng, best, grupper));
+    }
+
+    if (!plan) {
+      const units = dornCap ? buildUnits(inp.bandRows, inp.buffer, inp.dorn, dornCap) : baseUnits;
+      plan = planCutting(inp.rollDefs, units, inp.maxPerWidth, S, ctx);
+    }
+    const m = planMetrics(plan.rolls, plan.leftovers);
+    if (cmpMetrics(m, best.m) < 0) best = { plan, m, S, dornCap, iter };
+    yield status(iter + 1);
+  }
+
+  return { plan: best.plan, metrics: best.m, baseMetrics: baseM, iterations: iter, ms: nuMs() - t0, foundAt: best.iter };
+}
+// ---- MOTOR SLUT ----
 
 // ============================================================
 // Lagerliste-upload — automatisk valg af moderruller
@@ -956,11 +1669,75 @@ btnAutoSelect.addEventListener('click', () => {
 });
 
 // ============================================================
+// Indstillinger der huskes i browseren (kun bekvemmelighed — alt virker
+// også uden): min. restbredde, optimeringsniveau, tegnemåde og hvilke
+// indstillingskort der er foldet ud.
+// ============================================================
+const PREF_KEY = 'opsk_indstillinger';
+function loadPrefs() {
+  try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; }
+  catch { return {}; }
+}
+function savePrefs(patch) {
+  try { localStorage.setItem(PREF_KEY, JSON.stringify({ ...loadPrefs(), ...patch })); }
+  catch { /* ikke kritisk */ }
+}
+
+const NIVEAU_NAVN = { hurtig: 'Hurtig', normal: 'Normal', grundig: 'Grundig' };
+let _skala = 'laesbar';
+
+function currentNiveau() {
+  const el = document.querySelector('input[name="opt-niveau"]:checked');
+  return el ? el.value : 'normal';
+}
+
+function initPrefs() {
+  const p = loadPrefs();
+  if (p.minRestW != null && p.minRestW !== '') document.getElementById('min-restbredde').value = p.minRestW;
+  const niv = document.querySelector(`input[name="opt-niveau"][value="${p.niveau || 'normal'}"]`);
+  if (niv) niv.checked = true;
+  if (p.skala === 'skala') _skala = 'skala';
+  const folds = p.folds || {};
+  document.querySelectorAll('details.fold').forEach(d => {
+    if (folds[d.id] != null) d.open = !!folds[d.id];
+    d.addEventListener('toggle', () => savePrefs({ folds: { ...(loadPrefs().folds || {}), [d.id]: d.open } }));
+  });
+}
+
+// Kort opsummering i de sammenfoldede kort, så man kan se indstillingerne
+// uden at folde dem ud.
+function updateFoldSummaries() {
+  const v = id => document.getElementById(id).value.trim();
+  const mm = raw => (raw !== '' && Number.isFinite(Number(raw)) ? fmt(Number(raw)) + ' mm' : '–');
+  const minRest = v('min-restbredde');
+  document.getElementById('sum-tillaeg').textContent =
+    `Buffer ${mm(v('buffer') || '0')} · Maks strimler ${v('max-strimler') || '–'} · Min. rest ${minRest !== '' && Number(minRest) > 0 ? mm(minRest) : '–'}`;
+  document.getElementById('sum-dorn').textContent = document.getElementById('dorn-on').checked
+    ? `Til · maks ${mm(v('dorn-maxbredde'))} · tillæg ${mm(v('dorn-tillaeg') || '0')} · bånd ≤ ${mm(v('dorn-maxlaengde'))}`
+    : 'Fra';
+  document.getElementById('sum-opt').textContent = NIVEAU_NAVN[currentNiveau()];
+  document.querySelectorAll('input[name="opt-niveau"]').forEach(r => r.parentElement.classList.toggle('on', r.checked));
+}
+
+['fold-tillaeg', 'fold-dorn', 'fold-opt'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', updateFoldSummaries);
+  el.addEventListener('change', updateFoldSummaries);
+});
+document.getElementById('min-restbredde').addEventListener('change', () =>
+  savePrefs({ minRestW: document.getElementById('min-restbredde').value.trim() }));
+document.querySelectorAll('input[name="opt-niveau"]').forEach(r =>
+  r.addEventListener('change', () => savePrefs({ niveau: currentNiveau() })));
+
+initPrefs();
+updateFoldSummaries();
+
+// ============================================================
 // Beregn
 // ============================================================
 document.getElementById('btn-calc').addEventListener('click', calculate);
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); calculate(); }
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'radio') { e.preventDefault(); calculate(); }
 });
 
 function showError(list) {
@@ -988,6 +1765,10 @@ function num(id, fallback) {
   return Number.isFinite(v) ? v : fallback;
 }
 
+const m2 = a => (a / 1e6).toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' m²';
+
+let _job = null;
+
 function calculate() {
   clearMessages();
   const errors = [], warnings = [];
@@ -1011,6 +1792,15 @@ function calculate() {
     else maxPerWidth = v;
   }
 
+  const minRestRaw = document.getElementById('min-restbredde').value.trim();
+  let minRestW = 0;
+  if (minRestRaw !== '') {
+    const v = Number(minRestRaw);
+    if (!Number.isFinite(v) || v < 0) errors.push('"Min. restbredde" skal være 0 eller derover, eller tomt.');
+    else minRestW = v;
+  }
+  if (errors.length) document.getElementById('fold-tillaeg').open = true;
+
   const dorn = {
     on: document.getElementById('dorn-on').checked,
     tillaeg: num('dorn-tillaeg', 0),
@@ -1018,9 +1808,11 @@ function calculate() {
     maxL: num('dorn-maxlaengde', 5500)
   };
   if (dorn.on) {
+    const before = errors.length;
     if (!Number.isFinite(dorn.tillaeg) || dorn.tillaeg < 0) errors.push('Skæretillæg pr. dorn skal være 0 eller derover.');
     if (!Number.isFinite(dorn.maxW) || dorn.maxW <= 0) errors.push('Maks bredde pr. dorn skal være > 0.');
     if (!Number.isFinite(dorn.maxL) || dorn.maxL <= 0) errors.push('Maks bånd-længde for dorn skal være > 0.');
+    if (errors.length > before) document.getElementById('fold-dorn').open = true;
   }
   if (errors.length) { showError(errors); return; }
 
@@ -1045,36 +1837,94 @@ function calculate() {
       warnings.push(`Skæretillægget (${fmt(dorn.tillaeg)} mm) fylder hele dorn-bredden (${fmt(effMaxW)} mm) — der pakkes ingen dorne.`);
   }
 
+  const niveau = currentNiveau();
+  const inputs = {
+    rolls: rollRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l, kode: r.kode, beskrivelse: r.beskrivelse })),
+    bands: bandRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l })),
+    buffer, maxPerWidth, dorn, minRestW, niveau
+  };
+
+  // En igangværende beregning afbrydes — den nye erstatter den.
+  if (_job) _job.cancel = true;
+  const job = { cancel: false, stop: false };
+  _job = job;
+
   _uid = 0;
-  const units = buildUnits(bandRes.rows, buffer, dorn);
-  const plan = planCutting(rollDefs, units, maxPerWidth);
+  const gen = optimerOpskaering({ rollDefs, bandRows: bandRes.rows, buffer, dorn, maxPerWidth, minRestW, niveau });
+  let last = null;
+  showProgress(job, null, niveau);
 
-  const totalBands = bandRes.rows.reduce((s, r) => s + r.qty, 0);
-  const placedBands = plan.rolls.reduce((s, r) =>
-    s + r.sections.reduce((s2, sec) =>
-      s2 + sec.cols.reduce((s3, c) => s3 + c.items.reduce((s4, u) => s4 + u.bands.length, 0), 0), 0), 0);
-  const lostBands = plan.leftovers.reduce((s, u) => s + u.bands.length, 0);
+  const finish = res => {
+    if (_job === job) _job = null;
+    hideProgress();
+    const plan = res.plan;
+    const totalBands = bandRes.rows.reduce((s, r) => s + r.qty, 0);
+    const placedBands = plan.rolls.reduce((s, r) =>
+      s + r.sections.reduce((s2, sec) =>
+        s2 + sec.cols.reduce((s3, c) => s3 + c.items.reduce((s4, u) => s4 + u.bands.length, 0), 0), 0), 0);
+    const lostBands = plan.leftovers.reduce((s, u) => s + u.bands.length, 0);
 
-  if (placedBands + lostBands !== totalBands)
-    warnings.push(`Intern kontrol: ${totalBands} bånd ind, ${placedBands + lostBands} bånd ud. Kontrollér planen manuelt.`);
-  if (maxPerWidth && plan.leftovers.length)
-    warnings.push('"Maks strimler pr. båndbredde" kan være årsag til at ikke alt kunne placeres — prøv at hæve eller fjerne begrænsningen.');
-  showWarnings(warnings);
+    const w = warnings.slice();
+    if (placedBands + lostBands !== totalBands)
+      w.push(`Intern kontrol: ${totalBands} bånd ind, ${placedBands + lostBands} bånd ud. Kontrollér planen manuelt.`);
+    if (maxPerWidth && plan.leftovers.length)
+      w.push('"Maks strimler pr. båndbredde" kan være årsag til at ikke alt kunne placeres — prøv at hæve eller fjerne begrænsningen.');
+    showWarnings(w);
 
-  renderResult({
-    plan, buffer, dorn, maxPerWidth,
-    totalBands, placedBands,
-    inputs: {
-      rolls: rollRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l, kode: r.kode, beskrivelse: r.beskrivelse })),
-      bands: bandRes.rows.map(r => ({ qty: r.qty, b: r.b, l: r.l })),
-      buffer, maxPerWidth, dorn
+    renderResult({
+      plan, buffer, dorn, maxPerWidth, minRestW,
+      totalBands, placedBands,
+      opt: { niveau, base: res.baseMetrics, best: res.metrics, iterations: res.iterations, ms: res.ms, stopped: !!res.stopped },
+      inputs
+    });
+  };
+
+  // Optimeringen køres i små bidder, så siden forbliver levende og kan vise
+  // fremdrift — og så "Stop" kan bruge den bedste plan fundet indtil da.
+  const step = () => {
+    if (job.cancel) return;
+    const t = performance.now();
+    while (performance.now() - t < 40) {
+      const s = gen.next();
+      if (s.done) { finish(s.value); return; }
+      last = s.value;
+      if (job.stop) {
+        finish({ plan: last.plan, metrics: last.best, baseMetrics: last.base, iterations: last.iter, ms: last.ms, stopped: true });
+        return;
+      }
     }
-  });
+    showProgress(job, last, niveau);
+    setTimeout(step, 0);
+  };
+  setTimeout(step, 30);
+}
+
+function showProgress(job, st, niveau) {
+  const el = document.getElementById('opt-progress');
+  el.style.display = 'flex';
+  el.querySelector('.op-stop').onclick = () => { job.stop = true; };
+  const frac = st ? Math.min(1, st.iter / st.total) : 0;
+  el.querySelector('.op-bar span').style.width = (frac * 100).toFixed(1) + '%';
+  let txt = `Optimerer (${NIVEAU_NAVN[niveau]}) …`;
+  if (st) {
+    txt += ` ${fmt(st.iter)} varianter afprøvet · spild ${m2(st.best.waste)}`;
+    const gain = st.base.waste > 0 ? 1 - st.best.waste / st.base.waste : 0;
+    if (st.best.lost < st.base.lost) txt += ` · ${fmt(st.base.lost - st.best.lost)} bånd mere placeret`;
+    else if (gain > 0.0005) txt += ` (−${pct(gain)} ift. grundberegning)`;
+  }
+  el.querySelector('.op-text').textContent = txt;
+  document.getElementById('btn-calc').textContent = 'Beregn igen';
+}
+function hideProgress() {
+  document.getElementById('opt-progress').style.display = 'none';
+  document.getElementById('btn-calc').textContent = 'Beregn opskæring';
 }
 
 // ============================================================
 // Beskrivelse af én strimmel — ét sted, brugt af både skærm og udskrift
 // ============================================================
+const sizeKey = u => u.bands[0].b + '×' + u.bands[0].origL;
+
 function describeColumn(col, buffer) {
   const pieces = [];
   let pos = 0;
@@ -1083,7 +1933,7 @@ function describeColumn(col, buffer) {
     pos = to;
     if (u.kind === 'dorn') {
       pieces.push({
-        dorn: true,
+        dorn: true, key: sizeKey(u),
         head: `${u.bands.length} × ${fmt(u.bandW)} × ${fmt(u.origL)} mm på dorn`,
         cut: `Kap ${fmt(u.len)} mm`,
         pos: `pos. ${fmt(from)} – ${fmt(to)} mm`,
@@ -1092,7 +1942,7 @@ function describeColumn(col, buffer) {
       });
     } else {
       pieces.push({
-        dorn: false,
+        dorn: false, key: sizeKey(u),
         head: `${fmt(u.w)} × ${fmt(u.origL)} mm`,
         cut: buffer > 0 ? `Kap ${fmt(u.len)} mm (+${fmt(buffer)})` : `Kap ${fmt(u.len)} mm`,
         pos: `pos. ${fmt(from)} – ${fmt(to)} mm`,
@@ -1111,11 +1961,41 @@ function describeColumn(col, buffer) {
 }
 
 // ============================================================
+// Farver pr. båndmål
+//
+// Hvert båndmål (bredde × længde) får sin egen farve, i den rækkefølge
+// målene står i bånd-listen — samme mål har altid samme farve i tegningen,
+// i tabellen og på arbejdssedlen. Paletten er valideret for farveblindhed
+// (tilstødende par); ud over 6 mål genbruges farverne med et prik- og
+// derefter et stregmønster ovenpå, så to mål aldrig kun adskilles af farve.
+// Teksten står altid ved siden af, så farven er en genvej, ikke den eneste
+// information.
+// ============================================================
+const PALETTE = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#4a3aa7'];
+
+function buildColorMap(inputs) {
+  const map = new Map();
+  for (const r of inputs.bands) {
+    const k = r.b + '×' + r.l;
+    if (map.has(k)) continue;
+    const i = map.size;
+    map.set(k, { c: PALETTE[i % PALETTE.length], tier: Math.min(2, Math.floor(i / PALETTE.length)), b: r.b, l: r.l });
+  }
+  return map;
+}
+const colorOf = (colors, key) => colors.get(key) || { c: '#6C8EA8', tier: 0 };
+const chipHTML = (colors, key) => {
+  const c = colorOf(colors, key);
+  return `<span class="chip t${c.tier}" style="--c:${c.c}"></span>`;
+};
+
+// ============================================================
 // Render — skærm
 // ============================================================
 let _lastPlan = null;
+const _hl = [];
 
-function rollStats(roll, buffer) {
+function rollStats(roll) {
   const cols = roll.sections.reduce((s, sec) => s + sec.cols.length, 0);
   const bands = roll.sections.reduce((s, sec) =>
     s + sec.cols.reduce((s2, c) => s2 + c.items.reduce((s3, u) => s3 + u.bands.length, 0), 0), 0);
@@ -1129,52 +2009,117 @@ function rollStats(roll, buffer) {
   const usedArea = roll.usedLen * roll.w - langRestAreal;
   const restW = roll.langRest ? roll.langRest.w : roll.w;
   const restLen = roll.langRest ? roll.langRest.len : roll.len - roll.usedLen;
-  return { cols, bands, net, usedArea, eff: usedArea > 0 ? net / usedArea : 0, restW, restLen };
+  const rollArea = roll.w * roll.len;
+  const waste = Math.max(0, usedArea - net);
+  return { cols, bands, net, usedArea, waste, rollArea, restArea: restW * restLen, eff: usedArea > 0 ? net / usedArea : 0, restW, restLen };
+}
+
+function optBannerHTML(o) {
+  const a = o.base, b = o.best;
+  const tid = (o.ms / 1000).toLocaleString('da-DK', { maximumFractionDigits: 1 }) + ' s';
+  const bedre = cmpMetrics(b, a) < 0;
+  const stats = [];
+  if (b.lost < a.lost) stats.push(`<span><b>${fmt(a.lost - b.lost)} bånd mere placeret</b></span>`);
+  if (b.rolls < a.rolls) stats.push(`<span>Moderruller <s>${a.rolls}</s> → <b>${b.rolls}</b></span>`);
+  if (a.waste - b.waste > 1) {
+    const gain = a.waste > 0 ? ` (−${pct(1 - b.waste / a.waste)})` : '';
+    stats.push(`<span>Spild <s>${m2(a.waste)}</s> → <b>${m2(b.waste)}</b>${gain}</span>`);
+  } else {
+    stats.push(`<span>Spild <b>${m2(b.waste)}</b></span>`);
+  }
+  if (b.rows !== a.rows) stats.push(`<span>Rækker <s>${a.rows}</s> → <b>${b.rows}</b></span>`);
+  if (b.strips !== a.strips) stats.push(`<span>Strimler <s>${a.strips}</s> → <b>${b.strips}</b></span>`);
+  const head = bedre
+    ? `<b>Optimeret plan</b> — bedste af ${fmt(o.iterations)} afprøvede varianter (${NIVEAU_NAVN[o.niveau]}, ${tid})${o.stopped ? ', stoppet før tid' : ''}.`
+    : `<b>Grundberegningen var allerede den bedste</b> af ${fmt(o.iterations)} afprøvede varianter (${NIVEAU_NAVN[o.niveau]}, ${tid})${o.stopped ? ', stoppet før tid' : ''}.`;
+  return `<div class="opt-banner${bedre ? ' improved' : ''}">
+    <div class="ob-icon" aria-hidden="true">${bedre ? '✓' : 'i'}</div>
+    <div class="ob-text">${head}<div class="ob-stats">${stats.join('')}</div></div>
+  </div>`;
+}
+
+function utilBarHTML(st) {
+  const p = v => st.rollArea > 0 ? v / st.rollArea : 0;
+  const seg = (cls, v) => v > 0 ? `<span class="${cls}" style="flex-grow:${p(v).toFixed(5)}"></span>` : '';
+  return `<div class="util">
+    <div class="util-bar" role="img" aria-label="Bånd ${pct(p(st.net))}, spild ${pct(p(st.waste))}, rest ${pct(p(st.restArea))}">
+      ${seg('u-net', st.net)}${seg('u-waste', st.waste)}${seg('u-rest', st.restArea)}
+    </div>
+    <div class="util-legend">
+      <span><i class="sw sw-net"></i>Bånd <b>${pct(p(st.net))}</b> · ${m2(st.net)}</span>
+      <span><i class="sw sw-waste"></i>Spild <b>${pct(p(st.waste))}</b> · ${m2(st.waste)}</span>
+      <span><i class="sw sw-rest"></i>Rest <b>${pct(p(st.restArea))}</b> · ${m2(st.restArea)}</span>
+    </div>
+  </div>`;
+}
+
+function legendHTML(roll, colors) {
+  const counts = new Map();
+  let hasDorn = false, hasWaste = false;
+  for (const sec of roll.sections) {
+    if (sec.sideRest > EPS) hasWaste = true;
+    for (const c of sec.cols) {
+      if (c.rest > EPS) hasWaste = true;
+      for (const u of c.items) {
+        const k = sizeKey(u);
+        counts.set(k, (counts.get(k) || 0) + u.bands.length);
+        if (u.kind === 'dorn') hasDorn = true;
+      }
+    }
+  }
+  const items = [...colors.keys()].filter(k => counts.has(k)).map(k => {
+    const c = colors.get(k);
+    return `<span class="lg-item">${chipHTML(colors, k)}${fmt(c.b)} × ${fmt(c.l)} mm <em>· ${fmt(counts.get(k))} stk</em></span>`;
+  });
+  if (hasDorn) items.push(`<span class="lg-item"><i class="sw sw-dorn"></i>Dorn (delt i bånd)</span>`);
+  if (hasWaste) items.push(`<span class="lg-item"><i class="sw sw-waste"></i>Spild</span>`);
+  items.push(`<span class="lg-item"><i class="sw sw-rest"></i>Rest til senere brug</span>`);
+  return `<div class="legend">${items.join('')}</div>`;
+}
+
+function skalaNote() {
+  return _skala === 'skala'
+    ? 'Bredde og længde er hver for sig i målestok — rækker og rest står i korrekt forhold til hinanden. Hold musen over (eller tryk på) et felt for detaljer.'
+    : 'Bredden er i målestok. Længden er strakt, så korte rækker kan læses — positionerne står i venstre side. Hold musen over (eller tryk på) et felt for detaljer.';
 }
 
 function renderResult(d) {
   _lastPlan = d;
+  _hl.length = 0;
+  d.colors = buildColorMap(d.inputs);
   const res = document.getElementById('result');
   res.style.display = 'flex';
   res.innerHTML = '';
+
+  if (d.opt) res.insertAdjacentHTML('beforeend', optBannerHTML(d.opt));
 
   // --- Manglende materiale ---
   if (d.plan.leftovers.length) {
     const grouped = new Map();
     for (const u of d.plan.leftovers)
       for (const b of u.bands) {
-        const k = b.b + ' ' + b.origL;
+        const k = b.b + ' ' + b.origL;
         grouped.set(k, { b: b.b, l: b.origL, qty: (grouped.get(k)?.qty || 0) + 1 });
       }
     const warn = document.createElement('div');
-    warn.className = 'card';
-    warn.style.borderColor = 'var(--danger)';
-    warn.style.background = 'var(--danger-bg)';
+    warn.className = 'card card-danger';
     warn.innerHTML = `
-      <h2 style="color:var(--danger);border-color:var(--danger-border)">⚠ Manglende materiale</h2>
-      <p style="font-size:13px;color:var(--danger);margin-bottom:14px">
-        Der er ikke plads til alle bånd på de angivne moderruller. Tilføj flere, bredere eller længere ruller.
-      </p>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace">
-        <thead><tr style="text-align:left;color:#B23A3A">
-          <th style="padding:6px 8px;border-bottom:1px solid var(--danger-border)">Antal</th>
-          <th style="padding:6px 8px;border-bottom:1px solid var(--danger-border)">Bredde</th>
-          <th style="padding:6px 8px;border-bottom:1px solid var(--danger-border)">Længde</th>
-        </tr></thead>
+      <h2>⚠ Manglende materiale</h2>
+      <p class="danger-text">Der er ikke plads til alle bånd på de angivne moderruller. Tilføj flere, bredere eller længere ruller.</p>
+      <table class="mini"><thead><tr><th>Antal</th><th>Bredde</th><th>Længde</th></tr></thead>
         <tbody>${[...grouped.values()].map(g =>
-          `<tr><td style="padding:5px 8px">${fmt(g.qty)} stk</td><td style="padding:5px 8px">${fmt(g.b)} mm</td><td style="padding:5px 8px">${fmt(g.l)} mm</td></tr>`
-        ).join('')}</tbody>
+          `<tr><td>${fmt(g.qty)} stk</td><td>${fmt(g.b)} mm</td><td>${fmt(g.l)} mm</td></tr>`).join('')}</tbody>
       </table>`;
     res.appendChild(warn);
   }
 
   // --- Pr. moderrulle ---
   d.plan.rolls.forEach((roll, ri) => {
-    const st = rollStats(roll, d.buffer);
+    const st = rollStats(roll);
 
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = `<h2>Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm${roll.kode ? ' · ' + esc(roll.kode) : ''}</h2>`;
+    card.innerHTML = `<h2>Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm${roll.kode ? ' · ' + esc(roll.kode) : ''}</h2>` + utilBarHTML(st);
     const sg = document.createElement('div');
     sg.className = 'summary-grid';
     [
@@ -1183,7 +2128,8 @@ function renderResult(d) {
       { lbl: 'Bånd på denne rulle', val: String(st.bands) },
       { lbl: 'Brugt længde', val: `${fmt(roll.usedLen)} mm` },
       { lbl: 'Udnyttelse', val: pct(st.eff) },
-      { lbl: 'Tilbage som moderrulle', val: `${fmt(st.restW)} × ${fmt(st.restLen)} mm`, green: true },
+      { lbl: 'Spild', val: m2(st.waste) },
+      { lbl: 'Tilbage som moderrulle', val: st.restLen > EPS ? `${fmt(st.restW)} × ${fmt(st.restLen)} mm` : 'Ingen', green: st.restLen > EPS },
     ].forEach(i => {
       const el = document.createElement('div');
       el.className = 'sum-card' + (i.green ? ' green' : '');
@@ -1193,43 +2139,65 @@ function renderResult(d) {
     card.appendChild(sg);
     res.appendChild(card);
 
-    const planCard = document.createElement('div');
-    planCard.className = 'card';
-    planCard.innerHTML = `<h2>Opskæringsplan — moderrulle ${ri + 1}</h2>` + sectionsHTML(roll, d.buffer);
-    res.appendChild(planCard);
-
     const visCard = document.createElement('div');
     visCard.className = 'card';
-    visCard.innerHTML = `<h2>Visuel oversigt — moderrulle ${ri + 1}</h2>
-      <div class="canvas-wrap"><canvas id="vis-${ri}"></canvas></div>
-      <div class="canvas-note">Bredden er i målestok. Længden er skaleret for at kunne vises — rækkerne er indbyrdes i korrekt forhold.</div>`;
+    visCard.innerHTML = `<div class="card-head"><h2>Visuel oversigt — moderrulle ${ri + 1}</h2>
+        <div class="seg seg-skala" role="group" aria-label="Længdeskala">
+          <button type="button" data-skala="laesbar">Læsbar</button><button type="button" data-skala="skala">Målestok</button>
+        </div></div>
+      <div class="canvas-wrap"><canvas id="vis-${ri}"></canvas><div class="vis-tip" role="tooltip"></div></div>
+      ${legendHTML(roll, d.colors)}
+      <div class="canvas-note">${skalaNote()}</div>`;
     res.appendChild(visCard);
+
+    const planCard = document.createElement('div');
+    planCard.className = 'card';
+    planCard.innerHTML = `<h2>Opskæringsplan — moderrulle ${ri + 1}</h2>` + sectionsHTML(roll, d.buffer, { ri, colors: d.colors });
+    res.appendChild(planCard);
+    wirePlanTable(planCard, ri);
   });
 
   if (d.plan.unusedRolls.length) {
     const c = document.createElement('div');
     c.className = 'card';
-    c.innerHTML = `<h2>Urørte moderruller</h2><div style="font-family:'DM Mono',monospace;font-size:13px;line-height:1.8">` +
+    c.innerHTML = `<h2>Urørte moderruller</h2><div class="mono-list">` +
       d.plan.unusedRolls.map(r => `${fmt(r.w)} × ${fmt(r.len)} mm${r.kode ? ' · ' + esc(r.kode) : ''} — ikke brugt`).join('<br>') + `</div>`;
     res.appendChild(c);
   }
 
-  const printBtn = document.createElement('button');
-  printBtn.className = 'btn-print';
-  printBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M3 11H1V6h13v5h-2M3 9h9v5H3z" stroke="white" stroke-width="1.4" stroke-linejoin="round"/></svg> Udskriv arbejdsseddel`;
-  printBtn.addEventListener('click', () => openPrintWindow(d));
-  res.appendChild(printBtn);
+  const actions = document.createElement('div');
+  actions.className = 'result-actions';
+  actions.innerHTML = `
+    <button class="btn-print" type="button" id="btn-print"><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M3 11H1V6h13v5h-2M3 9h9v5H3z" stroke="white" stroke-width="1.4" stroke-linejoin="round"/></svg> Udskriv arbejdsseddel</button>
+    ${d.plan.rolls.length ? `<button class="btn-step" type="button" id="btn-step"><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 3h11M2 7.5h7M2 12h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Skæretilstand — trin for trin</button>` : ''}`;
+  res.appendChild(actions);
+  actions.querySelector('#btn-print').addEventListener('click', () => openPrintWindow(d));
+  const stepBtn = actions.querySelector('#btn-step');
+  if (stepBtn) stepBtn.addEventListener('click', () => openStepMode(d));
 
-  d.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
+  res.querySelectorAll('.seg-skala button').forEach(b => b.addEventListener('click', () => setSkala(b.dataset.skala)));
+  updateSkalaButtons();
+  d.plan.rolls.forEach((roll, ri) => { drawRoll(ri); wireCanvas(document.getElementById(`vis-${ri}`), ri); });
 
   saveToHistory(d);
   res.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function piecesHTML(desc, buffer) {
+function setSkala(v) {
+  _skala = v === 'skala' ? 'skala' : 'laesbar';
+  savePrefs({ skala: _skala });
+  updateSkalaButtons();
+  document.querySelectorAll('#result .canvas-note').forEach(n => { n.textContent = skalaNote(); });
+  if (_lastPlan) _lastPlan.plan.rolls.forEach((_, ri) => drawRoll(ri));
+}
+function updateSkalaButtons() {
+  document.querySelectorAll('.seg-skala button').forEach(b => b.classList.toggle('on', b.dataset.skala === _skala));
+}
+
+function piecesHTML(desc, buffer, colors) {
   let html = '';
   desc.pieces.forEach((p, i) => {
-    html += `<div class="piece">${desc.pieces.length > 1 ? `<b>${i + 1}.</b> ` : ''}` +
+    html += `<div class="piece">${colors ? chipHTML(colors, p.key) : ''}${desc.pieces.length > 1 ? `<b>${i + 1}.</b> ` : ''}` +
       `${p.dorn ? '<span class="badge">DORN</span>' : ''}<b>${esc(p.head)}</b> — ${esc(p.cut)}` +
       `${desc.pieces.length > 1 ? ` <span class="pos">· ${esc(p.pos)}</span>` : ''}</div>`;
     if (p.action) html += `<div class="action">→ ${esc(p.action)}</div>`;
@@ -1238,7 +2206,10 @@ function piecesHTML(desc, buffer) {
   return html;
 }
 
-function sectionsHTML(roll, buffer) {
+// opt: { ri, colors } — ri bruges til at koble tabelrækker til tegningen.
+function sectionsHTML(roll, buffer, opt) {
+  opt = opt || {};
+  const ri = opt.ri != null ? opt.ri : '';
   let html = '', pos = 0;
   roll.sections.forEach((sec, si) => {
     const from = pos, to = pos + sec.len;
@@ -1246,11 +2217,11 @@ function sectionsHTML(roll, buffer) {
     let rows = '';
     sec.cols.forEach((col, ci) => {
       const desc = describeColumn(col, buffer);
-      rows += `<tr class="${desc.isDorn ? 'dorn' : ''}">
+      rows += `<tr class="${desc.isDorn ? 'dorn' : ''}" data-ri="${ri}" data-si="${si}" data-ci="${ci}">
         <td class="strip-no">${ci + 1}</td>
-        <td>${fmt(desc.from)} – ${fmt(desc.to)}</td>
-        <td>${fmt(desc.width)} mm</td>
-        <td>${piecesHTML(desc, buffer)}</td>
+        <td class="c-pos">${fmt(desc.from)} – ${fmt(desc.to)}</td>
+        <td class="c-w">${fmt(desc.width)} mm</td>
+        <td class="c-content">${piecesHTML(desc, buffer, opt.colors)}</td>
       </tr>`;
     });
     // Er dette den sidste række, og har forlaengSidsteRaekkeForLaengsteRest
@@ -1261,11 +2232,11 @@ function sectionsHTML(roll, buffer) {
     const erBevaretRest = si === roll.sections.length - 1 && !!roll.langRest;
     if (sec.sideRest > EPS)
       rows += erBevaretRest
-        ? `<tr class="langrest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Rest til senere brug</td></tr>`
-        : `<tr class="siderest"><td>—</td><td>${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td>${fmt(sec.sideRest)} mm</td><td>Siderest, spild</td></tr>`;
+        ? `<tr class="langrest" data-ri="${ri}" data-si="${si}" data-ci="rest"><td>—</td><td class="c-pos">${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td class="c-w">${fmt(sec.sideRest)} mm</td><td class="c-content">Rest til senere brug</td></tr>`
+        : `<tr class="siderest" data-ri="${ri}" data-si="${si}" data-ci="rest"><td>—</td><td class="c-pos">${fmt(sec.widthUsed)} – ${fmt(roll.w)}</td><td class="c-w">${fmt(sec.sideRest)} mm</td><td class="c-content">Siderest, spild</td></tr>`;
 
     const strimlerLbl = sec.cols.length === 1 ? 'strimmel' : 'strimler';
-    html += `<div class="section">
+    html += `<div class="section" data-ri="${ri}" data-si="${si}">
       <div class="sec-head">
         <span class="sec-num">Række ${si + 1}</span>
         <span class="sec-title">Kap ${fmt(sec.len)} mm</span>
@@ -1280,9 +2251,117 @@ function sectionsHTML(roll, buffer) {
   return html;
 }
 
+// Tabel ↔ tegning: hold musen over en tabelrække, og strimlen fremhæves i
+// tegningen (og omvendt, se wireCanvas).
+function wirePlanTable(card, ri) {
+  card.addEventListener('mouseover', e => {
+    const tr = e.target.closest('tr[data-si]');
+    if (tr) { setHighlight(ri, { si: +tr.dataset.si, ci: tr.dataset.ci === 'rest' ? 'rest' : +tr.dataset.ci }); return; }
+    const sec = e.target.closest('.section[data-si]');
+    if (sec) setHighlight(ri, { si: +sec.dataset.si, ci: null });
+  });
+  card.addEventListener('mouseleave', () => setHighlight(ri, null));
+}
+
+function setHighlight(ri, hl) {
+  const cur = _hl[ri] || null;
+  if ((cur && hl && cur.si === hl.si && cur.ci === hl.ci) || (!cur && !hl)) return;
+  _hl[ri] = hl;
+  document.querySelectorAll(`#result tr.hl[data-ri="${ri}"]`).forEach(tr => tr.classList.remove('hl'));
+  if (hl) {
+    const sel = hl.ci == null ? `#result tr[data-ri="${ri}"][data-si="${hl.si}"]` : `#result tr[data-ri="${ri}"][data-si="${hl.si}"][data-ci="${hl.ci}"]`;
+    document.querySelectorAll(sel).forEach(tr => tr.classList.add('hl'));
+  }
+  drawRoll(ri);
+}
+
+function drawRoll(ri) {
+  const d = _lastPlan;
+  const canvas = document.getElementById(`vis-${ri}`);
+  if (!d || !canvas) return;
+  const wrap = canvas.parentElement, cs = getComputedStyle(wrap);
+  const wrapW = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  renderRollCanvas(canvas, d.plan.rolls[ri], {
+    W: Math.max(300, Math.min(840, wrapW)), mode: _skala, colors: d.colors, highlight: _hl[ri] || null, buffer: d.buffer
+  });
+}
+
+function tipHTML(h, roll, buffer) {
+  const L = (a, b) => `<div class="tip-row"><span>${a}</span><b>${b}</b></div>`;
+  const where = h.si != null ? `Række ${h.si + 1}${h.ci != null && h.ci !== 'rest' ? ' · strimmel ' + (h.ci + 1) : ''}` : '';
+  if (h.t === 'piece') {
+    const u = h.u;
+    const head = u.kind === 'dorn'
+      ? `<span class="badge">DORN</span>${u.bands.length} × ${fmt(u.bandW)} × ${fmt(u.origL)} mm`
+      : `${fmt(u.w)} × ${fmt(u.origL)} mm`;
+    return `<div class="tip-where">${where}</div><div class="tip-head">${head}</div>` +
+      L('Kaplængde', `${fmt(u.len)} mm${buffer > 0 ? ` (+${fmt(buffer)})` : ''}`) +
+      L('Strimmelbredde', `${fmt(u.w)} mm`) +
+      (u.kind === 'dorn' ? L('Deles i', `${u.bands.length} bånd à ${fmt(u.bandW)} mm`) : '') +
+      L('Pos. i strimlen', `${fmt(h.from)} – ${fmt(h.from + u.len)} mm`) +
+      L('Knive', `${fmt(h.x0)} – ${fmt(h.x0 + u.w)} mm`);
+  }
+  if (h.t === 'lrest') return `<div class="tip-where">${where}</div><div class="tip-head">Længderest — spild</div>` + L('Størrelse', `${fmt(h.mmW)} × ${fmt(h.len)} mm`);
+  if (h.t === 'siderest') return `<div class="tip-where">${where}</div><div class="tip-head">Siderest — spild</div>` + L('Størrelse', `${fmt(h.mmW)} × ${fmt(h.len)} mm`);
+  if (h.t === 'langrest') return `<div class="tip-where">${where}</div><div class="tip-head tip-green">Rest til senere brug</div>` + L('Størrelse', `${fmt(h.mmW)} × ${fmt(h.len)} mm`);
+  if (h.t === 'tail') return `<div class="tip-head tip-green">Rest som moderrulle</div>` + L('Størrelse', `${fmt(roll.w)} × ${fmt(h.len)} mm`);
+  return '';
+}
+
+function wireCanvas(canvas, ri) {
+  const wrap = canvas.parentElement;
+  const tip = wrap.querySelector('.vis-tip');
+  const hitAt = ev => {
+    const r = canvas.getBoundingClientRect();
+    const x = ev.clientX - r.left, y = ev.clientY - r.top;
+    let h = null;
+    for (const it of canvas._hits || []) if (x >= it.x && x <= it.x + it.w && y >= it.y && y <= it.y + it.h) h = it;
+    return h;
+  };
+  const show = (ev, h) => {
+    if (!h) { tip.style.display = 'none'; return; }
+    tip.innerHTML = tipHTML(h, _lastPlan.plan.rolls[ri], _lastPlan.buffer);
+    tip.style.display = 'block';
+    const wr = wrap.getBoundingClientRect();
+    let left = ev.clientX - wr.left + wrap.scrollLeft + 14;
+    let top = ev.clientY - wr.top + 14;
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    if (left + tw > wrap.scrollLeft + wrap.clientWidth - 4) left = ev.clientX - wr.left + wrap.scrollLeft - tw - 14;
+    if (top + th > wrap.clientHeight - 4) top = Math.max(4, ev.clientY - wr.top - th - 14);
+    tip.style.left = Math.max(4, left) + 'px';
+    tip.style.top = top + 'px';
+  };
+  canvas.addEventListener('mousemove', ev => {
+    const h = hitAt(ev);
+    show(ev, h);
+    setHighlight(ri, h && h.si != null ? { si: h.si, ci: h.ci } : null);
+    canvas.style.cursor = h && h.si != null ? 'pointer' : 'default';
+  });
+  canvas.addEventListener('mouseleave', () => { tip.style.display = 'none'; setHighlight(ri, null); });
+  // Klik (eller tryk på en touchskærm): vis detaljer og find rækken i planen.
+  canvas.addEventListener('click', ev => {
+    const h = hitAt(ev);
+    show(ev, h);
+    if (!h || h.si == null) return;
+    setHighlight(ri, { si: h.si, ci: h.ci });
+    const sel = h.ci == null ? `tr[data-ri="${ri}"][data-si="${h.si}"]` : `tr[data-ri="${ri}"][data-si="${h.si}"][data-ci="${h.ci}"]`;
+    const tr = document.querySelector('#result ' + sel);
+    if (tr && ev.pointerType !== 'touch' && !matchMedia('(pointer:coarse)').matches) {
+      tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      tr.classList.remove('flash'); void tr.offsetWidth; tr.classList.add('flash');
+    }
+  });
+}
+
 // ============================================================
 // Udskrift
 // ============================================================
+function rollImageURL(roll, d) {
+  const c = document.createElement('canvas');
+  renderRollCanvas(c, roll, { W: 680, mode: 'laesbar', colors: d.colors, highlight: null, dpr: 2, buffer: d.buffer });
+  try { return c.toDataURL('image/png'); } catch { return ''; }
+}
+
 function openPrintWindow(d) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -1294,7 +2373,7 @@ function openPrintWindow(d) {
     const grouped = new Map();
     for (const u of d.plan.leftovers)
       for (const b of u.bands) {
-        const k = b.b + ' ' + b.origL;
+        const k = b.b + ' ' + b.origL;
         grouped.set(k, { b: b.b, l: b.origL, qty: (grouped.get(k)?.qty || 0) + 1 });
       }
     body += `<div class="unplaced">
@@ -1305,17 +2384,23 @@ function openPrintWindow(d) {
   }
 
   d.plan.rolls.forEach((roll, ri) => {
-    const st = rollStats(roll, d.buffer);
+    const st = rollStats(roll);
     body += `<div class="roll-header">Moderrulle ${ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm${roll.kode ? ' · ' + esc(roll.kode) : ''}
-      <span class="roll-sub">${roll.sections.length} rækker · ${st.cols} strimler · ${st.bands} bånd · brugt ${fmt(roll.usedLen)} mm · rest ${fmt(st.restW)} × ${fmt(st.restLen)} mm</span></div>`;
-    body += sectionsHTML(roll, d.buffer);
+      <span class="roll-sub">${roll.sections.length} rækker · ${st.cols} strimler · ${st.bands} bånd · brugt ${fmt(roll.usedLen)} mm · spild ${m2(st.waste)} · rest ${st.restLen > EPS ? `${fmt(st.restW)} × ${fmt(st.restLen)} mm` : 'ingen'}</span></div>`;
+    const img = rollImageURL(roll, d);
+    if (img) body += `<div class="roll-vis"><img src="${img}" alt="Tegning af moderrulle ${ri + 1}">${legendHTML(roll, d.colors)}</div>`;
+    body += sectionsHTML(roll, d.buffer, { colors: d.colors });
   });
+
+  let optLine = '';
+  if (d.opt && cmpMetrics(d.opt.best, d.opt.base) < 0 && d.opt.base.waste > d.opt.best.waste + 1)
+    optLine = ` &nbsp;|&nbsp; Optimeret: spild ${m2(d.opt.best.waste)} (−${pct(1 - d.opt.best.waste / Math.max(d.opt.base.waste, EPS))})`;
 
   const html = `<!DOCTYPE html><html lang="da"><head>
 <meta charset="UTF-8"><title>Arbejdsseddel — opskæring</title>
 <style>
 @page{size:A4 portrait;margin:12mm}
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{font-family:Arial,Helvetica,sans-serif;font-size:10.5px;color:#17324A;background:#fff}
 .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #17324A;padding-bottom:8px;margin-bottom:12px}
 .hdr-title{font-size:16px;font-weight:700}
@@ -1323,6 +2408,17 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10.5px;color:#17324A;backg
 .hdr-meta{text-align:right;font-size:9px;color:#666;font-family:monospace}
 .roll-header{font-size:12.5px;font-weight:700;color:#0B4F79;background:#E5F1FA;padding:6px 10px;border-radius:4px;margin:12px 0 8px;page-break-after:avoid}
 .roll-sub{display:block;font-size:8.5px;font-weight:400;color:#456;font-family:monospace;margin-top:2px}
+.roll-vis{margin:0 0 10px;page-break-inside:avoid}
+.roll-vis img{display:block;max-width:100%;max-height:120mm;width:auto;height:auto;margin-bottom:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:8.5px;font-family:monospace;color:#456}
+.legend em{font-style:normal;color:#889}
+.chip{display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--c);vertical-align:-1px;margin-right:5px}
+.chip.t1{background-image:radial-gradient(rgba(255,255,255,.95) 1px,transparent 1.4px);background-size:4px 4px}
+.chip.t2{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.9) 0 1px,transparent 1px 4px)}
+.sw{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+.sw-waste{background:repeating-linear-gradient(135deg,#B5C4D0 0 1px,#F4F7FA 1px 4px);border:1px solid #B5C4D0}
+.sw-rest{background:#E6F7EC;border:1px solid #2E9E52}
+.sw-dorn{background:repeating-linear-gradient(90deg,#6C8EA8 0 3px,#fff 3px 4px)}
 .section{border:1px solid #ccd;border-radius:4px;margin-bottom:10px;page-break-inside:avoid;overflow:hidden}
 .sec-head{background:#F1F6FA;padding:5px 9px}
 .sec-num{background:#0B4F79;color:#fff;font-family:monospace;font-size:9px;border-radius:3px;padding:2px 6px;margin-right:7px}
@@ -1348,7 +2444,7 @@ table.cut tr.langrest td{background:#E6F7EC;color:#2E9E52;font-style:italic}
 <div class="hdr">
   <div>
     <div class="hdr-title">Arbejdsseddel — opskæring</div>
-    <div class="hdr-sub">${d.plan.rolls.length} moderrulle(r) &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm${d.dorn.on ? ' &nbsp;|&nbsp; Dorn: maks ' + fmt(d.dorn.maxW) + ' mm, tillæg ' + fmt(d.dorn.tillaeg) + ' mm' : ' &nbsp;|&nbsp; Dorn: fra'}</div>
+    <div class="hdr-sub">${d.plan.rolls.length} moderrulle(r) &nbsp;|&nbsp; Buffer: ${fmt(d.buffer)} mm${d.dorn.on ? ' &nbsp;|&nbsp; Dorn: maks ' + fmt(d.dorn.maxW) + ' mm, tillæg ' + fmt(d.dorn.tillaeg) + ' mm' : ' &nbsp;|&nbsp; Dorn: fra'}${d.minRestW > 0 ? ' &nbsp;|&nbsp; Min. rest: ' + fmt(d.minRestW) + ' mm' : ''}${optLine}</div>
   </div>
   <div class="hdr-meta">Dato: ${dateStr}<br>Kl. ${timeStr}</div>
 </div>
@@ -1363,163 +2459,364 @@ ${body}
   w.document.close();
   w.focus();
   const go = () => { try { w.print(); } catch (e) { /* brugeren kan printe manuelt */ } };
-  if (w.document.readyState === 'complete') setTimeout(go, 120); else w.addEventListener('load', () => setTimeout(go, 120));
+  if (w.document.readyState === 'complete') setTimeout(go, 250); else w.addEventListener('load', () => setTimeout(go, 250));
 }
 
 // ============================================================
-// Canvas
+// Canvas — tegning af én moderrulle
+//
+// Bruges både på skærmen, i skæretilstanden og (som billede) på
+// arbejdssedlen. Hvert emne tegnes i sit båndmåls farve med 1 px
+// mellemrum, dorne med hvide delelinjer for hvert bånd, spild skraveret og
+// bevarede rester i grønt. Alle felter registreres i canvas._hits, så
+// musen/fingeren kan slå detaljerne op (wireCanvas).
+//
+// o: { W, mode: 'laesbar'|'skala', colors, highlight: {si, ci}|null, dpr, buffer }
 // ============================================================
 const clamp = (lo, v, hi) => Math.max(lo, Math.min(hi, v));
-const hexA = (hex, a) => `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`;
-const COLORS = ['#C94F1E','#1565C0','#2E7D32','#6A1B9A','#00695C','#E65100','#0277BD','#558B2F'];
+const CV = { surface: '#EEF4F8', frame: '#9DB4C6', text: '#17324A', muted: '#5F7C90', cut: '#0B4F79',
+  wasteBg: '#F4F7FA', wasteLine: '#B5C4D0', rest: '#2E9E52', restBg: '#E6F7EC', hl: '#17324A' };
 
-function drawRollCanvas(roll, rollIndex) {
-  const canvas = document.getElementById(`vis-${rollIndex}`);
-  if (!canvas) return;
-  const wrapW = canvas.parentElement.clientWidth - 28;
-  const W = Math.max(320, Math.min(820, wrapW));
-  const scaleX = W / roll.w;
+function patternCanvas(draw) {
+  const p = document.createElement('canvas');
+  p.width = p.height = 8;
+  draw(p.getContext('2d'));
+  return p;
+}
+const _pat = {};
+function getPatterns() {
+  if (_pat.waste) return _pat;
+  _pat.waste = patternCanvas(g => {
+    g.fillStyle = CV.wasteBg; g.fillRect(0, 0, 8, 8);
+    g.strokeStyle = CV.wasteLine; g.lineWidth = 1.1;
+    g.beginPath(); g.moveTo(-2, 2); g.lineTo(2, -2); g.moveTo(-2, 10); g.lineTo(10, -2); g.moveTo(6, 10); g.lineTo(10, 6); g.stroke();
+  });
+  _pat.dots = patternCanvas(g => {
+    g.fillStyle = 'rgba(255,255,255,.85)';
+    for (const [x, y] of [[2, 2], [6, 6]]) { g.beginPath(); g.arc(x, y, 1.1, 0, Math.PI * 2); g.fill(); }
+  });
+  _pat.lines = patternCanvas(g => {
+    g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(-2, 10); g.lineTo(10, -2); g.moveTo(-2, 2); g.lineTo(2, -2); g.moveTo(6, 10); g.lineTo(10, 6); g.stroke();
+  });
+  return _pat;
+}
 
+// Mørk tekst på lyse farver (gul, pink), hvid på mørke.
+function inkOn(hex) {
+  const c = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  const L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  return L > 0.3 ? '#17324A' : '#FFFFFF';
+}
+
+function renderRollCanvas(canvas, roll, o) {
+  const RL = 62, PAD_R = 6, TOP = 8, AXIS_H = 24;
+  const W = o.W;
+  const DW = W - RL - PAD_R;
+  const sx = DW / roll.w;
+  const X0 = RL;
   const n = roll.sections.length;
-  const MIN_ROW = 40, AXIS_H = 18;
-  // Er resten allerede vist grønt inde i sidste række (roll.langRest), er der
-  // ingen selvstændig hale at reservere plads til hernede.
-  const REST_H = roll.langRest ? 0 : 40;
-  const bodyH = Math.max(200, MIN_ROW * n + 140);
-  const sectionH = roll.sections.map(s =>
-    MIN_ROW + (bodyH - MIN_ROW * n) * (s.len / Math.max(roll.usedLen, EPS)));
-  const H = Math.round(sectionH.reduce((a, b) => a + b, 0)) + REST_H + AXIS_H;
+  const tail = roll.langRest ? 0 : Math.max(0, roll.len - roll.usedLen);
 
-  const dpr = window.devicePixelRatio || 1;
+  let rowH, tailH;
+  if (o.mode === 'skala') {
+    const body = clamp(320, DW * 0.95, 680);
+    const py = body / roll.len;
+    rowH = roll.sections.map(s => s.len * py);
+    tailH = tail * py;
+  } else {
+    const MIN_ROW = 46;
+    const bodyH = Math.max(210, MIN_ROW * n + 150);
+    rowH = roll.sections.map(s => MIN_ROW + (bodyH - MIN_ROW * n) * (s.len / Math.max(roll.usedLen, EPS)));
+    tailH = tail > EPS ? 46 : 0;
+  }
+  const bodyTotal = rowH.reduce((a, b) => a + b, 0) + tailH;
+  const H = Math.round(TOP + bodyTotal + AXIS_H);
+
+  const dpr = o.dpr || window.devicePixelRatio || 1;
   canvas.width = Math.round(W * dpr);
   canvas.height = Math.round(H * dpr);
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
   const ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const pat = getPatterns();
+  const P = k => ctx.createPattern(pat[k], 'repeat');
+  const wastePat = P('waste'), dotsPat = P('dots'), linesPat = P('lines');
+  const hits = [];
+  const rowY = [];
 
-  ctx.fillStyle = '#EFEAE2';
-  ctx.fillRect(0, 0, W, H - AXIS_H);
+  ctx.fillStyle = CV.surface;
+  ctx.fillRect(X0, TOP, DW, bodyTotal);
 
-  let y = 0, colorIdx = 0;
+  const label = (txt, x, y, font, color, align) => {
+    ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(txt, x, y);
+  };
+
+  let y = TOP, pos = 0, lastRulerY = -99;
   roll.sections.forEach((sec, si) => {
-    const rowH = sectionH[si];
-    const scaleY = rowH / sec.len;
+    const rh = rowH[si];
+    rowY.push(y);
+    const sy = rh / sec.len;
+    const erBevaret = si === n - 1 && !!roll.langRest;
 
-    sec.cols.forEach(col => {
-      const x = col.x * scaleX, cw = col.w * scaleX;
-      const c = COLORS[colorIdx++ % COLORS.length];
-      const isDorn = col.items.some(u => u.kind === 'dorn');
-
-      // Ubrugt længde bagest i strimlen
-      ctx.fillStyle = hexA(c, 0.13);
-      ctx.fillRect(x, y, cw, rowH);
-      // Fyldt del
-      ctx.fillStyle = hexA(c, isDorn ? 0.80 : 0.62);
-      ctx.fillRect(x, y, cw, col.filled * scaleY);
-
-      // Skillelinjer mellem emnerne i strimlen
+    sec.cols.forEach((col, ci) => {
+      const x = X0 + col.x * sx, cw = col.w * sx;
+      const gx = cw > 4 ? 0.75 : 0;
       let p = 0;
-      ctx.strokeStyle = 'rgba(255,255,255,.75)';
-      ctx.lineWidth = 1;
-      col.items.forEach((u, i) => {
+      col.items.forEach((u, pi) => {
+        const py = y + p * sy, ph = u.len * sy;
+        const from = p;
         p += u.len;
-        if (i < col.items.length - 1) {
-          ctx.beginPath();
-          ctx.moveTo(x, y + p * scaleY); ctx.lineTo(x + cw, y + p * scaleY); ctx.stroke();
+        const ci2 = colorOf(o.colors, sizeKey(u));
+        const gy = ph > 4 ? 0.75 : 0;
+        const rx = x + gx, ry = py + gy, rw = Math.max(0.5, cw - 2 * gx), rhh = Math.max(0.5, ph - 2 * gy);
+        ctx.fillStyle = ci2.c;
+        ctx.fillRect(rx, ry, rw, rhh);
+        if (ci2.tier === 1) { ctx.fillStyle = dotsPat; ctx.fillRect(rx, ry, rw, rhh); }
+        if (ci2.tier === 2) { ctx.fillStyle = linesPat; ctx.fillRect(rx, ry, rw, rhh); }
+        if (u.kind === 'dorn') {
+          // Hvide delelinjer: hvor dornen bagefter skæres op i de enkelte bånd.
+          ctx.strokeStyle = 'rgba(255,255,255,.9)';
+          ctx.lineWidth = 1;
+          for (let k = 1; k < u.bands.length; k++) {
+            const bx = Math.round(x + k * u.bandW * sx) + 0.5;
+            ctx.beginPath(); ctx.moveTo(bx, ry); ctx.lineTo(bx, ry + rhh); ctx.stroke();
+          }
+          if (u.tillaeg > 0) {
+            const tx = x + u.bands.length * u.bandW * sx;
+            ctx.fillStyle = 'rgba(255,255,255,.55)';
+            ctx.fillRect(tx, ry, Math.max(0, x + cw - gx - tx), rhh);
+          }
+        }
+        hits.push({ t: 'piece', x, y: py, w: cw, h: ph, si, ci, pi, u, from, x0: col.x });
+
+        // Mål direkte på feltet, når der er plads — ellers i værktøjstippet.
+        if (cw >= 30 && ph >= 15) {
+          const ink = inkOn(ci2.c);
+          const fs = clamp(8, cw / 6, 12);
+          const cy = py + ph / 2;
+          const topTxt = u.kind === 'dorn' ? `${u.bands.length}×${fmt(u.bandW)}` : fmt(u.w);
+          if (ph >= 30 && cw >= 38) {
+            label(topTxt, x + cw / 2, cy - fs * 0.6, `600 ${fs}px Inter,sans-serif`, ink);
+            label(fmt(u.len), x + cw / 2, cy + fs * 0.6, `${clamp(7, fs - 1, 11)}px 'DM Mono',monospace`, ink);
+          } else {
+            label(fmt(u.len), x + cw / 2, cy, `${clamp(7, fs - 1, 11)}px 'DM Mono',monospace`, ink);
+          }
         }
       });
 
-      ctx.strokeStyle = hexA(c, 0.9);
-      ctx.strokeRect(x + 0.5, y + 0.5, cw - 1, col.filled * scaleY - 1);
-
-      if (cw >= 26 && col.filled * scaleY >= 20) {
-        ctx.save();
-        const fs = clamp(8, cw / 5.5, 12);
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const cy = y + (col.filled * scaleY) / 2;
-        ctx.font = `600 ${fs}px Inter,sans-serif`;
-        ctx.fillText(fmt(col.w), x + cw / 2, cy - fs * 0.62);
-        ctx.font = `${clamp(7, cw / 7, 10)}px 'DM Mono',monospace`;
-        ctx.fillText(fmt(col.filled), x + cw / 2, cy + fs * 0.62);
-        if (isDorn && cw >= 44 && col.filled * scaleY >= fs * 4.4) {
-          ctx.font = `700 8px Inter,sans-serif`;
-          ctx.fillText('DORN', x + cw / 2, cy + fs * 1.8);
-        }
-        ctx.restore();
+      // Længderest bagest i strimlen — spild.
+      if (col.rest > EPS) {
+        const ry = y + col.filled * sy, rr = col.rest * sy;
+        ctx.fillStyle = wastePat;
+        ctx.fillRect(x + gx, ry, Math.max(0.5, cw - 2 * gx), rr);
+        hits.push({ t: 'lrest', x, y: ry, w: cw, h: rr, si, ci, mmW: col.w, len: col.rest });
       }
     });
 
+    // Siderest: spild — medmindre det er rullens bevarede rest (sidste række
+    // strukket ud af forlaengSidsteRaekkeForLaengsteRest), som er grøn.
     if (sec.sideRest > EPS) {
-      // Sidste række strukket ud af forlaengSidsteRaekkeForLaengsteRest: dens
-      // siderest er den bevarede rest, ikke spild — tegnes grøn som "Tilbage
-      // som moderrulle" i stedet for grå, ellers ser den bevarede rest ud til
-      // at være kasseret. Se rollStats/sectionsHTML for samme skelnen.
-      const erBevaretRest = si === roll.sections.length - 1 && !!roll.langRest;
-      const x = sec.widthUsed * scaleX, rw = sec.sideRest * scaleX;
-      ctx.fillStyle = erBevaretRest ? 'rgba(46,158,82,0.16)' : 'rgba(150,140,130,0.22)';
-      ctx.fillRect(x, y, rw, rowH);
-      if (rw >= 46 && rowH >= 16) {
-        ctx.save();
-        ctx.font = erBevaretRest ? '600 9px Inter,sans-serif' : '9px Inter,sans-serif';
-        ctx.fillStyle = erBevaretRest ? '#2E9E52' : '#7A7268';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText((erBevaretRest ? 'Rest ' : 'Siderest ') + fmt(sec.sideRest), x + rw / 2, y + rowH / 2);
-        ctx.restore();
+      const x = X0 + sec.widthUsed * sx, rw = sec.sideRest * sx;
+      if (erBevaret) {
+        ctx.fillStyle = CV.restBg; ctx.fillRect(x, y, rw, rh);
+        ctx.strokeStyle = CV.rest; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+        ctx.strokeRect(x + 1, y + 1, rw - 2, rh - 2); ctx.setLineDash([]);
+      } else {
+        ctx.fillStyle = wastePat; ctx.fillRect(x, y, rw, rh);
       }
+      if (rw >= 46 && rh >= 16) {
+        label(erBevaret ? 'Rest ' + fmt(sec.sideRest) : 'Spild', x + rw / 2, y + rh / 2,
+          erBevaret ? '600 10px Inter,sans-serif' : '9px Inter,sans-serif', erBevaret ? CV.rest : CV.muted);
+      }
+      hits.push({ t: erBevaret ? 'langrest' : 'siderest', x, y, w: rw, h: rh, si, ci: 'rest', mmW: sec.sideRest, len: sec.len });
     }
 
-    // Tværsnit
+    // Tværsnit mellem rækkerne.
     if (si > 0) {
-      ctx.strokeStyle = '#5F7C90';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([5, 3]);
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.strokeStyle = CV.cut; ctx.lineWidth = 1.5; ctx.setLineDash([6, 3]);
+      ctx.beginPath(); ctx.moveTo(X0 - 6, y); ctx.lineTo(X0 + DW, y); ctx.stroke(); ctx.setLineDash([]);
     }
 
-    ctx.save();
-    ctx.font = '9px "DM Mono",monospace';
-    ctx.fillStyle = '#17324A';
-    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-    ctx.fillText(`R${si + 1} · ${fmt(sec.len)} mm`, 4, y + 3);
-    ctx.restore();
+    // Lineal: position ved hvert tværsnit + rækkenummer.
+    if (y - lastRulerY >= 12) {
+      label(fmt(pos), X0 - 8, y + 1, `9px 'DM Mono',monospace`, CV.muted, 'right');
+      lastRulerY = y;
+    }
+    if (rh >= 26) label(`R${si + 1}`, X0 - 8, y + rh / 2 + 3, `600 11px Inter,sans-serif`, CV.text, 'right');
 
-    y += rowH;
+    y += rh;
+    pos += sec.len;
   });
 
-  // Rest af moderrullen — kun når resten er en urørt hale for sig selv.
-  // Har forlaengSidsteRaekkeForLaengsteRest strukket sidste række ud i
-  // stedet (roll.langRest), er resten allerede vist grønt inde i selve
-  // rækken herover, og skal ikke vises en gang til hernede.
-  if (!roll.langRest) {
-    ctx.fillStyle = '#E6F7EC';
-    ctx.fillRect(0, y, W, REST_H);
-    ctx.strokeStyle = '#A8DFB8';
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.save();
-    ctx.font = '600 11px Inter,sans-serif';
-    ctx.fillStyle = '#2E9E52';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(`Rest som moderrulle: ${fmt(roll.w)} × ${fmt(roll.len - roll.usedLen)} mm`, W / 2, y + REST_H / 2);
-    ctx.restore();
+  // Rullens urørte hale — rest som moderrulle i fuld bredde.
+  if (tailH > 0) {
+    ctx.fillStyle = CV.restBg; ctx.fillRect(X0, y, DW, tailH);
+    ctx.strokeStyle = CV.rest; ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(X0, y + 0.5); ctx.lineTo(X0 + DW, y + 0.5); ctx.stroke(); ctx.setLineDash([]);
+    if (tailH >= 14) label(`Rest som moderrulle: ${fmt(roll.w)} × ${fmt(tail)} mm`, X0 + DW / 2, y + tailH / 2, '600 11px Inter,sans-serif', CV.rest);
+    hits.push({ t: 'tail', x: X0, y, w: DW, h: tailH, len: tail });
+    if (y - lastRulerY >= 12) { label(fmt(pos), X0 - 8, y + 1, `9px 'DM Mono',monospace`, CV.muted, 'right'); lastRulerY = y; }
+    y += tailH;
+  }
+  if (y - lastRulerY >= 10) label(fmt(roll.len), X0 - 8, y - 1, `9px 'DM Mono',monospace`, CV.muted, 'right');
+
+  ctx.strokeStyle = CV.frame; ctx.lineWidth = 1;
+  ctx.strokeRect(X0 + 0.5, TOP + 0.5, DW - 1, bodyTotal - 1);
+
+  // Fremhævning (fra musen i tegningen eller i tabellen).
+  const hl = o.highlight;
+  if (hl && hl.si != null && hl.si < n) {
+    const sec = roll.sections[hl.si];
+    let hx = X0, hw = DW;
+    if (hl.ci === 'rest') { hx = X0 + sec.widthUsed * sx; hw = sec.sideRest * sx; }
+    else if (hl.ci != null && sec.cols[hl.ci]) { hx = X0 + sec.cols[hl.ci].x * sx; hw = sec.cols[hl.ci].w * sx; }
+    // Mørk ramme med hvid inderkant — synlig oven på alle båndfarver.
+    const hy = rowY[hl.si], hh = rowH[hl.si];
+    ctx.strokeStyle = CV.hl; ctx.lineWidth = 3;
+    ctx.strokeRect(hx + 1.5, hy + 1.5, Math.max(2, hw - 3), Math.max(2, hh - 3));
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1;
+    ctx.strokeRect(hx + 3.5, hy + 3.5, Math.max(1, hw - 7), Math.max(1, hh - 7));
   }
 
-  ctx.strokeStyle = '#AAA49C';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(0.5, 0.5, W - 1, H - AXIS_H - 1);
+  // Bredde-akse.
+  const ay = TOP + bodyTotal + 12;
+  ctx.strokeStyle = CV.muted; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(X0, ay); ctx.lineTo(X0 + DW, ay); ctx.moveTo(X0 + 0.5, ay - 4); ctx.lineTo(X0 + 0.5, ay + 4);
+  ctx.moveTo(X0 + DW - 0.5, ay - 4); ctx.lineTo(X0 + DW - 0.5, ay + 4); ctx.stroke();
+  const wTxt = `${fmt(roll.w)} mm`;
+  ctx.font = `10px 'DM Mono',monospace`;
+  const tw = ctx.measureText(wTxt).width + 12;
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(X0 + DW / 2 - tw / 2, ay - 7, tw, 14);
+  label(wTxt, X0 + DW / 2, ay, `10px 'DM Mono',monospace`, CV.muted);
+  label('mm', X0 - 8, ay, `9px 'DM Mono',monospace`, CV.muted, 'right');
 
-  ctx.save();
-  ctx.font = '10px "DM Mono",monospace';
-  ctx.fillStyle = '#5F7C90';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-  ctx.fillText(`← ${fmt(roll.w)} mm bredde →`, W / 2, H - 3);
-  ctx.restore();
+  // Felter til værktøjstippet (x/y/w/h i px; mmW/len i mm).
+  canvas._hits = hits;
 }
+
+// ============================================================
+// Skæretilstand — ét tværsnit ad gangen, til tablet/skærm ved maskinen
+// ============================================================
+const stepEl = document.getElementById('step-mode');
+let _step = null;
+
+function openStepMode(d) {
+  const steps = [];
+  d.plan.rolls.forEach((roll, ri) => roll.sections.forEach((sec, si) => steps.push({ ri, si })));
+  steps.push({ end: true });
+  _step = { d, steps, i: 0, done: new Set() };
+  stepEl.hidden = false;
+  document.body.classList.add('no-scroll');
+  renderStep();
+  stepEl.querySelector('.st-next').focus();
+}
+
+function closeStepMode() {
+  stepEl.hidden = true;
+  document.body.classList.remove('no-scroll');
+  _step = null;
+}
+
+function gotoStep(i, markDone) {
+  if (!_step) return;
+  if (markDone) _step.done.add(_step.i);
+  _step.i = clamp(0, i, _step.steps.length - 1);
+  renderStep();
+}
+
+function renderStep() {
+  const { d, steps, i, done } = _step;
+  const s = steps[i];
+  const total = steps.length - 1;
+  stepEl.querySelector('.st-count').textContent = s.end ? 'Færdig' : `Trin ${i + 1} af ${total}`;
+  stepEl.querySelector('.st-bar span').style.width = (100 * Math.min(i, total) / total) + '%';
+  stepEl.querySelector('.st-prev').disabled = i === 0;
+  const next = stepEl.querySelector('.st-next');
+  next.textContent = s.end ? 'Luk' : (i === total - 1 ? 'Udført — afslut →' : 'Udført — næste →');
+
+  stepEl.querySelector('.st-dots').innerHTML = steps.map((st, k) =>
+    `<button type="button" class="st-dot${k === i ? ' cur' : ''}${done.has(k) ? ' ok' : ''}${st.end ? ' end' : ''}" data-k="${k}" title="${st.end ? 'Færdig' : `Rulle ${st.ri + 1}, række ${st.si + 1}`}">${st.end ? '✓' : done.has(k) ? '✓' : k + 1}</button>`).join('');
+
+  const body = stepEl.querySelector('.st-body');
+  if (s.end) {
+    const rests = d.plan.rolls.map((roll, ri) => {
+      const st = rollStats(roll);
+      return st.restLen > EPS
+        ? `<li><span class="chip-rest"></span><b>Moderrulle ${ri + 1}${roll.kode ? ' · ' + esc(roll.kode) : ''}:</b> rest ${fmt(st.restW)} × ${fmt(st.restLen)} mm — mærk og læg tilbage på lager</li>`
+        : `<li><b>Moderrulle ${ri + 1}${roll.kode ? ' · ' + esc(roll.kode) : ''}:</b> brugt helt op</li>`;
+    }).join('');
+    const lost = d.plan.leftovers.reduce((a, u) => a + u.bands.length, 0);
+    body.innerHTML = `<div class="st-end">
+      <div class="st-end-icon">✓</div>
+      <h3>Alle ${fmt(total)} rækker er skåret</h3>
+      <p>${fmt(d.placedBands)} bånd i alt.${lost ? ` <span class="danger-text">${fmt(lost)} bånd mangler stadig materiale.</span>` : ''}</p>
+      <ul class="st-rests">${rests}</ul>
+    </div>`;
+    return;
+  }
+
+  const roll = d.plan.rolls[s.ri];
+  const sec = roll.sections[s.si];
+  let from = 0;
+  for (let k = 0; k < s.si; k++) from += roll.sections[k].len;
+  const knives = sec.cols.map(c => c.x + c.w).filter(x => x < roll.w - EPS);
+  const erBevaret = s.si === roll.sections.length - 1 && !!roll.langRest;
+
+  const strips = sec.cols.map((col, ci) => {
+    const desc = describeColumn(col, d.buffer);
+    return `<div class="st-strip${desc.isDorn ? ' dorn' : ''}">
+      <div class="st-strip-head"><span class="st-strip-no">${ci + 1}</span><b>${fmt(col.w)} mm</b><span class="st-strip-pos">${fmt(col.x)} – ${fmt(col.x + col.w)}</span></div>
+      <div class="st-strip-body">${piecesHTML(desc, d.buffer, d.colors)}</div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="st-roll">Moderrulle ${s.ri + 1} — ${fmt(roll.w)} × ${fmt(roll.len)} mm${roll.kode ? ' · ' + esc(roll.kode) : ''} &nbsp;·&nbsp; Række ${s.si + 1} af ${roll.sections.length}</div>
+    <div class="st-grid">
+      <div class="st-main">
+        <div class="st-block"><div class="st-no">1</div><div>
+          <div class="st-lbl">Kap rækken af (tværsnit)</div>
+          <div class="st-big">${fmt(sec.len)} mm</div>
+          <div class="st-meta">pos. ${fmt(from)} – ${fmt(from + sec.len)} mm på rullen</div>
+        </div></div>
+        <div class="st-block"><div class="st-no">2</div><div>
+          <div class="st-lbl">Sæt knivene (længdesnit) — målt fra kanten</div>
+          <div class="st-knives">${knives.length ? knives.map(k => `<span>${fmt(k)}</span>`).join('') : '<em>Ingen — hele bredden bruges som én strimmel</em>'}</div>
+          ${sec.sideRest > EPS ? `<div class="st-meta">${erBevaret ? `<span class="st-green">Rest til senere brug: ${fmt(sec.sideRest)} mm bred</span>` : `Siderest (spild): ${fmt(sec.sideRest)} mm bred`}</div>` : ''}
+        </div></div>
+        <div class="st-block"><div class="st-no">3</div><div style="flex:1;min-width:0">
+          <div class="st-lbl">Kap strimlerne</div>
+          <div class="st-strips">${strips}</div>
+        </div></div>
+      </div>
+      <div class="st-vis"><canvas id="st-canvas"></canvas></div>
+    </div>`;
+  const cv = document.getElementById('st-canvas');
+  const vw = cv.parentElement.clientWidth;
+  renderRollCanvas(cv, roll, { W: Math.max(260, Math.min(520, vw)), mode: 'laesbar', colors: d.colors, highlight: { si: s.si, ci: null }, buffer: d.buffer });
+}
+
+stepEl.querySelector('.st-close').addEventListener('click', closeStepMode);
+stepEl.querySelector('.st-prev').addEventListener('click', () => gotoStep(_step.i - 1));
+stepEl.querySelector('.st-next').addEventListener('click', () => {
+  if (!_step) return;
+  if (_step.steps[_step.i].end) { closeStepMode(); return; }
+  gotoStep(_step.i + 1, true);
+});
+stepEl.querySelector('.st-dots').addEventListener('click', e => {
+  const b = e.target.closest('.st-dot');
+  if (b) gotoStep(+b.dataset.k);
+});
+document.addEventListener('keydown', e => {
+  if (!_step) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeStepMode(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); stepEl.querySelector('.st-next').click(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); if (_step.i > 0) gotoStep(_step.i - 1); }
+});
 
 // ============================================================
 // Historik
@@ -1546,6 +2843,7 @@ function saveToHistory(d) {
       placed: d.placedBands,
       rolls: d.plan.rolls.length,
       usedLen: d.plan.rolls.reduce((s, r) => s + r.usedLen, 0),
+      waste: d.plan.rolls.reduce((s, r) => s + rollStats(r).waste, 0),
       rests: d.plan.rolls.map(r => r.langRest ? { b: r.langRest.w, l: r.langRest.len } : { b: r.w, l: r.len - r.usedLen })
     }
   };
@@ -1582,6 +2880,13 @@ function loadHistEntry(entry) {
   const inp = entryInputs(entry);
   document.getElementById('buffer').value     = inp.buffer ?? 0;
   document.getElementById('max-strimler').value = inp.maxPerWidth ?? '';
+  // Ældre gemte beregninger (før v4.0) har ingen min. restbredde/niveau —
+  // så beholdes det, der står i felterne nu.
+  if (inp.minRestW != null) document.getElementById('min-restbredde').value = inp.minRestW > 0 ? inp.minRestW : '';
+  if (inp.niveau) {
+    const r = document.querySelector(`input[name="opt-niveau"][value="${inp.niveau}"]`);
+    if (r) r.checked = true;
+  }
   document.getElementById('dorn-on').checked  = inp.dorn ? inp.dorn.on !== false : true;
   document.getElementById('dorn-tillaeg').value    = inp.dorn?.tillaeg ?? 0;
   document.getElementById('dorn-maxbredde').value  = inp.dorn?.maxW ?? 700;
@@ -1595,6 +2900,7 @@ function loadHistEntry(entry) {
   (inp.bands || []).forEach(r => addBandRow({ qty: r.qty ?? 1, b: r.b, l: r.l }));
   if (!bandList.children.length) addBandRow({ qty: 1 });
 
+  updateFoldSummaries();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1609,7 +2915,7 @@ function renderHistory() {
     const inp = entryInputs(e);
     const title = e.orderRef || `${(inp.bands || []).reduce((a, b) => a + (b.qty || 1), 0)} bånd`;
     const sub = s
-      ? `${e.date} ${e.time} · ${fmt(s.placed)}/${fmt(s.bands)} bånd · ${s.rolls} rulle(r) · brugt ${fmt(s.usedLen)} mm · rest ${s.rests.map(r => `${fmt(r.b)}×${fmt(r.l)}`).join(', ')}`
+      ? `${e.date} ${e.time} · ${fmt(s.placed)}/${fmt(s.bands)} bånd · ${s.rolls} rulle(r) · brugt ${fmt(s.usedLen)} mm${s.waste != null ? ' · spild ' + m2(s.waste) : ''} · rest ${s.rests.map(r => `${fmt(r.b)}×${fmt(r.l)}`).join(', ')}`
       : `${e.date} ${e.time}`;
 
     const item = document.createElement('div');
@@ -1627,10 +2933,15 @@ function renderHistory() {
 
 renderHistory();
 
+let _resizeT = 0;
 window.addEventListener('resize', () => {
-  if (_lastPlan) _lastPlan.plan.rolls.forEach((roll, ri) => drawRollCanvas(roll, ri));
+  clearTimeout(_resizeT);
+  _resizeT = setTimeout(() => {
+    if (_lastPlan) _lastPlan.plan.rolls.forEach((_, ri) => drawRoll(ri));
+    if (_step) renderStep();
+  }, 120);
 });
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v3.6 &middot; 17-09-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v4.0 &middot; 24-09-2026</div>
 </body>
 </html>
