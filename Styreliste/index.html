@@ -451,6 +451,12 @@
       </div>
     </div>
 
+    <div class="field" id="edgeField">
+      <label for="edgeDist">Kant bånd til center liste <span class="unit">mm</span></label>
+      <input type="text" inputmode="decimal" autocomplete="off" id="edgeDist" placeholder="tom = centreret">
+      <div class="field-hint" id="edgeHint">Fra venstre båndkant til listens center — lad stå tomt for at centrere</div>
+    </div>
+
     <div class="field" id="modeField" hidden>
       <label>Afstand angives som</label>
       <div class="seg" role="radiogroup">
@@ -481,12 +487,6 @@
 
     <div class="field" id="eqInfo" hidden>
       <div class="field-hint">Listerne fordeles jævnt, så afstanden mellem listerne og ud til båndkanterne er den samme.</div>
-    </div>
-
-    <div class="field" id="edgeField">
-      <label for="edgeDist">Afstand til venstre kant <span class="unit">mm</span></label>
-      <input type="text" inputmode="decimal" autocomplete="off" id="edgeDist" placeholder="tom = centreret">
-      <div class="field-hint" id="edgeHint">Fra venstre båndkant til listens venstre kant — lad stå tomt for at centrere</div>
     </div>
 
 
@@ -565,15 +565,18 @@ function pad(n) { return String(n).padStart(2, '0'); }
 function updateVisibility() {
   const n = num(raw('numGuides'));
   const multi = n >= 2;
-  $('modeField').hidden = !multi;
-  $('ccField').hidden   = !(multi && mode === 'cc');
-  $('kkField').hidden   = !(multi && mode === 'kk');
-  $('indField').hidden  = !(multi && mode === 'ind');
-  $('eqInfo').hidden    = !(multi && mode === 'eq');
-  $('edgeField').hidden = multi && mode === 'eq';
+  // Udfyldt kantmål ved 2+ lister bestemmer placeringen alene → afstandsmetode skjules
+  const spaced = multi && raw('edgeDist') === '';
+  $('modeField').hidden = !spaced;
+  $('ccField').hidden   = !(spaced && mode === 'cc');
+  $('kkField').hidden   = !(spaced && mode === 'kk');
+  $('indField').hidden  = !(spaced && mode === 'ind');
+  $('eqInfo').hidden    = !(spaced && mode === 'eq');
   $('edgeHint').textContent = multi
-    ? 'Fra venstre båndkant til liste 1\'s venstre kant — lad stå tomt for at centrere listerne på båndet'
-    : 'Fra venstre båndkant til listens venstre kant — lad stå tomt for at centrere';
+    ? (n > 2
+        ? 'Fra båndkant til center af yderste liste — gælder fra begge sider; listerne imellem fordeles jævnt. Tomt = brug afstandsmetoden nedenfor'
+        : 'Fra båndkant til center af listen — gælder fra begge sider. Tomt = brug afstandsmetoden nedenfor')
+    : 'Fra venstre båndkant til listens center — lad stå tomt for at centrere';
   if (multi && Number.isInteger(n)) {
     const k = n - 1;
     $('indHint').textContent = `Angiv ${k} afstand${k === 1 ? '' : 'e'} (1→2${k > 1 ? ', 2→3' : ''}${k > 2 ? ' …' : ''}), adskilt af ; eller mellemrum`;
@@ -595,12 +598,21 @@ function compute() {
   if (need.length) return { missing: 'Indtast ' + need.join(', ') };
 
   const e = num(raw('edgeDist'));
-  if (raw('edgeDist') !== '' && isNaN(e)) return { error: 'Ugyldig afstand til kant.' };
+  if (raw('edgeDist') !== '' && isNaN(e)) return { error: 'Ugyldigt mål for kant bånd til center liste.' };
 
-  const effMode = n === 1 ? 'single' : mode;
+  const effMode = n === 1 ? 'single' : (!isNaN(e) ? 'edge' : mode);
   let spacings = [], centers = [], lane = NaN, input = {};
 
-  if (effMode === 'eq') {
+  if (effMode === 'single') {
+    centers = [isNaN(e) ? B / 2 : e];
+  } else if (effMode === 'edge') {
+    // Samme mål fra begge båndkanter til center af de yderste lister; mellemliggende fordeles jævnt
+    const span = B - 2 * e;
+    if (!(span > 0)) return { error: `Kant til center (${fmt(e)} mm) er for stort — to gange målet skal være mindre end båndbredden.` };
+    const cc = span / (n - 1);
+    for (let i = 0; i < n; i++) centers.push(e + i * cc);
+    spacings = Array(n - 1).fill(cc);
+  } else if (effMode === 'eq') {
     lane = (B - n * w) / (n + 1);
     for (let i = 0; i < n; i++) centers.push(lane + w / 2 + i * (lane + w));
     spacings = Array(n - 1).fill(lane + w);
@@ -626,8 +638,7 @@ function compute() {
       input.list = parts;
     }
     const span = spacings.reduce((a, b) => a + b, 0);
-    const first = isNaN(e) ? B / 2 - span / 2 : e + w / 2;
-    centers = [first];
+    centers = [B / 2 - span / 2];
     for (const s of spacings) centers.push(centers[centers.length - 1] + s);
   }
 
@@ -771,6 +782,13 @@ function renderDiagram(r) {
   ], 10.5);
   const y1 = cur + R1.up; cur = y1 + R1.down + 8;
 
+  // Række 1b: båndkant → center af yderste lister (begge sider)
+  const R1b = dimRow([
+    { x1: bx, x2: tx(g0.c), label: fmt(g0.c), color: K.dark },
+    { x1: tx(gn.c), x2: br, label: fmt(B - gn.c), color: K.dark }
+  ], 10.5);
+  const y1b = cur + R1b.up; cur = y1b + R1b.down + 8;
+
   // Række 2+3: K/K og C/C
   let R2, R3, y2, y3;
   if (n > 1) {
@@ -805,7 +823,7 @@ function renderDiagram(r) {
 
   // Hjælpelinjer (tegnes først, så de ligger bagved)
   const ext = (x, ya, yb) => `<line class="ext" x1="${x}" y1="${ya}" x2="${x}" y2="${yb}" stroke="${K.ext}" stroke-width="0.8" stroke-dasharray="2,3"/>`;
-  out += ext(bx, topY, y4) + ext(br, topY, y1);
+  out += ext(bx, topY, y4) + ext(br, topY, y1b);
   for (const g of guides) {
     const yEdge = n > 1 ? y2 : y1;
     out += ext(tx(g.l), gBot, yEdge) + ext(tx(g.r), gBot, yEdge) + ext(tx(g.c), gBot, y4);
@@ -849,6 +867,7 @@ function renderDiagram(r) {
   // Mål
   out += top.render(topY);
   out += R1.render(y1);
+  out += `<text x="4" y="${y1b + 3}" ${F} font-size="9" font-weight="600" fill="${K.dark}">K→C</text>` + R1b.render(y1b);
   if (n > 1) {
     out += `<text x="4" y="${y2 + 3}" ${F} font-size="9" font-weight="600" fill="${K.acc}">K/K</text>` + R2.render(y2);
     out += `<text x="4" y="${y3 + 3}" ${F} font-size="9" font-weight="600" fill="${K.dark}">C/C</text>` + R3.render(y3);
@@ -898,6 +917,7 @@ function renderTables(r) {
   let rows = '';
   const g0 = guides[0], gn = guides[n - 1];
   rows += `<tr class="${g0.outL > EPS ? 'warn' : ''}"><td><span class="dot none"></span>Båndkant → liste 1</td><td class="v strong">${fmt(g0.l)} mm</td></tr>`;
+  rows += `<tr><td><span class="dot none"></span>Båndkant → center liste 1</td><td class="v strong">${fmt(g0.c)} mm</td></tr>`;
   // Ens afstande (fra 3 lister) samles i én række, så tabellen ikke bliver lang
   const allEqual = n > 2 && r.spacings.every(s => Math.abs(s - r.spacings[0]) < EPS);
   if (allEqual) {
@@ -912,6 +932,7 @@ function renderTables(r) {
     }
   }
   rows += `<tr class="${gn.outR > EPS ? 'warn' : ''}"><td><span class="dot none"></span>Liste ${n} → båndkant</td><td class="v strong">${fmt(B - gn.r)} mm</td></tr>`;
+  rows += `<tr><td><span class="dot none"></span>Center liste ${n} → båndkant</td><td class="v strong">${fmt(B - gn.c)} mm</td></tr>`;
   if (n > 1) rows += `<tr><td>Samlet C/C 1→${n}</td><td class="v">${fmt(gn.c - g0.c)} mm</td></tr>`;
   if (r.mode === 'eq') rows += `<tr><td>Afstand mellem lister og til kant</td><td class="v">${fmt(r.lane)} mm</td></tr>`;
   rows += `<tr><td>Styrelistebredde</td><td class="v">${fmt(w)} mm</td></tr>`;
@@ -942,12 +963,16 @@ function renderPrintHead(r) {
   const date = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
   const method = {
     single: '—',
+    edge: `C/C ${fmt(r.spacings[0])} mm (beregnet)`,
     cc:  `C/C ${fmt(r.input.cc)} mm`,
     kk:  `K/K ${fmt(r.input.kk)} mm`,
     ind: `C/C ${(r.input.list || []).map(fmt).join(' / ')} mm`,
     eq:  'Jævnt fordelt'
   }[r.mode];
-  const place = r.mode === 'eq' ? 'Jævnt fordelt' : (r.centered ? 'Centreret' : `${fmt(r.e)} mm fra venstre kant`);
+  const place = r.mode === 'eq' ? 'Jævnt fordelt'
+    : r.mode === 'edge' ? `${fmt(r.e)} mm kant → center, begge sider`
+    : r.mode === 'single' && !r.centered ? `${fmt(r.e)} mm venstre kant → center`
+    : 'Centreret';
   const cell = (l, v, cls = '') => `<div class="${cls}"><span class="ph-l">${l}</span><span class="ph-v">${esc(v)}</span></div>`;
   return `
     <div class="ph-title">Styreliste — arbejdsseddel</div>
@@ -1067,6 +1092,6 @@ initCombo($('guideWidth'), $('guideList'));
 loadState();
 update();
 </script>
-<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v2.3 &middot; 23-09-2026</div>
+<div class="version-footer" style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Styreliste Beregner &middot; v2.4 &middot; 30-09-2026</div>
 </body>
 </html>
