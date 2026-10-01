@@ -4,7 +4,7 @@
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**Fil:** `/home/user/Induminati/Rullelaengde/index.html`. **Version:** v1.1 · 01-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
+**Fil:** `/home/user/Induminati/Rullelaengde/index.html`. **Version:** v1.2 · 01-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
 
 **Formål:** Beregn ca. længde af en båndrulle, der ikke kan rulles ud, ud fra ét enkelt mål og en lagtælling. Bygget til at blive brugt på telefonen ude ved rullen (mobilvenlig, store input-felter, `inputmode="decimal"`/`"numeric"`, 16px+ font i felter så iOS ikke zoomer).
 
@@ -17,7 +17,7 @@ Lagene behandles som koncentriske cirkler; forskellen til en ægte (arkimedisk) 
 **Input:**
 - `M` (mm, påkrævet). Ét felt — et ekstra "M på kryds"-felt (gennemsnit af to mål) fandtes i v1.0, men blev fjernet i v1.1 efter brugerønske; genindfør det ikke.
 - `Antal lag` (helt tal, påkrævet).
-- Kontrol (valgfri): `Kerne Ø` **eller** `Båndtykkelse`.
+- Kontrol (valgfri): `Kerne Ø` **eller** `Båndtykkelse` (= tykkelsen af ét lag bånd; label siger "(ét lag)" siden v1.2, da det var uklart for brugeren).
   - Kun kerne Ø → yderdiameter `D = 2M − d` og beregnet tykkelse `t = (M − d)/n`.
   - Kun tykkelse → beregnet kerne Ø `d = M − n·t` (brugeren sammenligner med den rigtige).
   - Begge → afvigelse mellem beregnet og kendt tykkelse; ≤ 10 % = grøn "passer", ellers advarsel med forventet antal lag `(M − d)/t`.
