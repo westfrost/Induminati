@@ -13,6 +13,7 @@ Statisk site, ingen build-step. Hvert værktøj er én selvstændig `index.html`
 - `Opskæring/CLAUDE.md` — Opskæringsberegner
 - `DXF/CLAUDE.md` — DXF → NCP Konverter
 - `Kapacitet/CLAUDE.md` — Kapacitetsoverblik (Test/WIP)
+- `Rullelaengde/CLAUDE.md` — Rullelængde (Test/WIP)
 
 `index.html` (forsiden) er så lille og rent statisk, at dens noter blot står nedenfor i denne fil i stedet for i en separat `index.html/`-mappe (det er trods alt en fil, ikke en mappe med et værktøj i).
 
