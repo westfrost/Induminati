@@ -64,7 +64,10 @@
   .chip button{border:none;background:transparent;color:var(--muted);font-size:16px;line-height:1;cursor:pointer;width:22px;height:22px;border-radius:50%}
   .chip button:hover{background:var(--danger-bg);color:var(--danger)}
 
-  .search-card{position:sticky;top:0;z-index:5;box-shadow:0 4px 14px rgba(11,79,121,.06)}
+  .exportbar{position:sticky;top:0;z-index:6;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 12px 10px 16px;box-shadow:0 4px 14px rgba(11,79,121,.08)}
+  .exportbar .sum{font-size:14px;white-space:nowrap}
+  .exportbar .sum b{font-family:'DM Mono',monospace;font-size:18px;color:var(--dark)}
+  .search-card{position:sticky;top:var(--bar-h,66px);z-index:5;box-shadow:0 4px 14px rgba(11,79,121,.06),0 -8px 0 var(--smoke)}
   .search-wrap{position:relative}
   #q{font-size:22px;font-weight:600;padding:14px 44px 14px 14px}
   #q-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:transparent;font-size:22px;color:var(--muted);cursor:pointer;width:32px;height:32px;border-radius:50%;display:none}
@@ -100,10 +103,7 @@
   .place-edit input{font-size:15px;padding:8px 10px}
   .item-side{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
   .list-empty{font-size:13px;color:var(--muted);text-align:center;padding:18px 6px}
-  .totals{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
-  .totals .sum{font-size:14px}
-  .totals .sum b{font-family:'DM Mono',monospace;font-size:18px;color:var(--dark)}
-  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .totals{display:flex;justify-content:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
 
   .version-footer{text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px}
 
@@ -120,8 +120,6 @@
     .dims{font-size:17px}
     .place-edit{grid-template-columns:1fr 1fr}
     .place-edit .btn{grid-column:span 2}
-    .totals .actions{width:100%}
-    .totals .actions .btn{flex:1}
   }
 </style>
 </head>
@@ -138,6 +136,11 @@
 </header>
 
 <main>
+  <div class="exportbar" id="exportbar">
+    <div class="sum"><span id="sum-pcs">0</span> stk · <b id="sum-m2">0,000</b> m²</div>
+    <button class="btn primary" type="button" id="export">Eksportér .xlsx</button>
+  </div>
+
   <section class="card">
     <h2>Placering — gælder alle varianter på arket</h2>
     <div class="grid">
@@ -170,16 +173,10 @@
   <section class="card">
     <h2>Til udsmidning <span class="count" id="list-count"></span></h2>
     <div class="list" id="list"></div>
-    <div class="totals">
-      <div class="sum"><span id="sum-pcs">0</span> stk · <b id="sum-m2">0,000</b> m²</div>
-      <div class="actions">
-        <button class="btn ghost small" type="button" id="clear-marks">Ryd liste</button>
-        <button class="btn primary" type="button" id="export">Eksportér .xlsx</button>
-      </div>
-    </div>
+    <div class="totals"><button class="btn ghost small" type="button" id="clear-marks">Ryd liste</button></div>
   </section>
 
-  <div class="version-footer">Variantoprydning &middot; v1.1 &middot; 01-10-2026</div>
+  <div class="version-footer">Variantoprydning &middot; v1.2 &middot; 01-10-2026</div>
 </main>
 
 <script>
@@ -528,6 +525,10 @@
     a.download = name; document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   });
+
+  // Søgefeltet klæber lige under eksport-bjælken — mål bjælkens faktiske højde
+  const setBarH = () => document.documentElement.style.setProperty('--bar-h', ($('exportbar').offsetHeight + 4) + 'px');
+  window.addEventListener('resize', setBarH); setBarH();
 
   renderChips(); renderResults(); renderList();
 })();
