@@ -108,12 +108,6 @@
     </div>
 
     <div class="field">
-      <label for="m2">Mål M på kryds <span style="font-weight:400;color:var(--muted)">(valgfri)</span></label>
-      <div class="sub">Hvis rullen er trykt flad — mål igen 90° drejet, så bruges gennemsnittet.</div>
-      <div class="input-wrap"><input id="m2" type="text" inputmode="decimal" autocomplete="off" placeholder="—"><span class="unit">mm</span></div>
-    </div>
-
-    <div class="field">
       <label for="n">Antal lag</label>
       <div class="input-wrap"><input id="n" type="text" inputmode="numeric" autocomplete="off" placeholder="fx 30"><span class="unit">lag</span></div>
     </div>
@@ -177,12 +171,12 @@
     </div>
   </section>
 
-  <div class="version-footer span-2">Rullelængde &middot; v1.0 &middot; 01-10-2026</div>
+  <div class="version-footer span-2">Rullelængde &middot; v1.1 &middot; 01-10-2026</div>
 </main>
 
 <script>
 (function(){
-  const ids = ['m1','m2','n','d','t'];
+  const ids = ['m1','n','d','t'];
   const el = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
   const out = document.getElementById('result');
   const STORE = 'rullelaengde.v1';
@@ -202,10 +196,9 @@
   const row = (k, v) => `<div class="detail"><span class="k">${k}</span><span class="v">${v}</span></div>`;
 
   function calc(){
-    const m1 = num(el.m1), m2 = num(el.m2), n = num(el.n), d = num(el.d), t = num(el.t);
+    const m1 = num(el.m1), n = num(el.n), d = num(el.d), t = num(el.t);
     const bad = {
       m1: m1 !== null && !(m1 > 0),
-      m2: m2 !== null && !(m2 > 0),
       n:  n  !== null && !(n > 0 && Number.isInteger(n)),
       d:  d  !== null && !(d > 0),
       t:  t  !== null && !(t > 0),
@@ -213,15 +206,15 @@
     ids.forEach(id => el[id].classList.toggle('bad', bad[id]));
     save();
 
-    if (m1 === null || n === null || bad.m1 || bad.n || bad.m2) {
+    if (m1 === null || n === null || bad.m1 || bad.n) {
       let hint = 'Indtast mål M og antal lag for at få længden.';
       if (bad.n) hint = 'Antal lag skal være et helt tal større end 0.';
-      else if (bad.m1 || bad.m2) hint = 'Mål M skal være et tal større end 0.';
+      else if (bad.m1) hint = 'Mål M skal være et tal større end 0.';
       out.innerHTML = `<div class="result-empty">${hint}</div>`;
       return;
     }
 
-    const M = m2 !== null ? (m1 + m2) / 2 : m1;
+    const M = m1;
     const L = Math.PI * M * n;
     const perLayer = Math.PI * M;
 
@@ -230,7 +223,7 @@
       <div class="result-value">${fmtLen(L)}<small>m</small></div>
       <div class="result-range">± 1 lag = ± ${fmtLen(perLayer)} m</div>
     </div><div class="details">`;
-    html += row(m2 !== null ? 'Gennemsnitsdiameter (gns. af 2 mål)' : 'Gennemsnitsdiameter', fmt(M,1) + ' mm');
+    html += row('Gennemsnitsdiameter', fmt(M,1) + ' mm');
 
     let msg = '';
     if (d !== null && !bad.d) {

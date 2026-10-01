@@ -23,7 +23,7 @@ Når du tilføjer, fjerner eller flytter et værktøj (fx mellem `Test/` og fors
 
 ## Merge/push til main
 
-Efter enhver ændring der er committet og pushet til feature-branchen: spørg altid med det samme om det skal merges/pushes til `main` (dvs. gå live), i stedet for at antage at branchen bare skal stå og vente. Merge først når brugeren bekræfter.
+Efter enhver ændring der er committet og pushet til feature-branchen: merge og push den **straks** til `main` (dvs. gå live) — **spørg ikke først**. Brugeren har eksplicit bedt om at det bare gøres (01-10-2026).
 
 ---
 
@@ -87,7 +87,7 @@ Dette var **ikke** ensartet før 14-09-2026: Styreliste/Ordrer/Opskæring/DXF ha
 `<div ...>Værktøjsnavn &middot; vX.Y &middot; DD-MM-YYYY</div>`
 Ved enhver reel opdatering af en side (funktionsændring, redesign, bugfix — ikke rene formateringsrettelser) skal versionsnummeret bumpes og datoen sættes til dags dato, i samme ændring. Mangler en side stadig en footer, tilføjes en i samme stil næste gang siden redigeres væsentligt.
 
-**Git-workflow.** Der arbejdes altid på en feature-branch, aldrig direkte commits til `main` uden brugerens accept. Spørg altid med det samme, efter en ændring er committet og pushet til feature-branchen, om den skal merges/pushes til `main` (dvs. gå live) — antag ikke at branchen bare skal stå og vente. `main` opdateres desuden løbende af selve de live sider (Baanddb og Samlevejledninger pusher database-ændringer direkte til `main` via GitHub-sync-funktionen, se nedenfor) — forvent derfor at `main` ofte er foran den lokale branch ved merge-tid; ét `git fetch origin main` + `git rebase` (eller `git merge --ff-only` når muligt) løser det typisk uden konflikt, da databasesidernes auto-commits kun rører `database.json`/`gh-auth.json`.
+**Git-workflow.** Der arbejdes altid på en feature-branch, aldrig direkte commits til `main` uden brugerens accept. Efter en ændring er committet og pushet til feature-branchen, merges den straks til `main` (dvs. går live) uden at spørge — se "Merge/push til main" ovenfor. `main` opdateres desuden løbende af selve de live sider (Baanddb og Samlevejledninger pusher database-ændringer direkte til `main` via GitHub-sync-funktionen, se nedenfor) — forvent derfor at `main` ofte er foran den lokale branch ved merge-tid; ét `git fetch origin main` + `git rebase` (eller `git merge --ff-only` når muligt) løser det typisk uden konflikt, da databasesidernes auto-commits kun rører `database.json`/`gh-auth.json`.
 
 **Database-sider (Baanddb, Samlevejledninger).** Disse to værktøjer er de eneste med en "database": et array af poster gemt i browserens `localStorage`, med valgfri synkronisering til/fra GitHub. Begge sider deler nøjagtig samme arkitektur og samme klasse af tidligere bugs — se de to værktøjers egne `CLAUDE.md`-filer (`Baanddb/CLAUDE.md`, `Samlevejledninger/CLAUDE.md`) for fuld detalje, men kort opsummeret:
 - **Push** kræver et GitHub-token, men i stedet for at hver bruger opretter sit eget, er ét rigtigt token krypteret (AES-GCM, nøgle udledt af en fælles adgangskode via PBKDF2, 300.000 iterationer) og gemt i selve repo'et som `<Mappe>/gh-auth.json`. Alle der kender adgangskoden kan låse tokenet op i browseren og pushe (`resolveToken()`/`decryptToken()`). Da repo'et er offentligt, kan den krypterede fil ses af alle — sikkerheden afhænger derfor alene af adgangskodens styrke. Førstegangsopsætning (`setupSharedToken()`) kræver ét rigtigt GitHub PAT engangs.
