@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rullelængde — Induminati</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --dark:#0B4F79; --accent:#E8791E; --accent-hover:#C9640F; --sky:#1C7FBF;
+    --smoke:#F3F7FA; --light:#FFFFFF; --border:#D7E3EC; --text:#17324A; --muted:#5F7C90;
+    --danger:#D64545; --danger-bg:#FBEAEA; --danger-border:#F0C7C7;
+    --warn:#7A5A18; --warn-bg:#FFF8ED; --warn-border:#E0C8A0;
+    --green:#2E9E52; --green-bg:#E6F7EC; --green-border:#A8DFB8;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh;-webkit-text-size-adjust:100%}
+  header{background:var(--dark);padding:18px 28px;display:flex;align-items:center;gap:14px}
+  .logo-icon{width:34px;height:34px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .logo-icon svg{width:20px;height:20px}
+  header h1{font-size:16px;font-weight:600;color:#fff;flex:1}
+  header h1 span{font-size:12px;color:#B9D8EA;font-family:'DM Mono',monospace;margin-left:4px;font-weight:400}
+  .btn-home{color:#CFE3EE;text-decoration:none;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:5px;transition:color .15s,border-color .15s}
+  .btn-home:hover{color:#fff;border-color:var(--accent)}
+
+  main{max-width:860px;margin:0 auto;padding:24px 16px 48px;display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  .card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:20px}
+  .card h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .span-2{grid-column:1 / -1}
+
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+  .field label{font-size:13px;font-weight:600;color:var(--text)}
+  .field .sub{font-size:12px;color:var(--muted);line-height:1.45}
+  .input-wrap{position:relative}
+  .input-wrap input{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;padding:12px 52px 12px 12px;border:1.5px solid var(--border);border-radius:6px;background:var(--smoke);color:var(--text);outline:none;width:100%;transition:border-color .15s,background .15s;-moz-appearance:textfield}
+  .input-wrap input::-webkit-outer-spin-button,.input-wrap input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .input-wrap input:focus{border-color:var(--accent);background:#fff}
+  .input-wrap input.bad{border-color:var(--danger);background:var(--danger-bg)}
+  .input-wrap .unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);pointer-events:none}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .optional{margin-top:6px;padding-top:14px;border-top:1px dashed var(--border)}
+  .optional-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px}
+  .optional-note{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+  .btn-reset{font-family:inherit;font-size:13px;font-weight:500;color:var(--muted);background:transparent;border:1.5px solid var(--border);border-radius:6px;padding:10px 14px;cursor:pointer;width:100%;transition:border-color .15s,color .15s}
+  .btn-reset:hover{border-color:var(--accent);color:var(--text)}
+
+  .result{text-align:center;padding:6px 0 16px}
+  .result-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .result-value{font-size:44px;font-weight:700;color:var(--dark);line-height:1.1;font-variant-numeric:tabular-nums}
+  .result-value small{font-size:22px;font-weight:600;color:var(--muted);margin-left:4px}
+  .result-range{font-size:13px;color:var(--muted);margin-top:6px}
+  .result-empty{font-size:14px;color:var(--muted);text-align:center;padding:26px 6px;line-height:1.55}
+  .details{border-top:1px solid var(--border)}
+  .detail{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .detail:last-child{border-bottom:none}
+  .detail .k{color:var(--muted)}
+  .detail .v{font-family:'DM Mono',monospace;font-weight:500;text-align:right;white-space:nowrap}
+  .msg{font-size:12.5px;line-height:1.5;border-radius:6px;padding:10px 12px;margin-top:12px;border:1px solid}
+  .msg.warn{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-border)}
+  .msg.err{color:var(--danger);background:var(--danger-bg);border-color:var(--danger-border)}
+  .msg.info{color:var(--muted);background:var(--smoke);border-color:var(--border)}
+  .msg.ok{color:var(--green);background:var(--green-bg);border-color:var(--green-border)}
+
+  .howto{display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:center}
+  .howto svg{width:100%;height:auto;max-width:260px;margin:0 auto;display:block}
+  .howto ol{padding-left:18px;font-size:13.5px;line-height:1.6}
+  .howto li{margin-bottom:6px}
+  .formula{font-family:'DM Mono',monospace;font-size:14px;background:var(--smoke);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:10px;text-align:center;color:var(--dark)}
+  .howto .note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px}
+
+  .version-footer{text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px}
+
+  @media (max-width:640px){
+    header{padding:14px 16px;gap:10px}
+    header h1{font-size:15px}
+    header h1 span{display:block;margin-left:0;margin-top:2px}
+    main{grid-template-columns:1fr;padding:16px 12px 40px;gap:14px}
+    .card{padding:16px}
+    .howto{grid-template-columns:1fr}
+    .howto svg{max-width:220px}
+    .result-value{font-size:40px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-icon">
+    <svg viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="8" stroke="white" stroke-width="1.6"/>
+      <circle cx="10" cy="10" r="5.5" stroke="white" stroke-width="1.2" opacity=".8"/>
+      <circle cx="10" cy="10" r="2.5" fill="white"/>
+    </svg>
+  </div>
+  <h1>Rullelængde <span>længde af båndrulle ud fra lag</span></h1>
+  <a class="btn-home" href="../index.html">← Forside</a>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Mål</h2>
+
+    <div class="field">
+      <label for="m1">Mål M</label>
+      <div class="sub">Fra båndets yderside, gennem midten, til hvor båndet starter på modsat side af kernen.</div>
+      <div class="input-wrap"><input id="m1" type="text" inputmode="decimal" autocomplete="off" placeholder="fx 500"><span class="unit">mm</span></div>
+    </div>
+
+    <div class="field">
+      <label for="m2">Mål M på kryds <span style="font-weight:400;color:var(--muted)">(valgfri)</span></label>
+      <div class="sub">Hvis rullen er trykt flad — mål igen 90° drejet, så bruges gennemsnittet.</div>
+      <div class="input-wrap"><input id="m2" type="text" inputmode="decimal" autocomplete="off" placeholder="—"><span class="unit">mm</span></div>
+    </div>
+
+    <div class="field">
+      <label for="n">Antal lag</label>
+      <div class="input-wrap"><input id="n" type="text" inputmode="numeric" autocomplete="off" placeholder="fx 30"><span class="unit">lag</span></div>
+    </div>
+
+    <div class="optional">
+      <div class="optional-title">Kontrol (valgfri)</div>
+      <div class="optional-note">Udfyld én af dem for at tjekke at lagene er talt rigtigt — den anden regnes ud.</div>
+      <div class="row-2">
+        <div class="field">
+          <label for="d">Kerne Ø</label>
+          <div class="input-wrap"><input id="d" type="text" inputmode="decimal" autocomplete="off" placeholder="—"><span class="unit">mm</span></div>
+        </div>
+        <div class="field">
+          <label for="t">Båndtykkelse</label>
+          <div class="input-wrap"><input id="t" type="text" inputmode="decimal" autocomplete="off" placeholder="—"><span class="unit">mm</span></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-reset" type="button" id="reset">Nulstil</button>
+  </section>
+
+  <section class="card" id="out">
+    <h2>Resultat</h2>
+    <div id="result"></div>
+  </section>
+
+  <section class="card span-2">
+    <h2>Sådan måler du</h2>
+    <div class="howto">
+      <svg viewBox="0 0 260 230" role="img" aria-label="Snit af rulle med målet M markeret">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#E8791E"/>
+          </marker>
+        </defs>
+        <circle cx="130" cy="105" r="95" fill="#E5F1FA" stroke="#0B4F79" stroke-width="2"/>
+        <g fill="none" stroke="#0B4F79" stroke-width=".8" opacity=".35">
+          <circle cx="130" cy="105" r="85"/><circle cx="130" cy="105" r="75"/>
+          <circle cx="130" cy="105" r="65"/><circle cx="130" cy="105" r="55"/>
+          <circle cx="130" cy="105" r="45"/>
+        </g>
+        <circle cx="130" cy="105" r="35" fill="#FFFFFF" stroke="#5F7C90" stroke-width="2.5"/>
+        <circle cx="130" cy="105" r="2.5" fill="#5F7C90"/>
+        <line x1="35" y1="105" x2="165" y2="105" stroke="#E8791E" stroke-width="2.5" marker-start="url(#arr)" marker-end="url(#arr)"/>
+        <line x1="35" y1="90" x2="35" y2="120" stroke="#E8791E" stroke-width="1.5"/>
+        <line x1="165" y1="90" x2="165" y2="120" stroke="#E8791E" stroke-width="1.5"/>
+        <rect x="86" y="80" width="24" height="18" rx="3" fill="#E8791E"/>
+        <text x="98" y="93" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="700" fill="#fff">M</text>
+        <text x="130" y="222" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#5F7C90">yderside → gennem midten → kernens modsatte side</text>
+      </svg>
+      <div>
+        <ol>
+          <li>Læg linealen/målebåndet <strong>gennem kernens midte</strong>.</li>
+          <li>Mål fra <strong>båndets yderste lag</strong> til <strong>hvor båndet starter</strong> på den modsatte side af kernen (kernerørets yderside).</li>
+          <li>Tæl antal lag på rullens side.</li>
+        </ol>
+        <div class="formula">L = π × M × antal lag</div>
+        <div class="note">M svarer præcis til rullens gennemsnitsdiameter, (yder-Ø + kerne-Ø) / 2. Måles der til kernerørets inderside, bliver M rørets godstykkelse for kort. Én fejltalt vinding giver en fejl på π × M.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="version-footer span-2">Rullelængde &middot; v1.0 &middot; 01-10-2026</div>
+</main>
+
+<script>
+(function(){
+  const ids = ['m1','m2','n','d','t'];
+  const el = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
+  const out = document.getElementById('result');
+  const STORE = 'rullelaengde.v1';
+
+  // Tillad både komma og punktum som decimaltegn
+  function num(input){
+    const s = input.value.trim().replace(/\s/g,'').replace(',', '.');
+    if (s === '') return null;
+    const v = Number(s);
+    return Number.isFinite(v) ? v : NaN;
+  }
+  const fmt = (v, dec) => v.toLocaleString('da-DK', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  function fmtLen(mm){
+    const m = mm / 1000;
+    return m >= 100 ? fmt(m,0) : m >= 10 ? fmt(m,1) : fmt(m,2);
+  }
+  const row = (k, v) => `<div class="detail"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+
+  function calc(){
+    const m1 = num(el.m1), m2 = num(el.m2), n = num(el.n), d = num(el.d), t = num(el.t);
+    const bad = {
+      m1: m1 !== null && !(m1 > 0),
+      m2: m2 !== null && !(m2 > 0),
+      n:  n  !== null && !(n > 0 && Number.isInteger(n)),
+      d:  d  !== null && !(d > 0),
+      t:  t  !== null && !(t > 0),
+    };
+    ids.forEach(id => el[id].classList.toggle('bad', bad[id]));
+    save();
+
+    if (m1 === null || n === null || bad.m1 || bad.n || bad.m2) {
+      let hint = 'Indtast mål M og antal lag for at få længden.';
+      if (bad.n) hint = 'Antal lag skal være et helt tal større end 0.';
+      else if (bad.m1 || bad.m2) hint = 'Mål M skal være et tal større end 0.';
+      out.innerHTML = `<div class="result-empty">${hint}</div>`;
+      return;
+    }
+
+    const M = m2 !== null ? (m1 + m2) / 2 : m1;
+    const L = Math.PI * M * n;
+    const perLayer = Math.PI * M;
+
+    let html = `<div class="result">
+      <div class="result-label">Ca. længde</div>
+      <div class="result-value">${fmtLen(L)}<small>m</small></div>
+      <div class="result-range">± 1 lag = ± ${fmtLen(perLayer)} m</div>
+    </div><div class="details">`;
+    html += row(m2 !== null ? 'Gennemsnitsdiameter (gns. af 2 mål)' : 'Gennemsnitsdiameter', fmt(M,1) + ' mm');
+
+    let msg = '';
+    if (d !== null && !bad.d) {
+      // M = (D + d)/2  →  D = 2M − d ; tykkelse = (D − d) / (2n) = (M − d) / n
+      const D = 2*M - d;
+      const tt = (M - d) / n;
+      if (tt <= 0) {
+        msg = `<div class="msg err">Kerne Ø er større end eller lig med M — det kan ikke passe. Tjek at M er målt fra yderside til kernens modsatte side.</div>`;
+      } else {
+        html += row('Yderdiameter', fmt(D,0) + ' mm');
+        html += row('Båndtykkelse (beregnet)', fmt(tt,2) + ' mm');
+        if (t !== null && !bad.t) {
+          const dev = (tt - t) / t;
+          const layersFromT = (M - d) / t;
+          if (Math.abs(dev) <= 0.1) {
+            msg = `<div class="msg ok">Beregnet tykkelse passer med den kendte (${fmt(dev*100,0)} %). Lagtællingen ser rigtig ud.</div>`;
+          } else {
+            msg = `<div class="msg warn">Beregnet tykkelse afviger ${fmt(dev*100,0)} % fra den kendte. Med ${fmt(t,2)} mm tykkelse burde der være ca. <strong>${fmt(layersFromT,0)} lag</strong>. Tjek lagtællingen — eller rullen er løst viklet.</div>`;
+          }
+        }
+      }
+    } else if (t !== null && !bad.t) {
+      // Opviklet højde = n·t  →  kerne Ø = M − n·t
+      const dd = M - n * t;
+      const D = dd + 2 * n * t;
+      if (dd <= 0) {
+        msg = `<div class="msg warn">Med ${fmt(t,2)} mm tykkelse og ${fmt(n,0)} lag bliver kernen ${fmt(dd,0)} mm — det kan ikke passe. Enten er der talt for mange lag, eller tykkelsen er forkert.</div>`;
+      } else {
+        html += row('Kerne Ø (beregnet)', fmt(dd,0) + ' mm');
+        html += row('Yderdiameter (beregnet)', fmt(D,0) + ' mm');
+        msg = `<div class="msg info">Sammenlign den beregnede kerne Ø med den rigtige. Passer den ikke, er lagene sandsynligvis talt forkert.</div>`;
+      }
+    }
+    html += '</div>' + msg;
+    out.innerHTML = html;
+  }
+
+  function save(){
+    try { localStorage.setItem(STORE, JSON.stringify(Object.fromEntries(ids.map(id => [id, el[id].value])))); } catch(e){}
+  }
+  function load(){
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE) || '{}');
+      ids.forEach(id => { if (typeof s[id] === 'string') el[id].value = s[id]; });
+    } catch(e){}
+  }
+
+  ids.forEach(id => el[id].addEventListener('input', calc));
+  document.getElementById('reset').addEventListener('click', () => {
+    ids.forEach(id => el[id].value = '');
+    calc();
+    el.m1.focus();
+  });
+  load();
+  calc();
+})();
+</script>
+</body>
+</html>

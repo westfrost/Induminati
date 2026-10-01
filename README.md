@@ -28,6 +28,7 @@ Ingen build-step, ingen framework, ingen backend. Hvert værktøj er én selvst�
 | Mappe | Værktøj | Beskrivelse |
 |---|---|---|
 | `Kapacitet/` | Kapacitetsoverblik | Visualiser ordremængde vs. reel kapacitet pr. afdeling og uge. |
+| `Rullelaengde/` | Rullelængde | Ca. længde af en båndrulle der ikke kan rulles ud — ét mål gennem kernen + antal lag (L = π × M × lag). Mobilvenlig, med valgfri kontrol af lagtællingen via kerne Ø eller båndtykkelse. |
 
 Når et test-værktøj er klar til drift, flyttes det fra `Test/index.html` til forsidens `index.html`.
 
