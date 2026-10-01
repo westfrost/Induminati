@@ -67,6 +67,10 @@
   .exportbar{position:sticky;top:0;z-index:6;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 12px 10px 16px;box-shadow:0 4px 14px rgba(11,79,121,.08)}
   .exportbar .sum{font-size:14px;white-space:nowrap}
   .exportbar .sum b{font-family:'DM Mono',monospace;font-size:18px;color:var(--dark)}
+  .bar-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+  .bar-actions .btn.ghost{color:var(--danger);border-color:var(--danger-border)}
+  .bar-actions .btn.ghost:hover{background:var(--danger-bg)}
+  .bar-actions .btn:disabled{opacity:.4;cursor:not-allowed}
   .search-card{position:sticky;top:var(--bar-h,66px);z-index:5;box-shadow:0 4px 14px rgba(11,79,121,.06),0 -8px 0 var(--smoke)}
   .search-wrap{position:relative}
   #q{font-size:22px;font-weight:600;padding:14px 44px 14px 14px}
@@ -103,7 +107,6 @@
   .place-edit input{font-size:15px;padding:8px 10px}
   .item-side{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
   .list-empty{font-size:13px;color:var(--muted);text-align:center;padding:18px 6px}
-  .totals{display:flex;justify-content:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
 
   .version-footer{text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px}
 
@@ -119,6 +122,10 @@
     .import-row .btn{flex:1}
     .dims{font-size:17px}
     .place-edit{grid-template-columns:1fr 1fr}
+    .exportbar{padding:8px 8px 8px 12px;gap:8px}
+    .exportbar .sum{font-size:12px}
+    .exportbar .sum b{font-size:15px}
+    .bar-actions .btn.primary{padding:10px 12px;font-size:13px}
     .place-edit .btn{grid-column:span 2}
   }
 </style>
@@ -138,7 +145,10 @@
 <main>
   <div class="exportbar" id="exportbar">
     <div class="sum"><span id="sum-pcs">0</span> stk · <b id="sum-m2">0,000</b> m²</div>
-    <button class="btn primary" type="button" id="export">Eksportér .xlsx</button>
+    <div class="bar-actions">
+      <button class="btn ghost small" type="button" id="clear-marks">Ryd liste</button>
+      <button class="btn primary" type="button" id="export">Eksportér .xlsx</button>
+    </div>
   </div>
 
   <section class="card">
@@ -173,10 +183,9 @@
   <section class="card">
     <h2>Til udsmidning <span class="count" id="list-count"></span></h2>
     <div class="list" id="list"></div>
-    <div class="totals"><button class="btn ghost small" type="button" id="clear-marks">Ryd liste</button></div>
   </section>
 
-  <div class="version-footer">Variantoprydning &middot; v1.2 &middot; 01-10-2026</div>
+  <div class="version-footer">Variantoprydning &middot; v1.3 &middot; 01-10-2026</div>
 </main>
 
 <script>
@@ -442,6 +451,7 @@
     $('sum-pcs').textContent = pcs;
     $('sum-m2').textContent = fmt(sum, 3);
     $('export').disabled = !rows.length;
+    $('clear-marks').disabled = !rows.length && !state.datasets.length && !state.manual.length;
     if (!rows.length) { $('list').innerHTML = `<div class="list-empty">Ingen varianter markeret endnu. Søg på et mål ovenfor og skriv antal.</div>`; return; }
     $('list').innerHTML = rows.map(({v, m}) => {
       const pl = placeOf(m);
@@ -487,9 +497,15 @@
   $('list').addEventListener('focusout', e => { if (e.target.dataset.pl) setTimeout(() => { if (!document.activeElement?.dataset?.pl) renderList(); }, 0); });
 
   $('clear-marks').addEventListener('click', () => {
-    if (!Object.keys(state.marks).length) return;
-    if (!confirm('Ryd hele listen over varianter til udsmidning?')) return;
-    state.marks = {}; openEdit.clear(); save(); renderList(); renderResults();
+    const n = Object.keys(state.marks).length;
+    if (!n && !state.datasets.length && !state.manual.length) return;
+    const vn = state.datasets.map(d => d.varenr).join(', ');
+    if (!confirm(`ER DU SIKKER?\n\nDette sletter:\n• listen med ${n} markerede variant${n === 1 ? '' : 'er'}\n• varenr og importeret BC-udtræk${vn ? ' (' + vn + ')' : ''}\n\nDet kan ikke fortrydes. Eksportér evt. først.`)) return;
+    // Placering/overskrift/enhed bevares — kun liste, manuelle varianter, varenr og BC-udtræk ryddes
+    state.marks = {}; state.datasets = []; state.manual = []; state.lastVarenr = '';
+    openEdit.clear(); all = variants(); save();
+    $('imp-varenr').value = ''; $('q').value = ''; setStatus('', '');
+    renderChips(); renderResults(); renderList();
   });
 
   // ---------- Eksport ----------
