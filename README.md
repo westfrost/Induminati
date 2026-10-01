@@ -29,7 +29,7 @@ Ingen build-step, ingen framework, ingen backend. Hvert værktøj er én selvst�
 |---|---|---|
 | `Kapacitet/` | Kapacitetsoverblik | Visualiser ordremængde vs. reel kapacitet pr. afdeling og uge. |
 | `Rullelaengde/` | Rullelængde | Ca. længde af en båndrulle der ikke kan rulles ud — ét mål gennem kernen + antal lag (L = π × M × lag). Mobilvenlig, med valgfri kontrol af lagtællingen via kerne Ø eller båndtykkelse. |
-| `Varianter/` | Variantoprydning | Importér BC-udtræk ("Linjer") pr. varenr, søg varianter på mål (fx `140x2040`), markér dem der smides ud med antal, og eksportér et Excel-ark (Varenr/Variantkode/Ny + Gl placering/Antal m²/Enhed) med m² udregnet. Fælles placering for hele arket, med mulighed for egen placering pr. variant. Mobilvenlig. |
+| `Varianter/` | Variantoprydning | Importér BC-udtræk ("Linjer") pr. varenr, søg varianter på mål (fx `140x2040`), markér dem der smides ud med antal, og eksportér "PU Døde Varer <varenr>.xlsx" (Varenr/Variantkode/Dimensioner/Ny + Gl placering/Antal m²/Enhed) med m² udregnet. Fælles placering for hele arket, med mulighed for egen placering pr. variant. Mobilvenlig. |
 
 Når et test-værktøj er klar til drift, flyttes det fra `Test/index.html` til forsidens `index.html`.
 
