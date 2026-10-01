@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saml ark — Induminati</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  :root {
+    --dark:#0B4F79; --accent:#E8791E; --accent-hover:#C9640F; --sky:#1C7FBF;
+    --smoke:#F3F7FA; --light:#FFFFFF; --border:#D7E3EC; --text:#17324A; --muted:#5F7C90;
+    --accent-bg:#FCEADA; --sky-bg:#EAF4FB;
+    --danger:#D64545; --danger-bg:#FBEAEA; --danger-border:#F0C7C7;
+    --warn:#7A5A18; --warn-bg:#FFF8ED; --warn-border:#E0C8A0;
+    --green:#2E9E52; --green-bg:#E6F7EC; --green-border:#A8DFB8;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh;-webkit-text-size-adjust:100%}
+  header{background:var(--dark);padding:18px 28px;display:flex;align-items:center;gap:14px}
+  .logo-icon{width:34px;height:34px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .logo-icon svg{width:20px;height:20px}
+  header h1{font-size:16px;font-weight:600;color:#fff;flex:1}
+  header h1 span{font-size:12px;color:#B9D8EA;font-family:'DM Mono',monospace;margin-left:4px;font-weight:400}
+  .btn-home{color:#CFE3EE;text-decoration:none;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:5px;transition:color .15s,border-color .15s}
+  .btn-home:hover{color:#fff;border-color:var(--accent)}
+
+  main{max-width:900px;margin:0 auto;padding:22px 16px 48px;display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:18px}
+  .card h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .card h2 .count{font-family:'DM Mono',monospace;color:var(--accent);font-size:12px;letter-spacing:0}
+
+  .btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:6px;padding:10px 16px;cursor:pointer;border:1.5px solid var(--border);background:var(--light);color:var(--text);transition:border-color .15s,background .15s,color .15s;white-space:nowrap}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.small{font-size:12px;padding:6px 10px;font-weight:500}
+  .btn.danger{color:var(--danger);border-color:var(--danger-border)}
+  .btn.danger:hover{background:var(--danger-bg)}
+
+  .topbar{position:sticky;top:0;z-index:6;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 12px 10px 16px;box-shadow:0 4px 14px rgba(11,79,121,.08)}
+  .topbar .sum{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .sum b{font-family:'DM Mono',monospace;font-size:17px;color:var(--dark)}
+  .bar-actions{display:flex;gap:6px;flex-shrink:0}
+
+  .drop{display:block;border:2px dashed var(--border);border-radius:8px;padding:26px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+  .drop:hover,.drop.drag{border-color:var(--accent);background:var(--accent-bg)}
+  .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .drop b{display:block;font-size:15px;margin-bottom:4px}
+  .drop span{font-size:12.5px;color:var(--muted)}
+  .msgs{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .msg{font-size:12.5px;line-height:1.5;border-radius:6px;padding:8px 12px;border:1px solid}
+  .msg.ok{color:var(--green);background:var(--green-bg);border-color:var(--green-border)}
+  .msg.warn{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-border)}
+  .msg.err{color:var(--danger);background:var(--danger-bg);border-color:var(--danger-border)}
+
+  .files{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+  .file{display:flex;align-items:center;gap:10px;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--smoke)}
+  .file .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+  .file .fi{color:var(--muted);white-space:nowrap;font-size:12px}
+  .file button{border:none;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;width:26px;height:26px;border-radius:50%;flex-shrink:0}
+  .file button:hover{background:var(--danger-bg);color:var(--danger)}
+
+  .opt{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-top:14px;line-height:1.45;cursor:pointer}
+  .opt input{width:18px;height:18px;accent-color:var(--accent);margin-top:1px;flex-shrink:0}
+  .opt em{font-style:normal;color:var(--muted);display:block;font-size:12px}
+
+  .group-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .group-title{font-size:17px;font-weight:700;color:var(--dark)}
+  .group-title small{font-size:12px;font-weight:500;color:var(--muted);margin-left:6px}
+  .group-sum{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:var(--dark);color:#fff;font-weight:600;text-align:left;padding:7px 10px;white-space:nowrap;font-size:12px}
+  td{padding:7px 10px;border-top:1px solid var(--border);white-space:nowrap}
+  tr:nth-child(even) td{background:var(--smoke)}
+  td.num{text-align:right;font-family:'DM Mono',monospace}
+  td.mono{font-family:'DM Mono',monospace}
+  td .merged{display:inline-block;font-size:10px;font-weight:600;background:var(--accent-bg);color:#A3540E;border-radius:3px;padding:1px 5px;margin-left:6px;font-family:'Inter',sans-serif}
+  .empty{font-size:13px;color:var(--muted);text-align:center;padding:24px 6px;line-height:1.55}
+  .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px}
+
+  .version-footer{text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px}
+
+  @media (max-width:640px){
+    header{padding:14px 16px;gap:10px}
+    header h1{font-size:15px}
+    header h1 span{display:block;margin-left:0;margin-top:2px}
+    main{padding:12px 10px 40px;gap:12px}
+    .card{padding:14px}
+    .topbar{padding:8px 8px 8px 12px;gap:8px}
+    .topbar .sum{font-size:12px}
+    .topbar .sum b{font-size:15px}
+    .bar-actions .btn.primary{padding:10px 12px;font-size:13px}
+    th,td{padding:6px 8px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-icon">
+    <svg viewBox="0 0 20 20" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2.5" y="3" width="8" height="10" rx="1"/>
+      <rect x="9.5" y="7" width="8" height="10" rx="1" fill="#E8791E"/>
+    </svg>
+  </div>
+  <h1>Saml ark <span>flet "Døde Varer"-ark til ét pr. varenr</span></h1>
+  <a class="btn-home" href="../index.html">← Forside</a>
+</header>
+
+<main>
+  <div class="topbar">
+    <div class="sum" id="sum">Ingen ark indlæst</div>
+    <div class="bar-actions">
+      <button class="btn small danger" type="button" id="clear" disabled>Ryd</button>
+      <button class="btn primary" type="button" id="dl-all" disabled>Download alle</button>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>Indlæs ark <span class="count" id="file-count"></span></h2>
+    <label class="drop" id="drop">
+      <input type="file" id="files" accept=".xlsx" multiple>
+      <b>Vælg eller træk .xlsx-filer hertil</b>
+      <span>Flere filer på én gang — fx alle "PU Døde Varer"-ark fra Variantoprydning</span>
+    </label>
+    <div class="msgs" id="msgs"></div>
+    <div class="files" id="file-list"></div>
+    <label class="opt"><input type="checkbox" id="opt-sum" checked>
+      <span>Læg ens linjer sammen
+        <em>Samme varenr, variantkode, dimensioner, placering og enhed bliver til én linje med summeret m². Slå fra for at beholde hver linje for sig.</em></span>
+    </label>
+  </section>
+
+  <div id="groups"></div>
+
+  <div class="version-footer">Saml ark &middot; v1.0 &middot; 01-10-2026</div>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt = (v, dec) => v.toLocaleString('da-DK', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  const norm = s => String(s ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const str = v => v == null ? '' : String(v).trim();
+  const r4 = v => Math.round(v * 10000) / 10000;
+  const toNum = v => {
+    if (typeof v === 'number') return v;
+    const s = str(v).replace(/\s/g, '');
+    if (!s) return NaN;
+    return Number(/,/.test(s) ? s.replace(/\./g, '').replace(',', '.') : s);
+  };
+
+  // files: [{name, sig, title, rows:[{varenr, code, dims, ny, gl, antal, enhed}]}]
+  let files = [];
+
+  // ---------- Indlæsning ----------
+  function parseSheet(rows){
+    const hi = rows.findIndex(r => r && r.some(c => norm(c) === 'varenr'));
+    if (hi < 0) throw new Error('fandt ingen kolonne "Varenr"');
+    const h = rows[hi].map(norm);
+    const col = n => h.indexOf(n);
+    const c = {varenr: col('varenr'), code: col('variantkode'), dims: col('dimensioner'),
+               ny: col('ny placering'), gl: col('gl placering'), antal: col('antal'), enhed: col('enhed')};
+    if (c.antal < 0) throw new Error('fandt ingen kolonne "Antal"');
+    // Overskrift (fx "PU") = første tekst over header-rækken
+    let title = '';
+    for (let i = 0; i < hi && !title; i++) (rows[i] || []).forEach(v => { if (!title && str(v)) title = str(v); });
+    const out = [];
+    for (let i = hi + 1; i < rows.length; i++) {
+      const r = rows[i]; if (!r) continue;
+      const varenr = str(r[c.varenr]);
+      if (!varenr) continue;
+      let code = c.code >= 0 ? str(r[c.code]) : '';
+      let dims = c.dims >= 0 ? str(r[c.dims]) : '';
+      // Ældre skabelon uden Dimensioner-kolonne: mål stod i Variantkode
+      if (!dims && /^\d+\s*[x×]\s*\d+$/i.test(code)) { dims = code; code = ''; }
+      dims = dims.replace(/\s*[x×X]\s*/, 'x');
+      const antal = toNum(r[c.antal]);
+      out.push({varenr, code, dims, ny: c.ny >= 0 ? str(r[c.ny]) : '', gl: c.gl >= 0 ? str(r[c.gl]) : '',
+                antal: Number.isFinite(antal) ? antal : 0, enhed: c.enhed >= 0 ? str(r[c.enhed]) : ''});
+    }
+    return {title, rows: out};
+  }
+
+  async function addFiles(list){
+    const msgs = [];
+    for (const f of list) {
+      try {
+        const wb = XLSX.read(await f.arrayBuffer(), {type:'array'});
+        const parsed = parseSheet(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:null}));
+        if (!parsed.rows.length) { msgs.push(['warn', `<b>${esc(f.name)}</b>: ingen linjer — sprunget over.`]); continue; }
+        const sig = JSON.stringify(parsed.rows);
+        const dup = files.find(x => x.sig === sig);
+        if (dup) { msgs.push(['warn', `<b>${esc(f.name)}</b> har præcis samme indhold som <b>${esc(dup.name)}</b> — sprunget over, så intet tælles dobbelt.`]); continue; }
+        files.push({name: f.name, sig, ...parsed});
+        msgs.push(['ok', `<b>${esc(f.name)}</b>: ${parsed.rows.length} linjer.`]);
+      } catch(err) {
+        msgs.push(['err', `<b>${esc(f.name)}</b>: kunne ikke læses — ${esc(err.message)}.`]);
+      }
+    }
+    $('msgs').innerHTML = msgs.map(([c, m]) => `<div class="msg ${c}">${m}</div>`).join('');
+    render();
+  }
+
+  $('files').addEventListener('change', e => { const l = [...e.target.files]; e.target.value = ''; addFiles(l); });
+  const drop = $('drop');
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, () => drop.classList.remove('drag')));
+  drop.addEventListener('drop', e => { e.preventDefault(); addFiles([...e.dataTransfer.files].filter(f => /\.xlsx$/i.test(f.name))); });
+
+  $('file-list').addEventListener('click', e => {
+    const b = e.target.closest('button[data-i]'); if (!b) return;
+    files.splice(+b.dataset.i, 1); $('msgs').innerHTML = ''; render();
+  });
+  $('opt-sum').addEventListener('change', render);
+  $('clear').addEventListener('click', () => {
+    if (!files.length) return;
+    if (!confirm(`ER DU SIKKER?\n\nAlle ${files.length} indlæste ark fjernes fra siden.\n(Selve filerne på din enhed røres ikke.)`)) return;
+    files = []; $('msgs').innerHTML = ''; render();
+  });
+
+  // ---------- Fletning ----------
+  const dimKey = d => { const m = d.match(/^(\d+)x(\d+)$/); return m ? [+m[1], +m[2]] : [Infinity, Infinity]; };
+  function groups(){
+    const doSum = $('opt-sum').checked;
+    const by = new Map();   // varenr -> {varenr, title, lines:Map|Array}
+    files.forEach(f => f.rows.forEach(r => {
+      if (!by.has(r.varenr)) by.set(r.varenr, {varenr: r.varenr, title: f.title, lines: new Map(), n: 0});
+      const g = by.get(r.varenr);
+      const key = doSum ? [r.code, r.dims, r.ny, r.gl, r.enhed].map(norm).join('|') : 'row' + (g.n++);
+      const ex = g.lines.get(key);
+      if (ex) { ex.antal += r.antal; ex.count++; ex.from.add(f.name); }
+      else g.lines.set(key, {...r, count: 1, from: new Set([f.name])});
+    }));
+    return [...by.values()]
+      .sort((a, b) => a.varenr.localeCompare(b.varenr, 'da', {numeric:true}))
+      .map(g => {
+        const lines = [...g.lines.values()].map(l => ({...l, antal: r4(l.antal)}));
+        lines.sort((a, b) => { const [ab, al] = dimKey(a.dims), [bb, bl] = dimKey(b.dims);
+          return ab - bb || al - bl || a.code.localeCompare(b.code) || a.ny.localeCompare(b.ny); });
+        const src = new Set(); lines.forEach(l => l.from.forEach(x => src.add(x)));
+        return {varenr: g.varenr, title: g.title || 'PU', lines, files: src.size, total: r4(lines.reduce((s, l) => s + l.antal, 0))};
+      });
+  }
+
+  // ---------- Visning ----------
+  let current = [];
+  function render(){
+    $('file-count').textContent = files.length ? files.length + ' ark' : '';
+    $('file-list').innerHTML = files.map((f, i) => {
+      const vn = [...new Set(f.rows.map(r => r.varenr))].join(', ');
+      return `<div class="file"><span class="fn">${esc(f.name)}</span><span class="fi">varenr ${esc(vn)} · ${f.rows.length} linjer</span><button type="button" data-i="${i}" title="Fjern">×</button></div>`;
+    }).join('');
+    current = groups();
+    $('clear').disabled = !files.length;
+    $('dl-all').disabled = !current.length;
+    $('dl-all').textContent = current.length > 1 ? `Download alle (${current.length})` : 'Download';
+    const tot = r4(current.reduce((s, g) => s + g.total, 0));
+    $('sum').innerHTML = current.length
+      ? `${current.length} varenr · <b>${fmt(tot, 3)}</b> m²`
+      : 'Ingen ark indlæst';
+    if (!current.length) { $('groups').innerHTML = files.length ? '' : `<section class="card"><div class="empty">Indlæs de ark du har talt op. Ark med samme varenr flettes til ét ark — ét pr. varenr.</div></section>`; return; }
+    $('groups').innerHTML = current.map((g, gi) => `
+      <section class="card" style="margin-bottom:16px">
+        <div class="group-head">
+          <div class="group-title">Varenr ${esc(g.varenr)}<small>${g.lines.length} linjer fra ${g.files} ark</small></div>
+          <div style="display:flex;gap:10px;align-items:center"><span class="group-sum">${fmt(g.total, 3)} m²</span>
+            <button class="btn small" type="button" data-dl="${gi}">Download</button></div>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Variantkode</th><th>Dimensioner</th><th>Ny placering</th><th>Gl placering</th><th style="text-align:right">Antal</th><th>Enhed</th></tr></thead>
+          <tbody>${g.lines.map(l => `<tr>
+            <td class="mono">${esc(l.code) || '—'}${l.count > 1 ? `<span class="merged" title="${esc([...l.from].join(', '))}">×${l.count} lagt sammen</span>` : ''}</td>
+            <td class="mono">${esc(l.dims)}</td><td>${esc(l.ny)}</td><td>${esc(l.gl)}</td>
+            <td class="num">${fmt(l.antal, 4)}</td><td>${esc(l.enhed)}</td></tr>`).join('')}</tbody>
+        </table></div>
+      </section>`).join('');
+  }
+
+  $('groups').addEventListener('click', e => {
+    const b = e.target.closest('button[data-dl]'); if (!b) return;
+    download(current[+b.dataset.dl]);
+  });
+  $('dl-all').addEventListener('click', async () => {
+    for (const g of current) { await download(g); await new Promise(r => setTimeout(r, 500)); }
+  });
+
+  // ---------- Eksport (samme format som Variantoprydning) ----------
+  async function download(g){
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Ark1');
+    const font = {name:'Aptos Narrow', size:11};
+    [27.86, 9, 13.86, 13.86, 14.14, 13.71, 10.57, 9.14].forEach((w, i) => ws.getColumn(i + 1).width = w);
+    ws.getCell('A1').value = g.title;
+    ws.getCell('A1').font = {name:'Aptos Narrow', size:72};
+    ws.getRow(1).height = 92;
+    const vn = /^\d+$/.test(g.varenr) ? Number(g.varenr) : g.varenr;
+    ws.addTable({
+      name: 'Tabel1', ref: 'B2', headerRow: true, totalsRow: false,
+      style: {theme: 'TableStyleLight2', showRowStripes: true},
+      columns: ['Varenr','Variantkode','Dimensioner','Ny placering','Gl placering','Antal','Enhed'].map(name => ({name})),
+      rows: g.lines.map(l => [vn, l.code || null, l.dims || null, l.ny || null, l.gl || null, l.antal, l.enhed || null])
+    });
+    for (let r = 2; r <= g.lines.length + 2; r++) for (let c = 2; c <= 8; c++) ws.getCell(r, c).font = font;
+    const buf = await wb.xlsx.writeBuffer();
+    const name = `${g.title} Døde Varer ${g.varenr}`.replace(/[\\/:*?"<>|]/g, '') + '.xlsx';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
