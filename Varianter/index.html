@@ -71,6 +71,12 @@
   .bar-actions .btn.ghost{color:var(--danger);border-color:var(--danger-border)}
   .bar-actions .btn.ghost:hover{background:var(--danger-bg)}
   .bar-actions .btn:disabled{opacity:.4;cursor:not-allowed}
+  .pl-import{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border)}
+  .pl-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .pl-head b{font-size:13px} .pl-head em{font-style:normal;font-size:12px;color:var(--muted)}
+  .chip.pl{background:var(--green-bg)}
+  .place .bc{color:var(--green);font-weight:600}
+  .bal .loc{color:var(--green);font-weight:600}
   .search-card{position:sticky;top:var(--bar-h,66px);z-index:5;box-shadow:0 4px 14px rgba(11,79,121,.06),0 -8px 0 var(--smoke)}
   .search-wrap{position:relative}
   #q{font-size:22px;font-weight:600;padding:14px 44px 14px 14px}
@@ -119,6 +125,8 @@
     .grid{grid-template-columns:1fr 1fr}
     .grid .wide{grid-column:span 1}
     .import-row .field{flex:1 1 100%}
+    .pl-head{flex-direction:column;align-items:stretch}
+    .pl-head .btn{text-align:center}
     .import-row .btn{flex:1}
     .dims{font-size:17px}
     .place-edit{grid-template-columns:1fr 1fr}
@@ -154,7 +162,7 @@
   <section class="card">
     <h2>Placering — gælder alle varianter på arket</h2>
     <div class="grid">
-      <div class="field wide place-main"><label for="s-gl">Taget fra <em>(Gl placering)</em></label><input type="text" id="s-gl" autocomplete="off" placeholder="fx P11D1"></div>
+      <div class="field wide place-main"><label for="s-gl">Taget fra <em>(Gl placering — hvis ikke i Placeringsindhold)</em></label><input type="text" id="s-gl" autocomplete="off" placeholder="fx P11D1"></div>
       <div class="field wide place-main"><label for="s-ny">Kommet hen <em>(Ny placering)</em></label><input type="text" id="s-ny" autocomplete="off" placeholder="fx PL1"></div>
       <div class="field"><label for="s-title">Overskrift (A1)</label><input type="text" id="s-title" autocomplete="off" placeholder="PU"></div>
       <div class="field"><label for="s-unit">Enhed</label><input type="text" id="s-unit" autocomplete="off" placeholder="M2"></div>
@@ -170,6 +178,12 @@
     </div>
     <div class="status" id="imp-status"></div>
     <div class="chips" id="ds-chips"></div>
+    <div class="pl-import">
+      <div class="pl-head"><div><b>Placeringsindhold</b> <em>(valgfri)</em><div class="hint" style="margin-top:2px">BC-udtræk med Variantkode + Placeringskode. Udfylder "Taget fra" automatisk pr. variant.</div></div>
+        <label class="btn file-btn">Vælg .xlsx …<input type="file" id="pl-file" accept=".xlsx,.xls"></label></div>
+      <div class="status" id="pl-status"></div>
+      <div class="chips" id="pl-chips"></div>
+    </div>
   </section>
 
   <section class="card search-card">
@@ -185,7 +199,7 @@
     <div class="list" id="list"></div>
   </section>
 
-  <div class="version-footer">Variantoprydning &middot; v1.3 &middot; 01-10-2026</div>
+  <div class="version-footer">Variantoprydning &middot; v1.4 &middot; 02-10-2026</div>
 </main>
 
 <script>
@@ -203,6 +217,8 @@
     datasets: [],   // [{varenr, file, rows:[{code, desc, b, l, bal}]}]
     manual: [],     // [{id, varenr, b, l}]
     marks: {},      // key -> {count, gl:null|string, ny:null|string, t}
+    places: {},     // "varenr|VARIANTKODE" -> [{p, q}]  (fra Placeringsindhold)
+    placeFiles: [], // [{file, varenr, n}]
     lastVarenr: ''
   };
   try {
@@ -280,6 +296,7 @@
       if (existing >= 0) state.datasets[existing] = ds; else state.datasets.push(ds);
       state.lastVarenr = varenr;
       all = variants(); pruneMarks(); save();
+      if (/Husk at importere/.test($('pl-status').textContent)) setPlStatus('', '');
       setStatus(`${existing >= 0 ? 'Opdateret' : 'Importeret'}: <b>${parsed.length}</b> varianter på varenr <b>${esc(varenr)}</b>.`, 'ok');
       renderChips(); renderResults(); renderList();
     } catch(err) {
@@ -308,6 +325,71 @@
     renderChips(); renderResults(); renderList();
   });
 
+  // ---------- Placeringsindhold ----------
+  const plKey = (varenr, code) => String(varenr).trim() + '|' + String(code).trim().toUpperCase();
+  // Placering for en variant; ligger den flere steder, vælges den med størst beholdning
+  function bcPlace(v){
+    if (!v.code) return null;
+    const list = state.places[plKey(v.varenr, v.code)];
+    if (!list || !list.length) return null;
+    const sorted = [...list].sort((a, b) => (b.q || 0) - (a.q || 0));
+    return {p: sorted[0].p, others: sorted.slice(1).map(x => x.p).filter(p => p !== sorted[0].p)};
+  }
+  function setPlStatus(msg, cls){ const el = $('pl-status'); el.className = 'status ' + (cls||''); el.innerHTML = msg; }
+  function renderPlChips(){
+    $('pl-chips').innerHTML = state.placeFiles.map((f, i) =>
+      `<div class="chip pl"><b>${esc(f.varenr)}</b><span>${f.n} placeringer</span><button type="button" data-i="${i}" title="Fjern">×</button></div>`
+    ).join('');
+  }
+  $('pl-file').addEventListener('change', async e => {
+    const file = e.target.files[0]; e.target.value = '';
+    if (!file) return;
+    try {
+      const wb = XLSX.read(await file.arrayBuffer(), {type:'array'});
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:null});
+      const hi = rows.findIndex(r => r && r.some(c => norm(c) === 'placeringskode'));
+      if (hi < 0) throw new Error('fandt ingen kolonne "Placeringskode"');
+      const h = rows[hi].map(norm);
+      const cV = h.indexOf('variantkode'), cP = h.indexOf('placeringskode');
+      const cN = h.findIndex(x => x === 'varenr.' || x === 'varenr');
+      const cQ = h.findIndex(x => x.startsWith('antal'));
+      if (cV < 0 || cN < 0) throw new Error('fandt ikke kolonnerne "Variantkode" og "Varenr."');
+      const fresh = {};
+      for (let i = hi + 1; i < rows.length; i++) {
+        const r = rows[i]; if (!r) continue;
+        const code = String(r[cV] ?? '').trim(), vn = String(r[cN] ?? '').trim(), p = String(r[cP] ?? '').trim();
+        if (!code || !vn || !p) continue;
+        const q = cQ >= 0 ? toNum(r[cQ]) : NaN;
+        (fresh[plKey(vn, code)] ||= []).push({p, q: Number.isFinite(q) ? q : 0});
+      }
+      const varenrs = [...new Set(Object.keys(fresh).map(k => k.split('|')[0]))];
+      if (!varenrs.length) throw new Error('ingen linjer med variantkode og placering');
+      // Erstat tidligere placeringer for de varenr filen dækker
+      Object.keys(state.places).forEach(k => { if (varenrs.includes(k.split('|')[0])) delete state.places[k]; });
+      Object.assign(state.places, fresh);
+      state.placeFiles = state.placeFiles.filter(f => !varenrs.includes(f.varenr));
+      varenrs.forEach(vn => state.placeFiles.push({file: file.name, varenr: vn,
+        n: Object.keys(fresh).filter(k => k.startsWith(vn + '|')).length}));
+      // Kun ét varenr i filen og intet varenr skrevet endnu → udfyld det
+      if (varenrs.length === 1 && !$('imp-varenr').value.trim()) $('imp-varenr').value = varenrs[0];
+      save();
+      const loaded = new Set(state.datasets.map(d => String(d.varenr).trim()));
+      const miss = varenrs.filter(v => !loaded.has(v));
+      setPlStatus(`Indlæst placeringer for varenr <b>${esc(varenrs.join(', '))}</b>.` +
+        (miss.length ? ` Husk at importere BC-udtrækket for ${esc(miss.join(', '))} ovenfor.` : ''), 'ok');
+      renderPlChips(); renderResults(); renderList();
+    } catch(err) {
+      setPlStatus('Kunne ikke læse filen: ' + esc(err.message) + '.', 'err');
+    }
+  });
+  $('pl-chips').addEventListener('click', e => {
+    const b = e.target.closest('button[data-i]'); if (!b) return;
+    const f = state.placeFiles[+b.dataset.i];
+    Object.keys(state.places).forEach(k => { if (k.split('|')[0] === f.varenr) delete state.places[k]; });
+    state.placeFiles.splice(+b.dataset.i, 1); save();
+    setPlStatus('', ''); renderPlChips(); renderResults(); renderList();
+  });
+
   // ---------- Søgning ----------
   function parseQuery(raw){
     const q = norm(raw);
@@ -333,8 +415,11 @@
     let bal = '';
     if (v.bal != null) {
       const pcs = v.bal / area(v);
-      bal = `<div class="bal">BC: ${fmt(v.bal,3)} m² ≈ ${fmt(pcs, Math.abs(pcs - Math.round(pcs)) < 0.05 ? 0 : 1)} stk</div>`;
+      bal = `BC: ${fmt(v.bal,3)} m² ≈ ${fmt(pcs, Math.abs(pcs - Math.round(pcs)) < 0.05 ? 0 : 1)} stk`;
     }
+    const loc = bcPlace(v);
+    if (loc) bal += (bal ? ' · ' : '') + `<span class="loc">${esc(loc.p)}</span>${loc.others.length ? ' (også ' + esc(loc.others.join(', ')) + ')' : ''}`;
+    if (bal) bal = `<div class="bal">${bal}</div>`;
     return `<div class="item${n ? ' marked' : ''}" data-key="${esc(v.key)}">
       <div class="item-main">
         <div class="dims">${v.b} × ${v.l}</div>
@@ -431,11 +516,16 @@
   });
 
   // ---------- Liste ----------
-  const placeOf = m => ({
-    gl: m.gl != null && m.gl !== '' ? m.gl : state.settings.gl,
-    ny: m.ny != null && m.ny !== '' ? m.ny : state.settings.ny,
-    own: (m.gl != null && m.gl !== '') || (m.ny != null && m.ny !== '')
-  });
+  // Gl placering: egen (pr. linje) > Placeringsindhold > fælles "Taget fra"
+  const placeOf = (v, m) => {
+    const ownGl = m.gl != null && m.gl !== '', ownNy = m.ny != null && m.ny !== '';
+    const bc = ownGl ? null : bcPlace(v);
+    return {
+      gl: ownGl ? m.gl : bc ? bc.p : state.settings.gl,
+      ny: ownNy ? m.ny : state.settings.ny,
+      own: ownGl || ownNy, bc
+    };
+  };
   const openEdit = new Set();
 
   function marked(){
@@ -451,16 +541,17 @@
     $('sum-pcs').textContent = pcs;
     $('sum-m2').textContent = fmt(sum, 3);
     $('export').disabled = !rows.length;
-    $('clear-marks').disabled = !rows.length && !state.datasets.length && !state.manual.length;
+    $('clear-marks').disabled = !rows.length && !state.datasets.length && !state.manual.length && !state.placeFiles.length;
     if (!rows.length) { $('list').innerHTML = `<div class="list-empty">Ingen varianter markeret endnu. Søg på et mål ovenfor og skriv antal.</div>`; return; }
     $('list').innerHTML = rows.map(({v, m}) => {
-      const pl = placeOf(m);
+      const pl = placeOf(v, m);
       const editing = openEdit.has(v.key);
+      const dflGl = bcPlace(v)?.p || state.settings.gl;
       return `<div class="item marked" data-key="${esc(v.key)}">
         <div class="item-main">
           <div class="dims">${v.b} × ${v.l}</div>
           <div class="meta">${v.manual ? '<span class="tag man">MANUEL</span>' : `<span class="tag">${esc(v.code)}</span>`}Varenr ${esc(v.varenr)}</div>
-          <div class="place"><span class="${pl.own ? 'own' : ''}">${esc(pl.gl || '—')} → ${esc(pl.ny || '—')}${pl.own ? ' (egen)' : ''}</span>
+          <div class="place"><span class="${pl.own ? 'own' : ''}"><span class="${pl.bc ? 'bc' : ''}">${esc(pl.gl || '—')}</span> → ${esc(pl.ny || '—')}${pl.own ? ' (egen)' : pl.bc ? ' <span class="bc">(BC)</span>' : ''}</span>
             <button class="btn small" type="button" data-act="edit">${editing ? 'Luk' : 'Ret placering'}</button></div>
         </div>
         <div class="item-side">
@@ -473,9 +564,9 @@
           <button class="btn ghost small" type="button" data-act="del">Fjern</button>
         </div>
         ${editing ? `<div class="place-edit">
-          <div class="field"><label>Taget fra</label><input type="text" data-pl="gl" value="${esc(m.gl ?? '')}" placeholder="${esc(state.settings.gl || 'fælles')}" autocomplete="off"></div>
+          <div class="field"><label>Taget fra</label><input type="text" data-pl="gl" value="${esc(m.gl ?? '')}" placeholder="${esc(dflGl || 'fælles')}" autocomplete="off"></div>
           <div class="field"><label>Kommet hen</label><input type="text" data-pl="ny" value="${esc(m.ny ?? '')}" placeholder="${esc(state.settings.ny || 'fælles')}" autocomplete="off"></div>
-          <button class="btn small" type="button" data-act="reset-pl">Brug fælles</button>
+          <button class="btn small" type="button" data-act="reset-pl">Brug standard</button>
         </div>` : ''}
       </div>`;
     }).join('');
@@ -498,14 +589,15 @@
 
   $('clear-marks').addEventListener('click', () => {
     const n = Object.keys(state.marks).length;
-    if (!n && !state.datasets.length && !state.manual.length) return;
+    if (!n && !state.datasets.length && !state.manual.length && !state.placeFiles.length) return;
     const vn = state.datasets.map(d => d.varenr).join(', ');
-    if (!confirm(`ER DU SIKKER?\n\nDette sletter:\n• listen med ${n} markerede variant${n === 1 ? '' : 'er'}\n• varenr og importeret BC-udtræk${vn ? ' (' + vn + ')' : ''}\n\nDet kan ikke fortrydes. Eksportér evt. først.`)) return;
+    if (!confirm(`ER DU SIKKER?\n\nDette sletter:\n• listen med ${n} markerede variant${n === 1 ? '' : 'er'}\n• varenr og importeret BC-udtræk${vn ? ' (' + vn + ')' : ''}\n• indlæst Placeringsindhold\n\nDet kan ikke fortrydes. Eksportér evt. først.`)) return;
     // Placering/overskrift/enhed bevares — kun liste, manuelle varianter, varenr og BC-udtræk ryddes
     state.marks = {}; state.datasets = []; state.manual = []; state.lastVarenr = '';
+    state.places = {}; state.placeFiles = []; $('pl-status').innerHTML = '';
     openEdit.clear(); all = variants(); save();
     $('imp-varenr').value = ''; $('q').value = ''; setStatus('', '');
-    renderChips(); renderResults(); renderList();
+    renderChips(); renderPlChips(); renderResults(); renderList();
   });
 
   // ---------- Eksport ----------
@@ -526,7 +618,7 @@
       style: {theme: 'TableStyleLight2', showRowStripes: true},
       columns: ['Varenr','Variantkode','Dimensioner','Ny placering','Gl placering','Antal','Enhed'].map(name => ({name})),
       rows: rows.map(({v, m}) => {
-        const pl = placeOf(m);
+        const pl = placeOf(v, m);
         const vn = /^\d+$/.test(String(v.varenr)) ? Number(v.varenr) : v.varenr;
         return [vn, v.code || null, `${v.b}x${v.l}`, pl.ny || null, pl.gl || null, m2Of(v, m.count), s.unit || 'M2'];
       })
@@ -546,7 +638,7 @@
   const setBarH = () => document.documentElement.style.setProperty('--bar-h', ($('exportbar').offsetHeight + 4) + 'px');
   window.addEventListener('resize', setBarH); setBarH();
 
-  renderChips(); renderResults(); renderList();
+  renderChips(); renderPlChips(); renderResults(); renderList();
 })();
 </script>
 </body>
