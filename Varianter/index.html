@@ -67,6 +67,11 @@
   .exportbar{position:sticky;top:0;z-index:6;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 12px 10px 16px;box-shadow:0 4px 14px rgba(11,79,121,.08)}
   .exportbar .sum{font-size:14px;white-space:nowrap}
   .exportbar .sum b{font-family:'DM Mono',monospace;font-size:18px;color:var(--dark)}
+  .exportbar .progress{font-size:12px;font-weight:600;color:var(--muted)}
+  .exportbar .progress:empty{display:none}
+  .exportbar{transition:background .2s,border-color .2s}
+  .exportbar.done{background:var(--green-bg);border-color:var(--green);box-shadow:0 4px 14px rgba(46,158,82,.18)}
+  .exportbar.done .progress{color:var(--green)}
   .bar-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
   .bar-actions .btn.ghost{color:var(--danger);border-color:var(--danger-border)}
   .bar-actions .btn.ghost:hover{background:var(--danger-bg)}
@@ -152,7 +157,10 @@
 
 <main>
   <div class="exportbar" id="exportbar">
-    <div class="sum"><span id="sum-pcs">0</span> stk · <b id="sum-m2">0,000</b> m²</div>
+    <div class="sum">
+      <div class="progress" id="progress"></div>
+      <div><span id="sum-pcs">0</span> stk · <b id="sum-m2">0,000</b> m²</div>
+    </div>
     <div class="bar-actions">
       <button class="btn ghost small" type="button" id="clear-marks">Ryd liste</button>
       <button class="btn primary" type="button" id="export">Eksportér .xlsx</button>
@@ -199,7 +207,7 @@
     <div class="list" id="list"></div>
   </section>
 
-  <div class="version-footer">Variantoprydning &middot; v1.5 &middot; 02-10-2026</div>
+  <div class="version-footer">Variantoprydning &middot; v1.6 &middot; 02-10-2026</div>
 </main>
 
 <script>
@@ -539,6 +547,11 @@
     let pcs = 0, sum = 0;
     rows.forEach(({v, m}) => { pcs += m.count; sum += m2Of(v, m.count); });
     $('sum-pcs').textContent = pcs;
+    // Fremdrift: hvor mange af BC-udtrækkets varianter har fået et antal — grøn bjælke når alle er valgt
+    const bcKeys = all.filter(v => !v.manual).map(v => v.key);
+    const done = bcKeys.filter(k => state.marks[k]).length;
+    $('progress').textContent = bcKeys.length ? (done === bcKeys.length ? '✓ ' : '') + `${done} af ${bcKeys.length} varianter` : '';
+    $('exportbar').classList.toggle('done', bcKeys.length > 0 && done === bcKeys.length);
     $('sum-m2').textContent = fmt(sum, 3);
     $('export').disabled = !rows.length;
     $('clear-marks').disabled = !rows.length && !state.datasets.length && !state.manual.length && !state.placeFiles.length;
