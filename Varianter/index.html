@@ -67,7 +67,7 @@
   .exportbar{position:sticky;top:0;z-index:6;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 12px 10px 16px;box-shadow:0 4px 14px rgba(11,79,121,.08)}
   .exportbar .sum{font-size:14px;white-space:nowrap}
   .exportbar .sum b{font-family:'DM Mono',monospace;font-size:18px;color:var(--dark)}
-  .exportbar .progress{font-size:12px;font-weight:600;color:var(--muted)}
+  .exportbar .progress{font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);background:none;border:none;padding:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;display:block}
   .exportbar .progress:empty{display:none}
   .exportbar{transition:background .2s,border-color .2s}
   .exportbar.done{background:var(--green-bg);border-color:var(--green);box-shadow:0 4px 14px rgba(46,158,82,.18)}
@@ -89,6 +89,10 @@
   #q-clear:hover{background:var(--smoke)}
   .results{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .results:empty{display:none}
+  .miss-btn{margin-top:10px;width:100%}
+  .miss-btn.on{border-color:var(--accent);color:var(--accent)}
+  .miss-head{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:2px 2px 0}
+  .miss-head.ok{color:var(--green);text-transform:none;letter-spacing:0;font-size:14px;padding:8px 2px}
   .res-empty{font-size:13px;color:var(--muted);padding:6px 2px;line-height:1.5}
   .item{display:flex;align-items:center;gap:12px;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--light)}
   .item.marked{border-color:var(--accent);background:var(--accent-bg)}
@@ -158,7 +162,7 @@
 <main>
   <div class="exportbar" id="exportbar">
     <div class="sum">
-      <div class="progress" id="progress"></div>
+      <button class="progress" type="button" id="progress" title="Vis manglende varianter"></button>
       <div><span id="sum-pcs">0</span> stk · <b id="sum-m2">0,000</b> m²</div>
     </div>
     <div class="bar-actions">
@@ -199,6 +203,7 @@
       <input type="text" id="q" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Søg mål, fx 140x2040" inputmode="text">
       <button id="q-clear" type="button" aria-label="Ryd søgning">×</button>
     </div>
+    <button class="btn small miss-btn" type="button" id="miss-btn" hidden></button>
     <div class="results" id="results"></div>
   </section>
 
@@ -207,7 +212,7 @@
     <div class="list" id="list"></div>
   </section>
 
-  <div class="version-footer">Variantoprydning &middot; v1.6 &middot; 02-10-2026</div>
+  <div class="version-footer">Variantoprydning &middot; v1.7 &middot; 02-10-2026</div>
 </main>
 
 <script>
@@ -446,7 +451,15 @@
     const raw = $('q').value;
     $('q-clear').style.display = raw ? 'block' : 'none';
     const box = $('results');
-    if (!raw.trim()) { box.innerHTML = ''; return; }
+    updateMissBtn();
+    if (!raw.trim()) {
+      if (!showMissing) { box.innerHTML = ''; return; }
+      const miss = missing();
+      box.innerHTML = miss.length
+        ? `<div class="miss-head">Mangler: ${miss.length} variant${miss.length === 1 ? '' : 'er'}</div>` + miss.map(itemHTML).join('')
+        : `<div class="miss-head ok">✓ Alle varianter er valgt.</div>`;
+      return;
+    }
     if (!all.length) { box.innerHTML = `<div class="res-empty">Importér først et BC-udtræk ovenfor.</div>`; return; }
     const {p, hits} = search(raw);
     let html = hits.slice(0, 60).map(itemHTML).join('');
@@ -462,7 +475,25 @@
     box.innerHTML = html;
   }
 
-  $('q').addEventListener('input', renderResults);
+  $('q').addEventListener('input', () => { showMissing = false; renderResults(); });
+
+  // ---------- Vis manglende ----------
+  let showMissing = false;
+  // BC-varianter der endnu ikke har fået et antal (manuelle tæller ikke med)
+  const missing = () => all.filter(v => !v.manual && !state.marks[v.key]).sort((a, b) => a.b - b.b || a.l - b.l);
+  function updateMissBtn(){
+    const btn = $('miss-btn');
+    const n = missing().length, hasBc = all.some(v => !v.manual);
+    btn.hidden = !hasBc || !!$('q').value.trim() || (!n && !showMissing);
+    btn.classList.toggle('on', showMissing);
+    btn.textContent = showMissing ? 'Skjul manglende' : `Vis manglende (${n})`;
+  }
+  function openMissing(){
+    showMissing = true; $('q').value = ''; renderResults();
+    document.querySelector('.search-card').scrollIntoView({block:'nearest'});
+  }
+  $('miss-btn').addEventListener('click', () => { showMissing ? (showMissing = false, renderResults()) : openMissing(); });
+  $('progress').addEventListener('click', openMissing);
   $('q').addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -504,6 +535,13 @@
       if (!e.target.classList.contains('qty-in') || e.key !== 'Enter') return;
       e.preventDefault();
       // Klar til næste variant
+      if (showMissing && !$('q').value.trim()) {
+        // I "manglende"-visning: den valgte forsvinder, og næste manglende får fokus
+        renderResults();
+        const next = $('results').querySelector('.qty-in');
+        if (next) { next.focus(); next.select(); } else $('q').focus();
+        return;
+      }
       $('q').value = ''; renderResults(); $('q').focus();
     });
   }
@@ -552,6 +590,7 @@
     const done = bcKeys.filter(k => state.marks[k]).length;
     $('progress').textContent = bcKeys.length ? (done === bcKeys.length ? '✓ ' : '') + `${done} af ${bcKeys.length} varianter` : '';
     $('exportbar').classList.toggle('done', bcKeys.length > 0 && done === bcKeys.length);
+    updateMissBtn();
     $('sum-m2').textContent = fmt(sum, 3);
     $('export').disabled = !rows.length;
     $('clear-marks').disabled = !rows.length && !state.datasets.length && !state.manual.length && !state.placeFiles.length;
