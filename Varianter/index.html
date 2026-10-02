@@ -199,7 +199,7 @@
     <div class="list" id="list"></div>
   </section>
 
-  <div class="version-footer">Variantoprydning &middot; v1.4 &middot; 02-10-2026</div>
+  <div class="version-footer">Variantoprydning &middot; v1.5 &middot; 02-10-2026</div>
 </main>
 
 <script>
@@ -370,8 +370,8 @@
       state.placeFiles = state.placeFiles.filter(f => !varenrs.includes(f.varenr));
       varenrs.forEach(vn => state.placeFiles.push({file: file.name, varenr: vn,
         n: Object.keys(fresh).filter(k => k.startsWith(vn + '|')).length}));
-      // Kun ét varenr i filen og intet varenr skrevet endnu → udfyld det
-      if (varenrs.length === 1 && !$('imp-varenr').value.trim()) $('imp-varenr').value = varenrs[0];
+      // Placeringsindhold har altid ét varenr pr. fil → sæt det i Varenr-feltet (overskriver evt. tidligere)
+      if (varenrs.length === 1) $('imp-varenr').value = varenrs[0];
       save();
       const loaded = new Set(state.datasets.map(d => String(d.varenr).trim()));
       const miss = varenrs.filter(v => !loaded.has(v));
