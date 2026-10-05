@@ -316,6 +316,7 @@
   <div class="panel">
     <h2>2. Vælg uge(r)</h2>
     <div class="week-options" id="weekOptions">
+      <label><input type="checkbox" class="week-cb" data-range="workdays7"><span>I dag + 7 hverdage<span class="week-range" id="workdaysRange"></span><span class="week-num" id="workdaysNum"></span></span></label>
       <label><input type="checkbox" class="week-cb" data-offset="0" checked><span>Denne uge<span class="week-range" id="weekRange0"></span><span class="week-num" id="weekNum0"></span></span></label>
       <label><input type="checkbox" class="week-cb" data-offset="1"><span>Uge +1<span class="week-range" id="weekRange1"></span><span class="week-num" id="weekNum1"></span></span></label>
       <label><input type="checkbox" class="week-cb" data-offset="2"><span>Uge +2<span class="week-range" id="weekRange2"></span><span class="week-num" id="weekNum2"></span></span></label>
@@ -324,7 +325,7 @@
       <label><input type="checkbox" class="week-cb" data-offset="5"><span>Uge +5<span class="week-range" id="weekRange5"></span><span class="week-num" id="weekNum5"></span></span></label>
     </div>
     <div class="rules" style="margin-top:12px;">
-      Filtrerer "i dag"-arket på <code>Bekræftet leveringsdato</code> – ordrer til og med den seneste valgte uge tages med, inklusiv alt bagudrettet/overskredet. Ordrer <u>uden</u> en gyldig leveringsdato bliver <u>ikke</u> sorteret fra – de kommer med på listen ligesom bagudrettede ordrer, bare uden en dato på.<br>
+      Filtrerer "i dag"-arket på <code>Bekræftet leveringsdato</code> – ordrer til og med den seneste valgte uge tages med, inklusiv alt bagudrettet/overskredet. <strong>"I dag + 7 hverdage"</strong> går altid til og med den 7. hverdag (man–fre) efter i dag, uanset hvor på ugen man er – den kan ikke kombineres med ugerne (vælger du den, fravælges ugerne og omvendt). Ordrer <u>uden</u> en gyldig leveringsdato bliver <u>ikke</u> sorteret fra – de kommer med på listen ligesom bagudrettede ordrer, bare uden en dato på.<br>
       Gælder ikke for rækker som allerede er bevaret fra "i går"; de beholdes uanset ugevalg.
     </div>
   </div>
@@ -360,7 +361,7 @@
     </div>
   </div>
 
-  <footer>Byg til intern brug &middot; v3.2 &middot; 18-09-2026</footer>
+  <footer>Byg til intern brug &middot; v3.3 &middot; 05-10-2026</footer>
 </div>
 
 <script>
@@ -475,10 +476,50 @@ function isDateInRanges(date, ranges) {
   return date.getTime() <= cutoff;
 }
 
+// I dag 00:00 → slutningen af den n'te hverdag (man–fre) efter i dag.
+// Helligdage tælles ikke fra — kun lørdag/søndag springes over.
+function getWorkdaysAheadRange(workdays) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  let count = 0;
+  while (count < workdays) {
+    end.setDate(end.getDate() + 1);
+    const day = end.getDay();
+    if (day !== 0 && day !== 6) count++;
+  }
+  end.setHours(23, 59, 59, 999);
+  return { start, end };
+}
+
+function rangeForCheckbox(cb) {
+  if (cb.dataset.range === 'workdays7') return getWorkdaysAheadRange(7);
+  return getWeekRange(parseInt(cb.dataset.offset, 10));
+}
+
 function selectedWeekRanges() {
   return Array.from(document.querySelectorAll('.week-cb'))
     .filter(cb => cb.checked)
-    .map(cb => getWeekRange(parseInt(cb.dataset.offset, 10)));
+    .map(rangeForCheckbox);
+}
+
+// "I dag + 7 hverdage" er et selvstændigt valg: den udelukker ugerne og omvendt,
+// ellers ville den seneste valgte uge alligevel bestemme den øvre grænse.
+document.querySelectorAll('.week-cb').forEach(cb => {
+  cb.addEventListener('change', () => {
+    if (!cb.checked) return;
+    const isWorkdays = cb.dataset.range === 'workdays7';
+    document.querySelectorAll('.week-cb').forEach(other => {
+      if (other !== cb && (other.dataset.range === 'workdays7') !== isWorkdays) other.checked = false;
+    });
+  });
+});
+
+{
+  const r = getWorkdaysAheadRange(7);
+  document.getElementById('workdaysRange').textContent = `${formatShortDate(r.start)} – ${formatShortDate(r.end)}`;
+  const w1 = getISOWeekNumber(r.start), w2 = getISOWeekNumber(r.end);
+  document.getElementById('workdaysNum').textContent = w1 === w2 ? `Uge ${w1}` : `Uge ${w1}–${w2}`;
 }
 
 [0, 1, 2, 3, 4, 5].forEach(offset => {
