@@ -5,7 +5,7 @@
 > for alle værktøjer, denne fil inklusive.
 
 **File:** `/home/user/Induminati/Ordrer/index.html` (single self-contained file, ~920 lines — no separate CSS/JS files)
-**Current version:** `v3.3 · 05-10-2026` (footer: `<footer>Byg til intern brug &middot; v3.3 &middot; 05-10-2026</footer>`)
+**Current version:** `v3.4 · 05-10-2026` (footer: `<footer>Byg til intern brug &middot; v3.4 &middot; 05-10-2026</footer>`)
 **Status:** Live front-page tool (moved out of `Test/` per commit `637ced0`, "Flyt Ordreliste-værktøj fra Test til forsiden")
 
 ## 1. Purpose
@@ -29,7 +29,7 @@ This tool cleans and rolls forward the daily "Frigivne produktionsordrer" (relea
 - **Salgsordrer (required)** — `#dropSales` / `#fileInputSales`. Expects a sales-order export containing `Nummer` and `Intern sælger` columns.
 - All three are drag-and-drop zones (`setupDrop()`) that also respond to click-to-browse; a shared `#status` message box (`.status.ok/.err/.info`) reports load results/errors for whichever zone was last touched.
 
-**Panel 2 — "2. Vælg uge(r)"** — first a **"I dag + 7 hverdage"** checkbox (`.week-cb[data-range=workdays7]`, labels `#workdaysRange`/`#workdaysNum`, added v3.3 · 05-10-2026), then six checkboxes `#weekOptions .week-cb[data-offset=0..5]`, "Denne uge" through "Uge +5", offset 0 checked by default. Each label shows a computed date range (`weekRange0..5`, dd/mm–dd/mm) and ISO week number (`weekNum0..5`, "Uge NN"), populated once at page load via `getWeekRange()`/`getISOWeekNumber()`.
+**Panel 2 — "2. Vælg uge(r)"** — first a **"I dag + 7 hverdage"** checkbox (`.week-cb[data-range=workdays7]`, labels `#workdaysRange`/`#workdaysNum`, added v3.3 · 05-10-2026, **checked by default since v3.4**), then six checkboxes `#weekOptions .week-cb[data-offset=0..5]`, "Denne uge" through "Uge +5" (offset 0 was the default until v3.4; now none of the weeks is pre-checked). Each label shows a computed date range (`weekRange0..5`, dd/mm–dd/mm) and ISO week number (`weekNum0..5`, "Uge NN"), populated once at page load via `getWeekRange()`/`getISOWeekNumber()`.
 
 **Panel 3 — "3. Hvad værktøjet gør"** — a static Danish explainer (`.rules`) documenting the exact cleaning/comparison rules (mirrors the JS logic below — kept in sync manually, not generated). Contains the **"Kør" (`#processBtn`)** button (disabled until "i dag" + Salgsordrer are both loaded) and **"Download resultat (.xlsx)" (`#downloadBtn`)** button (disabled until processing has run).
 
