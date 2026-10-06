@@ -48,7 +48,7 @@
   .topbar .sum b{font-family:'DM Mono',monospace;font-size:17px;color:var(--dark)}
   .bar-actions{display:flex;gap:6px;flex-shrink:0}
 
-  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .field{display:flex;flex-direction:column;gap:4px;min-width:0}
   .field label{font-size:12px;font-weight:600}
   .field input{font-family:'DM Mono',monospace;font-size:16px;padding:9px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--smoke);color:var(--text);outline:none;width:100%;transition:border-color .15s,background .15s}
@@ -131,6 +131,7 @@
     <h2>Kladde-felter — gælder alle linjer</h2>
     <div class="grid">
       <div class="field"><label for="s-batch">Kladdenavn</label><input type="text" id="s-batch" autocomplete="off"></div>
+      <div class="field"><label for="s-tmpl">Kladdetypenavn</label><input type="text" id="s-tmpl" autocomplete="off"></div>
       <div class="field"><label for="s-date">Bogføringsdato</label><input type="text" id="s-date" autocomplete="off" placeholder="DD-MM-ÅÅÅÅ" inputmode="numeric"></div>
       <div class="field"><label for="s-type">Posttype</label><input type="text" id="s-type" autocomplete="off"></div>
       <div class="field"><label for="s-doc">Bilagsnr.</label><input type="text" id="s-doc" autocomplete="off"></div>
@@ -155,7 +156,7 @@
     <div id="out"></div>
   </section>
 
-  <div class="version-footer">BC-varekladde &middot; v1.0 &middot; 06-10-2026</div>
+  <div class="version-footer">BC-varekladde &middot; v1.1 &middot; 06-10-2026</div>
 </main>
 
 <script>
@@ -174,18 +175,19 @@
     return Number(/,/.test(s) ? s.replace(/\./g, '').replace(',', '.') : s);
   };
 
-  // Kolonner præcis som BC's "Varekladder"-eksport
-  const COLS = ['Kladdenavn','Bogføringsdato','Posttype','Bilagsnr.','Årsagskode','Varenr.','Variantkode','Variant bredde','Variant længde','Bredde','Længde','Beskrivelse','Lokationskode','Placeringskode','Antal','Enhedskode','Pris','Beløb','Rabatbeløb','Kostpris','Udlign.postløbenr.','Afdeling','Hovedgruppe','ItemDescription'];
-  const WIDTHS = [13,16.1,10.5,10.2,12.8,9.3,13.5,15.9,16.1,9.1,9.7,12.5,15.5,15.9,7.4,13.4,6,7.8,12.8,9.8,19.1,10,14.7,16.8];
-  // "Kopiér til BC" indsætter fra Bogføringsdato (B) til og med Enhedskode (P) — Pris/Beløb m.m. røres ikke, så BC beregner dem selv
-  const COPY_FROM = 1, COPY_TO = 15;
+  // Kolonner præcis som brugerens BC-varekladde (44 kolonner, Linjenr. først) — rækkefølgen må ikke ændres
+  const COLS = ['Linjenr.','Kladdenavn','Kladdetypenavn','Bogføringsdato','Bilagsdato','Posttype','Prisberegningsmetode','Bilagsnr.','Eksternt bilagsnr.','Varenr.','Varereferencenr.','Variantkode','Variant bredde','Variant længde','Længde','Bredde','Beskrivelse','Lokationskode','Placeringskode','Bæredygtighedskontonr.','Sælger/indkøberkode','Virksomhedsbogføringsgruppe','Produktbogføringsgruppe','Antal','Enhedskode','Pris','Beløb','Rabatbeløb','Indir. omkost.pct.','Kostpris','Samlet CO2e','Udlign.postløbenr.','Udlign fra-post','Transaktionsart','Transportmåde','Lande-/områdekode','Årsagskode','Serienr.','Lotnr.','Pakkenr.','Udløbsdato','Garantiophør den','Genvejsdimension 1-kode','Genvejsdimension 2-kode'];
+  const WIDTHS = COLS.map(h => Math.max(9, Math.min(30, h.length * 1.1 + 2)));
+  const LINE_STEP = 10000;   // BC nummererer kladdelinjer 10000, 20000, 30000 …
+  // "Kopiér til BC" indsætter fra Bogføringsdato til og med Enhedskode — Pris/Beløb m.m. røres ikke, så BC beregner dem selv
+  const COPY_FROM = COLS.indexOf('Bogføringsdato'), COPY_TO = COLS.indexOf('Enhedskode');
 
   // ---------- Indstillinger ----------
   const STORE = 'varekladde.v1';
   const today = () => { const d = new Date(); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`; };
-  let settings = {batch:'SFE OP/NED', type:'Nedregulering', doc:'AFR', loc:'VIBORG'};
+  let settings = {batch:'SFE OP/NED', tmpl:'VARE', type:'Nedregulering', doc:'AFR', loc:'VIBORG'};
   try { Object.assign(settings, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch(e){}
-  const setMap = {'s-batch':'batch','s-type':'type','s-doc':'doc','s-loc':'loc'};
+  const setMap = {'s-batch':'batch','s-tmpl':'tmpl','s-type':'type','s-doc':'doc','s-loc':'loc'};
   Object.entries(setMap).forEach(([id, k]) => {
     $(id).value = settings[k] ?? '';
     $(id).addEventListener('input', () => { settings[k] = $(id).value; try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch(e){} render(); });
@@ -275,9 +277,12 @@
   }
 
   // Én række = alle 24 BC-kolonner; tomme felter = ''
-  function rowValues(l, date){
+  function rowValues(l, date, i){
     const s = settings;
-    return [s.batch, date, s.type, s.doc, '', l.varenr, l.code, '', '', '', '', '', s.loc, '', l.antal, l.enhed, '', '', '', '', '', '', '', ''];
+    const v = {'Linjenr.': (i + 1) * LINE_STEP, 'Kladdenavn': s.batch, 'Kladdetypenavn': s.tmpl, 'Bogføringsdato': date,
+               'Posttype': s.type, 'Bilagsnr.': s.doc, 'Varenr.': l.varenr, 'Variantkode': l.code,
+               'Lokationskode': s.loc, 'Antal': l.antal, 'Enhedskode': l.enhed};
+    return COLS.map(h => v[h] ?? '');
   }
 
   // ---------- Visning ----------
@@ -316,7 +321,7 @@
       </table></div>
       <ol class="steps">
         <li><b>Kopiér til BC:</b> Åbn varekladden i BC, klik i <b>Bogføringsdato</b> på den første tomme linje og tryk <b>Ctrl+V</b>. Der indsættes fra Bogføringsdato til og med Enhedskode.</li>
-        <li><b>.xlsx:</b> Hent kladden i præcis samme format som BC's "Varekladder"-eksport (alle kolonner, Kladdenavn først) — til "Rediger i Excel" eller til selv at kopiere fra.</li>
+        <li><b>.xlsx:</b> Hent kladden med præcis BC-varekladdens 44 kolonner (Linjenr. først, 10000, 20000 …) — til "Rediger i Excel" eller til selv at kopiere fra.</li>
       </ol>` + skippedHTML(skipped);
   }
   function skippedHTML(sk){
@@ -328,7 +333,7 @@
   $('copy').addEventListener('click', async () => {
     const date = postingDate(); if (!date || !current.lines.length) return;
     const ds = `${pad(date.getUTCDate())}-${pad(date.getUTCMonth() + 1)}-${date.getUTCFullYear()}`;
-    const text = current.lines.map(l => rowValues(l, ds).slice(COPY_FROM, COPY_TO + 1)
+    const text = current.lines.map((l, i) => rowValues(l, ds, i).slice(COPY_FROM, COPY_TO + 1)
       .map(v => typeof v === 'number' ? String(v).replace('.', ',') : String(v).replace(/[\t\r\n]/g, ' ')).join('\t')).join('\r\n');
     const btn = $('copy');
     try {
@@ -348,16 +353,20 @@
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('Varekladder');
     WIDTHS.forEach((w, i) => ws.getColumn(i + 1).width = w);
-    ws.addTable({
-      name: 'Table1', ref: 'A1', headerRow: true, totalsRow: false,
-      style: {theme: 'TableStyleMedium2', showRowStripes: true},
-      columns: COLS.map(name => ({name})),
-      rows: current.lines.map(l => rowValues(l, date))
+    // Som brugerens skabelon: almindeligt ark (ingen Excel-tabel), fed overskrift på grå baggrund, frosset øverste række
+    ws.views = [{state: 'frozen', ySplit: 1, topLeftCell: 'A2', activeCell: 'A2'}];
+    ws.addRow(COLS);
+    current.lines.forEach((l, i) => ws.addRow(rowValues(l, date, i)));
+    ws.getRow(1).eachCell(c => {
+      c.font = {name: 'Calibri', size: 11, bold: true};
+      c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFC0C0C0'}};
     });
-    // Talformater som i BC's eksport; alt andet er tekst (@)
-    const numFmt = {2: 'dd-mm-yyyy', 15: '#,##0.#####'};
+    // Talformater: dato, antal og linjenr.; alt andet er tekst (@)
+    const numFmt = {[COLS.indexOf('Bogføringsdato') + 1]: 'dd-mm-yyyy', [COLS.indexOf('Antal') + 1]: '#,##0.#####', [COLS.indexOf('Linjenr.') + 1]: '0'};
     for (let r = 1; r <= current.lines.length + 1; r++) for (let c = 1; c <= COLS.length; c++) {
-      ws.getCell(r, c).numFmt = (r > 1 && numFmt[c]) || '@';
+      const cell = ws.getCell(r, c);
+      cell.numFmt = (r > 1 && numFmt[c]) || '@';
+      if (r > 1) cell.font = {name: 'Calibri', size: 11};
     }
     const buf = await wb.xlsx.writeBuffer();
     const ds = `${pad(date.getUTCDate())}-${pad(date.getUTCMonth() + 1)}-${date.getUTCFullYear()}`;
