@@ -156,7 +156,7 @@
     <div id="out"></div>
   </section>
 
-  <div class="version-footer">BC-varekladde &middot; v1.1 &middot; 06-10-2026</div>
+  <div class="version-footer">BC-varekladde &middot; v1.2 &middot; 06-10-2026</div>
 </main>
 
 <script>
@@ -179,8 +179,9 @@
   const COLS = ['Linjenr.','Kladdenavn','Kladdetypenavn','Bogføringsdato','Bilagsdato','Posttype','Prisberegningsmetode','Bilagsnr.','Eksternt bilagsnr.','Varenr.','Varereferencenr.','Variantkode','Variant bredde','Variant længde','Længde','Bredde','Beskrivelse','Lokationskode','Placeringskode','Bæredygtighedskontonr.','Sælger/indkøberkode','Virksomhedsbogføringsgruppe','Produktbogføringsgruppe','Antal','Enhedskode','Pris','Beløb','Rabatbeløb','Indir. omkost.pct.','Kostpris','Samlet CO2e','Udlign.postløbenr.','Udlign fra-post','Transaktionsart','Transportmåde','Lande-/områdekode','Årsagskode','Serienr.','Lotnr.','Pakkenr.','Udløbsdato','Garantiophør den','Genvejsdimension 1-kode','Genvejsdimension 2-kode'];
   const WIDTHS = COLS.map(h => Math.max(9, Math.min(30, h.length * 1.1 + 2)));
   const LINE_STEP = 10000;   // BC nummererer kladdelinjer 10000, 20000, 30000 …
-  // "Kopiér til BC" indsætter fra Bogføringsdato til og med Enhedskode — Pris/Beløb m.m. røres ikke, så BC beregner dem selv
-  const COPY_FROM = COLS.indexOf('Bogføringsdato'), COPY_TO = COLS.indexOf('Enhedskode');
+  // "Kopiér til BC" giver hele rækker (alle 44 kolonner, uden overskrift) i samme form som BC's egen "Kopiér rækker":
+  // tabulator-separeret, dato ÅÅÅÅ-MM-DD, decimalkomma (jf. brugerens eksempel 06-10-2026)
+  const isoDate = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 
   // ---------- Indstillinger ----------
   const STORE = 'varekladde.v1';
@@ -279,7 +280,7 @@
   // Én række = alle 24 BC-kolonner; tomme felter = ''
   function rowValues(l, date, i){
     const s = settings;
-    const v = {'Linjenr.': (i + 1) * LINE_STEP, 'Kladdenavn': s.batch, 'Kladdetypenavn': s.tmpl, 'Bogføringsdato': date,
+    const v = {'Linjenr.': (i + 1) * LINE_STEP, 'Kladdenavn': s.batch, 'Kladdetypenavn': s.tmpl, 'Bogføringsdato': date, 'Bilagsdato': date,
                'Posttype': s.type, 'Bilagsnr.': s.doc, 'Varenr.': l.varenr, 'Variantkode': l.code,
                'Lokationskode': s.loc, 'Antal': l.antal, 'Enhedskode': l.enhed};
     return COLS.map(h => v[h] ?? '');
@@ -309,7 +310,7 @@
       $('out').innerHTML = `<div class="empty">Indlæs dine optællingsark ovenfor. Alle ark samles til én varekladde, klar til BC.</div>` + skippedHTML(skipped);
       return;
     }
-    const d = date ? `${pad(date.getUTCDate())}-${pad(date.getUTCMonth() + 1)}-${date.getUTCFullYear()}` : '<span style="color:var(--danger)">ugyldig</span>';
+    const d = date ? isoDate(date) : '<span style="color:var(--danger)">ugyldig</span>';
     $('out').innerHTML = `
       <div class="fixed">Alle linjer: <b>${d}</b> · <b>${esc(settings.type)}</b> · Bilagsnr. <b>${esc(settings.doc)}</b> · <b>${esc(settings.loc)}</b> · Beskrivelse og Placeringskode tomme</div>
       <div class="tbl-wrap"><table>
@@ -320,7 +321,7 @@
           <td class="num">${fmt(l.antal, 4)}</td><td>${esc(l.enhed)}</td></tr>`).join('')}</tbody>
       </table></div>
       <ol class="steps">
-        <li><b>Kopiér til BC:</b> Åbn varekladden i BC, klik i <b>Bogføringsdato</b> på den første tomme linje og tryk <b>Ctrl+V</b>. Der indsættes fra Bogføringsdato til og med Enhedskode.</li>
+        <li><b>Kopiér til BC:</b> Åbn varekladden i BC, markér den første tomme linje og tryk <b>Ctrl+V</b>. Der indsættes hele rækker med alle 44 kolonner (Linjenr. først) — samme form som når BC selv kopierer rækker.</li>
         <li><b>.xlsx:</b> Hent kladden med præcis BC-varekladdens 44 kolonner (Linjenr. først, 10000, 20000 …) — til "Rediger i Excel" eller til selv at kopiere fra.</li>
       </ol>` + skippedHTML(skipped);
   }
@@ -332,8 +333,8 @@
   // ---------- Kopiér (tabulator-separeret, dansk talformat, uden overskrift) ----------
   $('copy').addEventListener('click', async () => {
     const date = postingDate(); if (!date || !current.lines.length) return;
-    const ds = `${pad(date.getUTCDate())}-${pad(date.getUTCMonth() + 1)}-${date.getUTCFullYear()}`;
-    const text = current.lines.map((l, i) => rowValues(l, ds, i).slice(COPY_FROM, COPY_TO + 1)
+    const ds = isoDate(date);
+    const text = current.lines.map((l, i) => rowValues(l, ds, i)
       .map(v => typeof v === 'number' ? String(v).replace('.', ',') : String(v).replace(/[\t\r\n]/g, ' ')).join('\t')).join('\r\n');
     const btn = $('copy');
     try {
@@ -362,7 +363,7 @@
       c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFC0C0C0'}};
     });
     // Talformater: dato, antal og linjenr.; alt andet er tekst (@)
-    const numFmt = {[COLS.indexOf('Bogføringsdato') + 1]: 'dd-mm-yyyy', [COLS.indexOf('Antal') + 1]: '#,##0.#####', [COLS.indexOf('Linjenr.') + 1]: '0'};
+    const numFmt = {[COLS.indexOf('Bogføringsdato') + 1]: 'yyyy-mm-dd', [COLS.indexOf('Bilagsdato') + 1]: 'yyyy-mm-dd', [COLS.indexOf('Antal') + 1]: '#,##0.#####', [COLS.indexOf('Linjenr.') + 1]: '0'};
     for (let r = 1; r <= current.lines.length + 1; r++) for (let c = 1; c <= COLS.length; c++) {
       const cell = ws.getCell(r, c);
       cell.numFmt = (r > 1 && numFmt[c]) || '@';
