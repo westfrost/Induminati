@@ -16,6 +16,7 @@ Statisk site, ingen build-step. Hvert værktøj er én selvstændig `index.html`
 - `Rullelaengde/CLAUDE.md` — Rullelængde (Test/WIP)
 - `Varianter/CLAUDE.md` — Variantoprydning (Test/WIP)
 - `Samlark/CLAUDE.md` — Saml ark (Test/WIP, fletter Variantoprydnings eksporter)
+- `Varekladde/CLAUDE.md` — BC-varekladde (Test/WIP, optællinger → nedregulering i BC)
 
 `index.html` (forsiden) er så lille og rent statisk, at dens noter blot står nedenfor i denne fil i stedet for i en separat `index.html/`-mappe (det er trods alt en fil, ikke en mappe med et værktøj i).
 
@@ -31,7 +32,7 @@ Efter enhver ændring der er committet og pushet til feature-branchen: merge og 
 
 ## Arkitektur og konventioner (læs dette først)
 
-**Statisk site, ingen build-step.** Hvert værktøj er én selvstændig `<mappe>/index.html`-fil med indlejret `<style>` og `<script>` — ingen delte JS/CSS-filer, ingen npm/bundler, ingen backend. GitHub Pages serverer repo'et direkte fra `main` med custom domain `induminati.dk` (`CNAME`-fil i repo-roden). Nogle sider trækker et par eksterne CDN-scripts ind (Google Fonts alle steder; `xlsx.full.min.js` i `Ordrer/`, `Kapacitet/`, `Varianter/` og `Samlark/` til at læse `.xlsx`-uploads; `exceljs.min.js` i `Ordrer/`, `Varianter/` og `Samlark/` til at skrive formaterede `.xlsx`-outputs) — ellers er alt selvstændigt.
+**Statisk site, ingen build-step.** Hvert værktøj er én selvstændig `<mappe>/index.html`-fil med indlejret `<style>` og `<script>` — ingen delte JS/CSS-filer, ingen npm/bundler, ingen backend. GitHub Pages serverer repo'et direkte fra `main` med custom domain `induminati.dk` (`CNAME`-fil i repo-roden). Nogle sider trækker et par eksterne CDN-scripts ind (Google Fonts alle steder; `xlsx.full.min.js` i `Ordrer/`, `Kapacitet/`, `Varianter/`, `Samlark/` og `Varekladde/` til at læse `.xlsx`-uploads; `exceljs.min.js` i `Ordrer/`, `Varianter/`, `Samlark/` og `Varekladde/` til at skrive formaterede `.xlsx`-outputs) — ellers er alt selvstændigt.
 
 **Struktur:**
 ```

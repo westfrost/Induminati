@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BC-varekladde — Induminati</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  :root {
+    --dark:#0B4F79; --accent:#E8791E; --accent-hover:#C9640F; --sky:#1C7FBF;
+    --smoke:#F3F7FA; --light:#FFFFFF; --border:#D7E3EC; --text:#17324A; --muted:#5F7C90;
+    --accent-bg:#FCEADA; --sky-bg:#EAF4FB;
+    --danger:#D64545; --danger-bg:#FBEAEA; --danger-border:#F0C7C7;
+    --warn:#7A5A18; --warn-bg:#FFF8ED; --warn-border:#E0C8A0;
+    --green:#2E9E52; --green-bg:#E6F7EC; --green-border:#A8DFB8;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh;-webkit-text-size-adjust:100%}
+  header{background:var(--dark);padding:18px 28px;display:flex;align-items:center;gap:14px}
+  .logo-icon{width:34px;height:34px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .logo-icon svg{width:20px;height:20px}
+  header h1{font-size:16px;font-weight:600;color:#fff;flex:1}
+  header h1 span{font-size:12px;color:#B9D8EA;font-family:'DM Mono',monospace;margin-left:4px;font-weight:400}
+  .btn-home{color:#CFE3EE;text-decoration:none;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:5px;transition:color .15s,border-color .15s}
+  .btn-home:hover{color:#fff;border-color:var(--accent)}
+
+  main{max-width:960px;margin:0 auto;padding:22px 16px 48px;display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:18px}
+  .card h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .card h2 .count{font-family:'DM Mono',monospace;color:var(--accent);font-size:12px;letter-spacing:0}
+
+  .btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:6px;padding:10px 16px;cursor:pointer;border:1.5px solid var(--border);background:var(--light);color:var(--text);transition:border-color .15s,background .15s,color .15s;white-space:nowrap}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.small{font-size:12px;padding:6px 10px;font-weight:500}
+  .btn.danger{color:var(--danger);border-color:var(--danger-border)}
+  .btn.danger:hover{background:var(--danger-bg)}
+  .btn.copied{background:var(--green);border-color:var(--green);color:#fff}
+
+  .topbar{position:sticky;top:0;z-index:6;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 12px 10px 16px;box-shadow:0 4px 14px rgba(11,79,121,.08)}
+  .topbar .sum{font-size:14px;min-width:0}
+  .topbar .sum b{font-family:'DM Mono',monospace;font-size:17px;color:var(--dark)}
+  .bar-actions{display:flex;gap:6px;flex-shrink:0}
+
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .field label{font-size:12px;font-weight:600}
+  .field input{font-family:'DM Mono',monospace;font-size:16px;padding:9px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--smoke);color:var(--text);outline:none;width:100%;transition:border-color .15s,background .15s}
+  .field input:focus{border-color:var(--accent);background:#fff}
+  .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px}
+
+  .drop{display:block;border:2px dashed var(--border);border-radius:8px;padding:26px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+  .drop:hover,.drop.drag{border-color:var(--accent);background:var(--accent-bg)}
+  .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .drop b{display:block;font-size:15px;margin-bottom:4px}
+  .drop span{font-size:12.5px;color:var(--muted)}
+  .msgs{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .msg{font-size:12.5px;line-height:1.5;border-radius:6px;padding:8px 12px;border:1px solid}
+  .msg.ok{color:var(--green);background:var(--green-bg);border-color:var(--green-border)}
+  .msg.warn{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-border)}
+  .msg.err{color:var(--danger);background:var(--danger-bg);border-color:var(--danger-border)}
+  .files{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+  .file{display:flex;align-items:center;gap:10px;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--smoke)}
+  .file .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+  .file .fi{color:var(--muted);white-space:nowrap;font-size:12px}
+  .file button{border:none;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;width:26px;height:26px;border-radius:50%;flex-shrink:0}
+  .file button:hover{background:var(--danger-bg);color:var(--danger)}
+
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:6px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{background:var(--dark);color:#fff;font-weight:600;text-align:left;padding:7px 9px;white-space:nowrap;font-size:11.5px}
+  td{padding:6px 9px;border-top:1px solid var(--border);white-space:nowrap}
+  tr:nth-child(even) td{background:var(--smoke)}
+  td.num{text-align:right;font-family:'DM Mono',monospace}
+  td.mono{font-family:'DM Mono',monospace}
+  .fixed{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px;padding:8px 12px;background:var(--smoke);border-radius:6px}
+  .fixed b{color:var(--text);font-weight:600}
+  td .merged{display:inline-block;font-size:10px;font-weight:600;background:var(--accent-bg);color:#A3540E;border-radius:3px;padding:1px 5px;margin-left:6px;font-family:'Inter',sans-serif}
+  .empty{font-size:13px;color:var(--muted);text-align:center;padding:24px 6px;line-height:1.55}
+  .steps{font-size:13px;line-height:1.6;padding-left:18px;margin-top:12px}
+  .steps li{margin-bottom:3px}
+  details.skipped{margin-top:12px;font-size:12.5px}
+  details.skipped summary{cursor:pointer;color:var(--warn);font-weight:600}
+  details.skipped ul{margin:6px 0 0 18px;color:var(--muted);line-height:1.5}
+
+  .version-footer{text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px}
+
+  @media (max-width:760px){ .grid{grid-template-columns:1fr 1fr} .grid .wide{grid-column:span 2} }
+  @media (max-width:640px){
+    header{padding:14px 16px;gap:10px}
+    header h1{font-size:15px}
+    header h1 span{display:block;margin-left:0;margin-top:2px}
+    main{padding:12px 10px 40px;gap:12px}
+    .card{padding:14px}
+    .topbar{padding:8px 8px 8px 12px;gap:8px}
+    .topbar .sum{font-size:12px}
+    .topbar .sum b{font-size:15px}
+    .bar-actions .btn{padding:9px 10px;font-size:12.5px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-icon">
+    <svg viewBox="0 0 20 20" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="2.5" width="14" height="15" rx="1.5"/>
+      <path d="M6 7h8M6 10h8M6 13h5"/>
+    </svg>
+  </div>
+  <h1>BC-varekladde <span>optællinger → nedregulering til BC</span></h1>
+  <a class="btn-home" href="../index.html">← Forside</a>
+</header>
+
+<main>
+  <div class="topbar">
+    <div class="sum" id="sum">Ingen optællinger indlæst</div>
+    <div class="bar-actions">
+      <button class="btn small danger" type="button" id="clear" disabled>Ryd</button>
+      <button class="btn" type="button" id="copy" disabled>Kopiér til BC</button>
+      <button class="btn primary" type="button" id="dl" disabled>.xlsx</button>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>Kladde-felter — gælder alle linjer</h2>
+    <div class="grid">
+      <div class="field"><label for="s-batch">Kladdenavn</label><input type="text" id="s-batch" autocomplete="off"></div>
+      <div class="field"><label for="s-date">Bogføringsdato</label><input type="text" id="s-date" autocomplete="off" placeholder="DD-MM-ÅÅÅÅ" inputmode="numeric"></div>
+      <div class="field"><label for="s-type">Posttype</label><input type="text" id="s-type" autocomplete="off"></div>
+      <div class="field"><label for="s-doc">Bilagsnr.</label><input type="text" id="s-doc" autocomplete="off"></div>
+      <div class="field"><label for="s-loc">Lokationskode</label><input type="text" id="s-loc" autocomplete="off"></div>
+    </div>
+    <div class="hint">Fra optællingerne føres kun <b>Varenr.</b>, <b>Variantkode</b> og <b>Antal</b> (m²) + Enhedskode over. Beskrivelse og Placeringskode efterlades tomme — dem udfylder BC selv. Felterne huskes på denne enhed.</div>
+  </section>
+
+  <section class="card">
+    <h2>Optællinger <span class="count" id="file-count"></span></h2>
+    <label class="drop" id="drop">
+      <input type="file" id="files" accept=".xlsx" multiple>
+      <b>Vælg eller træk alle optællingsark hertil</b>
+      <span>"PU Døde Varer"-ark fra Variantoprydning / Saml ark — flere filer på én gang</span>
+    </label>
+    <div class="msgs" id="msgs"></div>
+    <div class="files" id="file-list"></div>
+  </section>
+
+  <section class="card" id="out-card">
+    <h2>Varekladde <span class="count" id="line-count"></span></h2>
+    <div id="out"></div>
+  </section>
+
+  <div class="version-footer">BC-varekladde &middot; v1.0 &middot; 06-10-2026</div>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt = (v, dec) => v.toLocaleString('da-DK', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  const norm = s => String(s ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const str = v => v == null ? '' : String(v).trim();
+  const r5 = v => Math.round(v * 100000) / 100000;
+  const pad = n => String(n).padStart(2, '0');
+  const toNum = v => {
+    if (typeof v === 'number') return v;
+    const s = str(v).replace(/\s/g, '');
+    if (!s) return NaN;
+    return Number(/,/.test(s) ? s.replace(/\./g, '').replace(',', '.') : s);
+  };
+
+  // Kolonner præcis som BC's "Varekladder"-eksport
+  const COLS = ['Kladdenavn','Bogføringsdato','Posttype','Bilagsnr.','Årsagskode','Varenr.','Variantkode','Variant bredde','Variant længde','Bredde','Længde','Beskrivelse','Lokationskode','Placeringskode','Antal','Enhedskode','Pris','Beløb','Rabatbeløb','Kostpris','Udlign.postløbenr.','Afdeling','Hovedgruppe','ItemDescription'];
+  const WIDTHS = [13,16.1,10.5,10.2,12.8,9.3,13.5,15.9,16.1,9.1,9.7,12.5,15.5,15.9,7.4,13.4,6,7.8,12.8,9.8,19.1,10,14.7,16.8];
+  // "Kopiér til BC" indsætter fra Bogføringsdato (B) til og med Enhedskode (P) — Pris/Beløb m.m. røres ikke, så BC beregner dem selv
+  const COPY_FROM = 1, COPY_TO = 15;
+
+  // ---------- Indstillinger ----------
+  const STORE = 'varekladde.v1';
+  const today = () => { const d = new Date(); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`; };
+  let settings = {batch:'SFE OP/NED', type:'Nedregulering', doc:'AFR', loc:'VIBORG'};
+  try { Object.assign(settings, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch(e){}
+  const setMap = {'s-batch':'batch','s-type':'type','s-doc':'doc','s-loc':'loc'};
+  Object.entries(setMap).forEach(([id, k]) => {
+    $(id).value = settings[k] ?? '';
+    $(id).addEventListener('input', () => { settings[k] = $(id).value; try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch(e){} render(); });
+  });
+  // Datoen huskes ikke — den er altid dags dato ved åbning
+  $('s-date').value = today();
+  $('s-date').addEventListener('input', render);
+  function postingDate(){
+    const m = $('s-date').value.trim().match(/^(\d{1,2})[-./](\d{1,2})[-./](\d{2}|\d{4})$/);
+    if (!m) return null;
+    const y = m[3].length === 2 ? 2000 + +m[3] : +m[3];
+    const d = new Date(Date.UTC(y, +m[2] - 1, +m[1]));
+    return d.getUTCMonth() === +m[2] - 1 ? d : null;
+  }
+
+  // ---------- Indlæsning ----------
+  let files = [];   // [{name, sig, rows:[{varenr, code, dims, antal, enhed}]}]
+  function parseSheet(rows){
+    const hi = rows.findIndex(r => r && r.some(c => norm(c) === 'varenr' || norm(c) === 'varenr.'));
+    if (hi < 0) throw new Error('fandt ingen kolonne "Varenr"');
+    const h = rows[hi].map(norm);
+    const col = (...n) => h.findIndex(x => n.includes(x));
+    const c = {varenr: col('varenr','varenr.'), code: col('variantkode'), dims: col('dimensioner'), antal: col('antal'), enhed: col('enhed','enhedskode')};
+    if (c.antal < 0) throw new Error('fandt ingen kolonne "Antal"');
+    const out = [];
+    for (let i = hi + 1; i < rows.length; i++) {
+      const r = rows[i]; if (!r) continue;
+      const varenr = str(r[c.varenr]); if (!varenr) continue;
+      let code = c.code >= 0 ? str(r[c.code]) : '';
+      let dims = c.dims >= 0 ? str(r[c.dims]) : '';
+      if (!dims && /^\d+\s*[x×]\s*\d+$/i.test(code)) { dims = code; code = ''; }   // gammel skabelon: mål i Variantkode
+      const antal = toNum(r[c.antal]);
+      out.push({varenr, code, dims, antal: Number.isFinite(antal) ? antal : 0, enhed: c.enhed >= 0 ? str(r[c.enhed]) : ''});
+    }
+    return out;
+  }
+
+  async function addFiles(list){
+    const msgs = [];
+    for (const f of list) {
+      try {
+        const wb = XLSX.read(await f.arrayBuffer(), {type:'array'});
+        const rows = parseSheet(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:null}));
+        if (!rows.length) { msgs.push(['warn', `<b>${esc(f.name)}</b>: ingen linjer — sprunget over.`]); continue; }
+        const sig = JSON.stringify(rows);
+        const dup = files.find(x => x.sig === sig);
+        if (dup) { msgs.push(['warn', `<b>${esc(f.name)}</b> har præcis samme indhold som <b>${esc(dup.name)}</b> — sprunget over, så intet nedreguleres dobbelt.`]); continue; }
+        files.push({name: f.name, sig, rows});
+        msgs.push(['ok', `<b>${esc(f.name)}</b>: ${rows.length} linjer.`]);
+      } catch(err) {
+        msgs.push(['err', `<b>${esc(f.name)}</b>: kunne ikke læses — ${esc(err.message)}.`]);
+      }
+    }
+    $('msgs').innerHTML = msgs.map(([c, m]) => `<div class="msg ${c}">${m}</div>`).join('');
+    render();
+  }
+  $('files').addEventListener('change', e => { const l = [...e.target.files]; e.target.value = ''; addFiles(l); });
+  const drop = $('drop');
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, () => drop.classList.remove('drag')));
+  drop.addEventListener('drop', e => { e.preventDefault(); addFiles([...e.dataTransfer.files].filter(f => /\.xlsx$/i.test(f.name))); });
+  $('file-list').addEventListener('click', e => {
+    const b = e.target.closest('button[data-i]'); if (!b) return;
+    files.splice(+b.dataset.i, 1); $('msgs').innerHTML = ''; render();
+  });
+  $('clear').addEventListener('click', () => {
+    if (!files.length) return;
+    if (!confirm(`ER DU SIKKER?\n\nAlle ${files.length} indlæste optællinger fjernes fra siden.\n(Selve filerne på din enhed røres ikke.)`)) return;
+    files = []; $('msgs').innerHTML = ''; render();
+  });
+
+  // ---------- Sammenlægning ----------
+  // Én kladdelinje pr. varenr + variantkode (+ enhed); placering er ligegyldig, da Placeringskode er tom
+  function build(){
+    const map = new Map(), skipped = [];
+    files.forEach(f => f.rows.forEach(r => {
+      if (!r.code) { skipped.push(`${r.varenr} · ${r.dims || '?'} — mangler variantkode (${f.name})`); return; }
+      if (!(r.antal > 0)) { skipped.push(`${r.varenr} · ${r.code} — antal er 0 (${f.name})`); return; }
+      const key = [r.varenr, r.code.toUpperCase(), (r.enhed || '').toUpperCase()].join('|');
+      const ex = map.get(key);
+      if (ex) { ex.antal += r.antal; ex.count++; }
+      else map.set(key, {varenr: r.varenr, code: r.code, enhed: r.enhed, antal: r.antal, count: 1});
+    }));
+    const lines = [...map.values()].map(l => ({...l, antal: r5(l.antal)}))
+      .sort((a, b) => a.varenr.localeCompare(b.varenr, 'da', {numeric:true}) || a.code.localeCompare(b.code, 'da', {numeric:true}));
+    return {lines, skipped};
+  }
+
+  // Én række = alle 24 BC-kolonner; tomme felter = ''
+  function rowValues(l, date){
+    const s = settings;
+    return [s.batch, date, s.type, s.doc, '', l.varenr, l.code, '', '', '', '', '', s.loc, '', l.antal, l.enhed, '', '', '', '', '', '', '', ''];
+  }
+
+  // ---------- Visning ----------
+  let current = {lines: [], skipped: []};
+  function render(){
+    $('file-count').textContent = files.length ? files.length + ' ark' : '';
+    $('file-list').innerHTML = files.map((f, i) => {
+      const vn = [...new Set(f.rows.map(r => r.varenr))].join(', ');
+      return `<div class="file"><span class="fn">${esc(f.name)}</span><span class="fi">varenr ${esc(vn)} · ${f.rows.length} linjer</span><button type="button" data-i="${i}" title="Fjern">×</button></div>`;
+    }).join('');
+    current = build();
+    const {lines, skipped} = current;
+    const date = postingDate();
+    $('s-date').style.borderColor = date ? '' : 'var(--danger)';
+    const ok = lines.length && date;
+    $('copy').disabled = $('dl').disabled = !ok;
+    $('clear').disabled = !files.length;
+    const varenrs = new Set(lines.map(l => l.varenr)).size;
+    const tot = r5(lines.reduce((s, l) => s + l.antal, 0));
+    $('sum').innerHTML = lines.length ? `${lines.length} linjer · ${varenrs} varenr · <b>${fmt(tot, 3)}</b> m²` : 'Ingen optællinger indlæst';
+    $('line-count').textContent = lines.length ? lines.length + ' linjer' : '';
+
+    if (!lines.length) {
+      $('out').innerHTML = `<div class="empty">Indlæs dine optællingsark ovenfor. Alle ark samles til én varekladde, klar til BC.</div>` + skippedHTML(skipped);
+      return;
+    }
+    const d = date ? `${pad(date.getUTCDate())}-${pad(date.getUTCMonth() + 1)}-${date.getUTCFullYear()}` : '<span style="color:var(--danger)">ugyldig</span>';
+    $('out').innerHTML = `
+      <div class="fixed">Alle linjer: <b>${d}</b> · <b>${esc(settings.type)}</b> · Bilagsnr. <b>${esc(settings.doc)}</b> · <b>${esc(settings.loc)}</b> · Beskrivelse og Placeringskode tomme</div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Varenr.</th><th>Variantkode</th><th style="text-align:right">Antal</th><th>Enhedskode</th></tr></thead>
+        <tbody>${lines.map(l => `<tr>
+          <td class="mono">${esc(l.varenr)}</td>
+          <td class="mono">${esc(l.code)}${l.count > 1 ? `<span class="merged">×${l.count} lagt sammen</span>` : ''}</td>
+          <td class="num">${fmt(l.antal, 4)}</td><td>${esc(l.enhed)}</td></tr>`).join('')}</tbody>
+      </table></div>
+      <ol class="steps">
+        <li><b>Kopiér til BC:</b> Åbn varekladden i BC, klik i <b>Bogføringsdato</b> på den første tomme linje og tryk <b>Ctrl+V</b>. Der indsættes fra Bogføringsdato til og med Enhedskode.</li>
+        <li><b>.xlsx:</b> Hent kladden i præcis samme format som BC's "Varekladder"-eksport (alle kolonner, Kladdenavn først) — til "Rediger i Excel" eller til selv at kopiere fra.</li>
+      </ol>` + skippedHTML(skipped);
+  }
+  function skippedHTML(sk){
+    if (!sk.length) return '';
+    return `<details class="skipped"><summary>${sk.length} linje${sk.length === 1 ? '' : 'r'} ikke med i kladden</summary><ul>${sk.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>`;
+  }
+
+  // ---------- Kopiér (tabulator-separeret, dansk talformat, uden overskrift) ----------
+  $('copy').addEventListener('click', async () => {
+    const date = postingDate(); if (!date || !current.lines.length) return;
+    const ds = `${pad(date.getUTCDate())}-${pad(date.getUTCMonth() + 1)}-${date.getUTCFullYear()}`;
+    const text = current.lines.map(l => rowValues(l, ds).slice(COPY_FROM, COPY_TO + 1)
+      .map(v => typeof v === 'number' ? String(v).replace('.', ',') : String(v).replace(/[\t\r\n]/g, ' ')).join('\t')).join('\r\n');
+    const btn = $('copy');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch(e) {
+      // Fallback for ældre browsere / ikke-sikker kontekst
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    btn.textContent = `✓ ${current.lines.length} linjer kopieret`; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopiér til BC'; btn.classList.remove('copied'); }, 2500);
+  });
+
+  // ---------- .xlsx i BC's "Varekladder"-format ----------
+  $('dl').addEventListener('click', async () => {
+    const date = postingDate(); if (!date || !current.lines.length) return;
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Varekladder');
+    WIDTHS.forEach((w, i) => ws.getColumn(i + 1).width = w);
+    ws.addTable({
+      name: 'Table1', ref: 'A1', headerRow: true, totalsRow: false,
+      style: {theme: 'TableStyleMedium2', showRowStripes: true},
+      columns: COLS.map(name => ({name})),
+      rows: current.lines.map(l => rowValues(l, date))
+    });
+    // Talformater som i BC's eksport; alt andet er tekst (@)
+    const numFmt = {2: 'dd-mm-yyyy', 15: '#,##0.#####'};
+    for (let r = 1; r <= current.lines.length + 1; r++) for (let c = 1; c <= COLS.length; c++) {
+      ws.getCell(r, c).numFmt = (r > 1 && numFmt[c]) || '@';
+    }
+    const buf = await wb.xlsx.writeBuffer();
+    const ds = `${pad(date.getUTCDate())}-${pad(date.getUTCMonth() + 1)}-${date.getUTCFullYear()}`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    a.download = `Varekladde ${settings.doc || ''} ${ds}`.replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() + '.xlsx';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
