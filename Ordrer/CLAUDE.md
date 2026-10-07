@@ -5,7 +5,7 @@
 > for alle værktøjer, denne fil inklusive.
 
 **File:** `/home/user/Induminati/Ordrer/index.html` (single self-contained file, ~920 lines — no separate CSS/JS files)
-**Current version:** `v3.4 · 05-10-2026` (footer: `<footer>Byg til intern brug &middot; v3.4 &middot; 05-10-2026</footer>`)
+**Current version:** `v3.5 · 07-10-2026` (footer: `<footer>Byg til intern brug &middot; v3.5 &middot; 07-10-2026</footer>`)
 **Status:** Live front-page tool (moved out of `Test/` per commit `637ced0`, "Flyt Ordreliste-værktøj fra Test til forsiden")
 
 ## 1. Purpose
@@ -55,7 +55,7 @@ const COLUMNS_TO_KEEP = ['Nummer', 'Varekategori', 'Beskrivelse', 'Kildenr.', 'B
 5. Maps every raw row into the new header set: `NEW_COLUMNS` cells start blank; `DATE_LIKE_COLUMNS` (`Bekræftet leveringsdato`, `Rykket`, `Ny leveringsdato`) get run through `formatDateDK()`; everything else is copied through as-is (missing values become `''`).
 6. Drops fully-empty rows (`isRowEmpty()`).
 7. Applies the week filter (see §5).
-8. Drops rows whose `Status` is `6. SFE` or `3. FÆRDIG` (`STATUS_VALUES_TO_DELETE`).
+8. Drops rows whose `Status` is `6. SFE`, `3. FÆRDIG` or `8. KOSTPRIS TJEK` (`STATUS_VALUES_TO_DELETE`; `8. KOSTPRIS TJEK` added v3.5 · 07-10-2026).
 
 Date parsing/formatting helpers: `excelSerialToDate()` converts Excel's numeric date serials; `parseDateValue()` accepts a `Date`, a numeric serial, or a `dd-mm-yyyy` string; `formatDateDK()` renders any of those back out as `dd-mm-yyyy` text (used for display/preview and for the intermediate cleaned-row representation — actual Date objects are only reconstructed at export time).
 
@@ -74,7 +74,7 @@ Diff key is **`Nummer`** (`KEY_COLUMN`), compared as a trimmed string.
     - `Kildenr.` is filled in from today **only if it was blank in yesterday's row and today has a value** — never overwrites an existing value (`kildenrFilled` counter).
     - `Beskrivelse 2` is overwritten from today **only when today's value is non-blank and differs from yesterday's** (`beskrivelse2Updated` counter, added 17-09-2026) — a third, distinct sync pattern from both `Status`/date (always overwrite, even to blank) and `Kildenr.` (fill-only-if-yesterday-blank): here it's *today's* value that gates the overwrite, not yesterday's. Before this fix, `Beskrivelse 2` had no sync path at all — yesterday's value silently persisted forever and today's was discarded for any row present in both files (only brand-new rows ever showed today's value, since those come from `cleanedToday`/`newOrders` rather than `yesterdayAligned`). Explicitly requested and confirmed reversed-behavior fix; if today's `Beskrivelse 2` is blank, yesterday's value is left untouched (this is deliberately different from `Status`/date, which overwrite unconditionally including to blank).
     - `Rykket`, `Grund`, `Ny leveringsdato` are never touched by this sync step — they're the user's manually-maintained fields, preserved as-is from yesterday.
-  - **Removal**: a yesterday row is dropped from the result only if its key is no longer present in today's raw data at all, or if today's status for that key is `6. SFE`/`3. FÆRDIG`. Critically, an order that just fell outside the selected week range is **not** removed — the week filter only applies to brand-new rows coming from "i dag" (see §5), so previously-tracked orders survive regardless of week selection.
+  - **Removal**: a yesterday row is dropped from the result only if its key is no longer present in today's raw data at all, or if today's status for that key is `6. SFE`/`3. FÆRDIG`/`8. KOSTPRIS TJEK`. Critically, an order that just fell outside the selected week range is **not** removed — the week filter only applies to brand-new rows coming from "i dag" (see §5), so previously-tracked orders survive regardless of week selection.
   - Final result = `yesterdayAligned` (surviving, updated rows) concatenated with `newOrders`, then sorted.
   - `applySalesLookup()` (see below) runs on the final combined row set either way.
 
