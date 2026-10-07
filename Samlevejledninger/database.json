@@ -240,5 +240,16 @@
     "holdetid": "5",
     "tryk": "1,5",
     "bemaerkning": "Samles med det dyre teflontape.\nRødhætte temperaturer"
+  },
+  {
+    "id": 23,
+    "baandtype": "Polymax 2M020W-PU-SIL",
+    "kategori": "PU",
+    "vareNr": "60081",
+    "tempOver": "175",
+    "tempUnder": "175",
+    "holdetid": "5",
+    "tryk": "1",
+    "bemaerkning": "Fingre klippes med dug opad.\nTape ovenpå, bagepapir under samling."
   }
 ]
