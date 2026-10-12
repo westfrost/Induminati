@@ -1483,5 +1483,23 @@
     "cylinder": "",
     "pres": "",
     "bemaerkning": "8 bars tryk på manometer"
+  },
+  {
+    "id": 98,
+    "maskine": "Store HF",
+    "baandtype": "3M36blå-NP-FDA",
+    "baandbredde": 0,
+    "medbringertype": "TC60W",
+    "laengde": 335,
+    "antal": 2,
+    "kontakt": "Y2",
+    "current": "60",
+    "welding": "100",
+    "prewelding": "",
+    "cool": "150",
+    "squeeze": "2,5",
+    "cylinder": "1",
+    "pres": "40%",
+    "bemaerkning": "medbring 2stk pr. deling"
   }
 ]
