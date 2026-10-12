@@ -1501,5 +1501,23 @@
     "cylinder": "1",
     "pres": "40%",
     "bemaerkning": "medbring 2stk pr. deling"
+  },
+  {
+    "id": 99,
+    "maskine": "Lille HF",
+    "baandtype": "2M24AG-S",
+    "baandbredde": 230,
+    "medbringertype": "R15 G",
+    "laengde": 230,
+    "antal": 1,
+    "kontakt": "2",
+    "current": "",
+    "welding": "0,6",
+    "prewelding": "4",
+    "cool": "1,0",
+    "squeeze": "",
+    "cylinder": "",
+    "pres": "",
+    "bemaerkning": "Styreliste på bagsiden. Tyndt styk volta i bunden af styrelistespor"
   }
 ]
