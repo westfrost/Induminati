@@ -71,7 +71,7 @@
   .roll .what{font-size:12px;color:var(--text);flex-basis:100%;padding-left:70px;margin-top:-2px}
 
   details.settings summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--sky)}
-  .set-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
+  .set-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
   .set-grid .field{display:flex;flex-direction:column;gap:4px}
   .set-grid label{font-size:11.5px;font-weight:600;line-height:1.3}
   .set-grid input{font-size:15px;padding:8px}
@@ -131,17 +131,16 @@
         <div class="field"><label for="s-roll">Rullelængde (m)</label><input type="text" inputmode="decimal" id="s-roll"></div>
         <div class="field"><label for="s-max">Svejsebom maks. længde (mm)</label><input type="text" inputmode="decimal" id="s-max"></div>
         <div class="field"><label for="s-add">Tillæg på længden (mm)</label><input type="text" inputmode="decimal" id="s-add"></div>
-        <div class="field"><label for="s-loss">Svejsetab pr. samling (mm)</label><input type="text" inputmode="decimal" id="s-loss"></div>
       </div>
       <div class="hint">
-        <b>Bredde:</b> mindste antal strimler hvor <i>antal × strimmelbredde − (antal − 1) × svejsetab</i> ≥ færdig bredde. Fx 400 mm → 4 strimler giver kun 400 − 3 × tab, altså for lidt → <b>5 strimler</b>.<br>
+        <b>Bredde:</b> altid én strimmel mere end der går op i bredden — <i>(bredde ÷ strimmelbredde, rundet ned) + 1</i>. Fx 400 mm → <b>5 strimler</b>, 350 mm → 4.<br>
         <b>Længde:</b> er båndet længere end svejsebommen, deles det i lige store sektioner (fx 1800 → 2 × 900). Hver strimmel = sektion + tillæg (fx 2 × 950).<br>
         <b>Ruller:</b> strimlerne fordeles på ruller med længste strimler først. Skæretab mellem strimlerne er ikke medregnet.
       </div>
     </details>
   </section>
 
-  <div class="version-footer">Strimmelberegner &middot; v1.0 &middot; 28-10-2026</div>
+  <div class="version-footer">Strimmelberegner &middot; v1.1 &middot; 28-10-2026</div>
 </main>
 
 <script>
@@ -151,7 +150,7 @@
   const num = s => { const t = String(s ?? '').trim().replace(/\s/g, '').replace(',', '.'); return t === '' ? null : Number(t); };
   const STORE = 'strimler.v1';
 
-  const DEF = {w:100, roll:60, max:1700, add:50, loss:5};
+  const DEF = {w:100, roll:60, max:1700, add:50};
   let state = {settings:{...DEF}, lines:[{w:'', l:'', q:'1'}]};
   try { const s = JSON.parse(localStorage.getItem(STORE) || 'null'); if (s) state = {settings:{...DEF, ...s.settings}, lines: s.lines?.length ? s.lines : state.lines}; } catch(e){}
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e){} };
@@ -159,17 +158,16 @@
   // ---------- Beregning for én båndstørrelse ----------
   function calc(W, L, Q){
     const S = state.settings;
-    const sw = num(S.w), max = num(S.max), add = num(S.add), loss = num(S.loss);
-    if (!(sw > 0 && max > 0 && add >= 0 && loss >= 0 && loss < sw)) return {err:'Tjek forudsætningerne nederst.'};
-    // Bredde: mindste n med n·sw − (n−1)·tab ≥ W
-    const n = Math.max(1, Math.ceil((W - loss) / (sw - loss) - 1e-9));
-    const net = n * sw - (n - 1) * loss;
+    const sw = num(S.w), max = num(S.max), add = num(S.add);
+    if (!(sw > 0 && max > 0 && add >= 0)) return {err:'Tjek forudsætningerne nederst.'};
+    // Bredde: altid én strimmel mere end der går op i bredden (400 → 5)
+    const n = Math.floor(W / sw + 1e-9) + 1;
     // Længde: lige store sektioner der hver kan være i svejsebommen
     const k = Math.ceil(L / max - 1e-9);
     const sec = L / k;
     const piece = Math.ceil(sec + add);   // hele mm
     const perBelt = n * k;
-    return {n, net, k, sec, piece, perBelt, total: perBelt * Q, meters: perBelt * Q * piece / 1000};
+    return {n, k, sec, piece, perBelt, total: perBelt * Q, meters: perBelt * Q * piece / 1000};
   }
 
   // ---------- Linjer ----------
@@ -205,7 +203,7 @@
       box.innerHTML = `
         <div class="big"><b>${fmt(r.total)}</b> ${r.total === 1 ? 'strimmel' : 'strimler'} à <b>${fmt(r.piece)}</b> mm</div>
         <div class="detail">Pr. bånd: <b>${r.n}</b> i bredden${r.k > 1 ? ` × <b>${r.k}</b> sektioner i længden (${fmt(L)} > ${fmt(num(S.max))} → ${r.k} × ${fmt(r.sec, r.sec % 1 ? 1 : 0)} + ${fmt(num(S.add))})` : ` (${fmt(L)} + ${fmt(num(S.add))})`} = <b>${r.perBelt}</b> ${r.perBelt === 1 ? 'strimmel' : 'strimler'}.
-          Bredde efter svejsning ca. ${fmt(r.net)} mm (${fmt(r.net - W)} mm at skære af). I alt ${fmt(r.meters, 2)} m.</div>`;
+          I alt ${fmt(r.meters, 2)} m.</div>`;
       tStrips += r.total; tMm += r.total * r.piece;
       for (let j = 0; j < r.total; j++) pieces.push({len: r.piece, label: `${fmt(W)}×${fmt(L)}`});
     });
@@ -254,7 +252,7 @@
     if (!confirm('Ryd alle båndstørrelser?')) return;
     state.lines = [{w:'', l:'', q:'1'}]; save(); renderLines();
   });
-  const setMap = {'s-w':'w','s-roll':'roll','s-max':'max','s-add':'add','s-loss':'loss'};
+  const setMap = {'s-w':'w','s-roll':'roll','s-max':'max','s-add':'add'};
   Object.entries(setMap).forEach(([id, k]) => {
     $(id).value = state.settings[k];
     $(id).addEventListener('input', () => { state.settings[k] = $(id).value; save(); update(); });
