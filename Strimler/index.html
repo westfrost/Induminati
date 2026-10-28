@@ -53,22 +53,13 @@
   .detail{font-size:12.5px;color:var(--muted);line-height:1.5;flex-basis:100%}
   .detail b{color:var(--text);font-weight:600}
   .err{font-size:12.5px;color:var(--danger)}
+  #roll-err:empty{display:none}
 
   .sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .stat{background:var(--smoke);border-radius:8px;padding:12px;text-align:center}
   .stat .v{font-family:'DM Mono',monospace;font-size:26px;font-weight:600;color:var(--dark)}
   .stat .v.accent{color:var(--accent)}
   .stat .k{font-size:12px;color:var(--muted);margin-top:2px}
-  .cutlist{margin-top:14px}
-  .cutlist h3{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-  .roll{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)}
-  .roll:last-child{border-bottom:none}
-  .roll .n{font-weight:700;min-width:60px}
-  .roll .bar{flex:1;height:14px;background:var(--smoke);border-radius:3px;overflow:hidden;display:flex;min-width:80px}
-  .roll .bar span{background:var(--accent);border-right:1px solid #fff}
-  .roll .bar span:nth-child(even){background:var(--accent-hover)}
-  .roll .t{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);white-space:nowrap}
-  .roll .what{font-size:12px;color:var(--text);flex-basis:100%;padding-left:70px;margin-top:-2px}
 
   details.settings summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--sky)}
   .set-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
@@ -90,7 +81,6 @@
     .sum-grid{grid-template-columns:1fr 1fr 1fr}
     .stat .v{font-size:20px}
     .set-grid{grid-template-columns:1fr 1fr}
-    .roll .what{padding-left:0}
   }
 </style>
 </head>
@@ -120,7 +110,7 @@
       <div class="stat"><div class="v" id="t-meter">0</div><div class="k">meter strimmel</div></div>
       <div class="stat"><div class="v" id="t-rolls">0</div><div class="k">ruller à <span id="t-rollm">60</span> m</div></div>
     </div>
-    <div class="cutlist" id="cutlist"></div>
+    <div class="err" id="roll-err" style="margin-top:10px"></div>
   </section>
 
   <section class="card">
@@ -140,7 +130,7 @@
     </details>
   </section>
 
-  <div class="version-footer">Strimmelberegner &middot; v1.1 &middot; 28-10-2026</div>
+  <div class="version-footer">Strimmelberegner &middot; v1.2 &middot; 28-10-2026</div>
 </main>
 
 <script>
@@ -213,26 +203,19 @@
     renderRolls(pieces);
   }
 
-  // ---------- Fordeling på ruller (first-fit, længste først) ----------
+  // ---------- Antal ruller (strimler fordeles first-fit, længste først) ----------
   function renderRolls(pieces){
     const rollMm = (num(state.settings.roll) || 0) * 1000;
-    if (!pieces.length || !(rollMm > 0)) { $('t-rolls').textContent = '0'; $('cutlist').innerHTML = ''; return; }
-    if (pieces.some(p => p.len > rollMm)) { $('t-rolls').textContent = '—'; $('cutlist').innerHTML = '<div class="err">En strimmel er længere end en hel rulle.</div>'; return; }
+    if (!pieces.length || !(rollMm > 0)) { $('t-rolls').textContent = '0'; $('roll-err').textContent = ''; return; }
+    if (pieces.some(p => p.len > rollMm)) { $('t-rolls').textContent = '—'; $('roll-err').textContent = 'En strimmel er længere end en hel rulle.'; return; }
     const rolls = [];
     [...pieces].sort((a, b) => b.len - a.len).forEach(p => {
       let r = rolls.find(r => r.used + p.len <= rollMm);
-      if (!r) { r = {used: 0, items: []}; rolls.push(r); }
-      r.used += p.len; r.items.push(p);
+      if (!r) { r = {used: 0}; rolls.push(r); }
+      r.used += p.len;
     });
     $('t-rolls').textContent = fmt(rolls.length);
-    $('cutlist').innerHTML = `<h3>Skæreplan</h3>` + rolls.map((r, i) => {
-      const groups = {};
-      r.items.forEach(p => { const k = `${fmt(p.len)} mm (${p.label})`; groups[k] = (groups[k] || 0) + 1; });
-      return `<div class="roll"><span class="n">Rulle ${i + 1}</span>
-        <span class="bar">${r.items.map(p => `<span style="width:${p.len / rollMm * 100}%"></span>`).join('')}</span>
-        <span class="t">${fmt(r.used / 1000, 2)} / ${fmt(rollMm / 1000)} m · rest ${fmt((rollMm - r.used) / 1000, 2)} m</span>
-        <span class="what">${Object.entries(groups).map(([k, v]) => `${v} × ${k}`).join(' · ')}</span></div>`;
-    }).join('');
+    $('roll-err').textContent = '';
   }
 
   // ---------- Hændelser ----------

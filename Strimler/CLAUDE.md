@@ -4,7 +4,7 @@
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**Fil:** `/home/user/Induminati/Strimler/index.html`. **Version:** v1.1 · 28-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
+**Fil:** `/home/user/Induminati/Strimler/index.html`. **Version:** v1.2 · 28-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
 
 **Formål:** Beregn hvor mange strimler råbånd der skal bruges til en ordre. Råbåndet (Volta Spike) kommer i ruller à 100 mm × 60 m; strimlerne svejses sidevejs sammen til færdige bånd. Ingen eksterne scripts.
 
@@ -13,6 +13,6 @@
 - **Længde:** strimmel = færdig længde + **50 mm** (til at skære rent). Svejsebommen kan maks. **1700 mm**; er båndet længere, deles det i `k = ceil(L / 1700)` lige store sektioner, strimmel = `L/k + 50` (fx 1800 → 2 × 950). Grænsen gælder den færdige længde (1700 → én strimmel à 1750). Strimmellængden rundes op til hele mm.
 - Pr. bånd: `n × k` strimler; pr. linje × antal bånd.
 
-**Ruller:** alle strimler fordeles first-fit-decreasing på ruller à 60 m (skæretab mellem strimler ikke medregnet); vist som skæreplan pr. rulle med rest.
+**Ruller:** kun **antal ruller** vises (i "Samlet for ordren"), beregnet ved at fordele alle strimler first-fit-decreasing på ruller à 60 m (skæretab ikke medregnet). v1.0–v1.1 viste også en skæreplan pr. rulle (bjælke, brugt/rest, hvilke strimler) — **fjernet i v1.2 efter brugerønske**; genindfør den ikke.
 
 **UI:** flere linjer (bredde × længde × antal), resultat pr. linje + samlet (strimler, meter, ruller). Forudsætninger (strimmelbredde, rullelængde, svejsebom-maks., længdetillæg) kan rettes. Linjer og forudsætninger gemmes i `localStorage` `strimler.v1`.
