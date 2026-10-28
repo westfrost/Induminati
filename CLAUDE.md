@@ -17,6 +17,7 @@ Statisk site, ingen build-step. Hvert værktøj er én selvstændig `index.html`
 - `Varianter/CLAUDE.md` — Variantoprydning (Test/WIP)
 - `Samlark/CLAUDE.md` — Saml ark (Test/WIP, fletter Variantoprydnings eksporter)
 - `Varekladde/CLAUDE.md` — BC-varekladde (Test/WIP, optællinger → nedregulering i BC)
+- `Strimler/CLAUDE.md` — Strimmelberegner (Test/WIP, Volta Spike-strimler pr. ordre)
 
 `index.html` (forsiden) er så lille og rent statisk, at dens noter blot står nedenfor i denne fil i stedet for i en separat `index.html/`-mappe (det er trods alt en fil, ikke en mappe med et værktøj i).
 
