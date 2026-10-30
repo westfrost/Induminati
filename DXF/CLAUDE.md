@@ -1,98 +1,78 @@
-# DXF/ — DXF → NCP Konverter
+# DXF/ — DXF / SVG → NCP Konverter
 
 > Del af en opdelt CLAUDE.md — se `../CLAUDE.md` for fælles konventioner
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**File:** `/home/user/Induminati/DXF/index.html` (single self-contained file, ~2030 lines). Danish-language UI. Page `<title>` is "DXF → NCP Konverter" but the on-page `<h1>` reads "DXF / SVG → NCP Vandskærer Konverter" with a small tag `IMF_PBL` — the tool actually accepts both DXF and SVG input despite the shorter title/footer label. Version footer (bottom of file): **v1.2 · 07-07-2026**.
+**File:** `/home/user/Induminati/DXF/index.html` (single self-contained file, ~1900 lines). Danish-language UI. Version footer (bottom of file): **v2.0 · 30-10-2026**. v2.0 was a near-complete rewrite of the v1.x script (see §7 for what was wrong in v1.x — do not reintroduce those bugs).
 
 ## 1. Purpose
 
-Converts 2D CAD drawings (DXF or SVG) into `.ncp` G-code-like programs for a waterjet/CNC cutting machine (an "IMF_PBL" controller dialect — commands like `MOVEABS`, `CWABS/CCWABS`, `FASTABS`, `SETPORT`). It parses vector entities out of the uploaded file, normalizes/scales them into micrometers, lets the operator preview the geometry and the resulting cut path, then emits the NCP text file for download. It also has a secondary standalone mode ("03 — Manuelt emne") to generate simple parametric shapes (rectangle, circle, flange/washer) without any source file at all — useful for quick one-off cuts.
+Converts 2D CAD drawings (DXF or SVG) into `.ncp` programs for a waterjet cutter ("IMF_PBL" controller dialect — `FASTABS`, `MOVEABS`, `CWABS`/`CCWABS`, `SETPORT`, `WAIT`, `PROGEND`). Pipeline: parse → chain into contours → classify outer/hole → lead-ins + cut order → (optional nesting on a sheet) → NCP text → ISO-8859-1 download. There is also a manual shape generator (rectangle with optional corner radius, circle, flange) that feeds the same pipeline, so manual shapes can be nested too.
 
-## 2. UI walkthrough
+## 2. Coordinate system & data model (read first)
 
-Left panel (`.panel`), top to bottom:
+- **Everything internal is in micrometers (µm, the NCP unit) as floats, Y up** (same as CAD/DXF). Rounding to integer µm happens **only** when NCP lines are emitted (`Math.round` in `generateNCP`).
+- **SVG is Y-down**, so `parseSVG` mirrors Y (root matrix `[s,0,0,-s,0,0]`) — an SVG part is cut as it looks. (v1.x did not flip and the canvas drew Y-down, so DXF parts looked mirrored in the preview and SVG parts were cut mirrored.)
+- **Machine zero = (0,0).** Without nesting the part is normalized so its bbox min is (0,0). With nesting, (0,0) is the sheet's bottom-left corner and parts are placed at absolute sheet coordinates.
+- **Segments:** `{t:'L', x0,y0,x1,y1}` or `{t:'A', x0,y0,x1,y1,cx,cy,ccw}` (`Lseg`/`Aseg`). Arcs are defined by endpoints + center + direction; `arcSweep()` gives the signed sweep. Full circles are always **two half arcs** (CCWABS can't express 360°). `revSeg` swaps endpoints and flips `ccw` — this is how a contour is reversed correctly.
+- **Paths** (parser output): `{segs, closed, layer}` — one per source entity (closed polylines/circles are already closed).
+- **Contours** (`buildContours`): chained paths + `poly` (flattened at 10 µm), `bb` (exact, incl. arc extremes via `segBB`), signed `area` (CCW positive), `depth` (number of closed contours containing it), `parent` (smallest container index), `kind` = `outer` (closed, even depth) / `hole` (closed, odd depth) / `open`.
+- **Matrices** are `[a,b,c,d,e,f]` (`mat.*`). `xfSegs(segs, m)` transforms segments; if `m` is not a similarity (non-uniform scale from an INSERT or SVG transform) arcs are flattened to lines first; a mirroring matrix (det<0) flips `ccw`.
 
-- **01 — DXF / SVG Fil**: a drag-and-drop zone (`#dropZone`) plus hidden `<input type=file accept=".dxf,.svg">`. Drop or click-to-browse triggers `handleFile()`. Shows a green "file loaded" chip (`#fileLoaded`/`#fileName`) once a file is read.
-- Hidden machine-config fields (not exposed in the UI, but read by the generator): `#vel` (50000), `#fastvel` (166000), `#pressure` (3800), `#startWait` (1000), `#material` ("POM/Standard/5.000"), `#outputName`. These are fixed constants baked into the page rather than user-editable controls.
-- **02 — Indstillinger** (settings):
-  - `#arcMode` select — "Native CWABS/CCWABS (anbefalet)" vs. segmenting arcs into 5°/2°/1° line chords.
-  - `#dxfUnit` select — mm / m / inch / µm (µm = "already in NCP unit"), drives `getScaleFactor()`.
-  - `#cutOrder` select — "DXF-rækkefølge" (as-drawn) vs. "Optimer" (nearest-neighbor travel optimization via `optimizeCutOrder()`).
-  - `#leadIn` number input (mm, default 3) — lead-in/lead-out distance; explanatory text notes the cutter starts 3mm outside the contour and plunges in (and 3mm inside a hole's void for internal cuts).
-- **03 — Manuelt emne** (manual shape generator): tab group (`switchShapeTab()`) for Firkant (rectangle: width/height/corner radius), Cirkel (outer diameter), Flange (outer Ø + inner Ø/hole). Has its own output filename field (`#shapeOutputName`) and a "⚡ Generer fra mål" button (`generateShapeNCP()`) that builds geometry directly and skips DXF/SVG parsing entirely.
-- **Fundet geometri** (entity info, hidden until a file loads): stat tiles for entity count and bbox size in mm, plus colored badges per entity type (`updateEntitySection()`).
-- **Log** panel (`#log`) — timestamped/colored status lines (`log(msg, type)`, types `ok`/`warn`/`err`/`info`/`accent`).
-- **Actions**: "⚡ Generer NCP-fil" (`#btnConvert`, disabled until parse succeeds, wired to `generateNCP()`), and "↓ Download NCP" (`#btnDownload`, hidden until output exists, calls `downloadNCP()`).
+## 3. Parsing
 
-Right panel is the preview area with a tab group (Geometri / NCP kode, `switchTab()`):
-- **Geometri tab**: `<canvas id="preview">` rendering the parsed geometry, plus floating zoom +/−/fit buttons (`zoom()`, `fitView()`) and a bottom-left overlay (`#coordOverlay`) showing size/zoom/entity count.
-- **NCP kode tab**: `#viewNcp` — syntax-highlighted plain-text NCP output, line count shown in `#previewInfo`.
+**DXF (`parseDXF`)** — hand-rolled, no library. `readPairs` → (code, value) pairs; walks `SECTION`s:
+- `HEADER`: reads `$INSUNITS` (1 inch, 4 mm, 5 cm, 6 m, 13 µm). On **first load** of a file this sets the `#dxfUnit` dropdown; afterwards the user's choice wins. Changing the unit re-parses the stored file text (`srcText`) — in v1.x a unit change after loading did nothing.
+- `BLOCKS`: block definitions (base point + records) for `INSERT`.
+- `ENTITIES`: `readRecords` + `groupSeq` (attaches `VERTEX` records to `POLYLINE`, drops `ATTRIB`/`SEQEND`).
+- Supported: `LINE`, `ARC`, `CIRCLE`, `LWPOLYLINE` (bulges → real arcs via `bulgeSeg`), old-style `POLYLINE`+`VERTEX` (meshes/polyface skipped), `SPLINE` (true rational B-spline evaluation via de Boor, `nurbsPts`; falls back to fit points with a warning), `ELLIPSE` (flattened, 180 pts/turn), `INSERT` (recursive, depth ≤ 8, scale/rotation/column-row arrays; block entities on layer `0` inherit the insert's layer).
+- OCS: entities with extrusion Z < 0 (code 230) are mirrored in X (arbitrary-axis rule for N=(0,0,-1)) for CIRCLE/ARC/LWPOLYLINE/2D POLYLINE/INSERT; ELLIPSE flips its minor-axis direction. LINE/SPLINE/ELLIPSE coordinates are WCS.
+- Paper-space entities (code 67 = 1) at top level are skipped (title blocks etc.).
+- Everything else (TEXT, MTEXT, DIMENSION, HATCH, POINT, …) is **counted and listed in one log warning** — never silently dropped.
 
-## 3. DXF parsing
+**SVG (`parseSVG`)** — DOMParser; elements `line/rect/circle/ellipse/polyline/polygon/path`, skipping anything inside `defs/clipPath/mask/symbol/marker/pattern`. `<use>` is not supported (warned). Transforms: `parseTransform` composes *all* functions in order (`matrix/translate/scale/rotate(a,cx,cy)/skewX/skewY`); cumulative matrix from all ancestors. Scale: `width` with an absolute unit (mm/cm/in/pt/pc) + `viewBox` → exact; otherwise SVG user units are treated as the selected unit. Circles and equal-radius rounded rects become real arcs; Béziers are flattened with a proper chord-distance flatness test (10 µm, `flatCubic`; quadratics are converted to cubics); `A` arcs via `svgArcToPoints` (with the spec's radius scale-up). Layer = nearest ancestor `<g>`'s `inkscape:label` or `id`.
 
-`parseDXF(text)` is a **hand-rolled line-by-line DXF parser** — no library, no format sniffing beyond finding the `ENTITIES` section by scanning for a bare `ENTITIES` line. It walks the file as pairs of (group code, value) lines, looks for `0`-code entity-type markers, and dispatches per type. Parsing stops at `ENDSEC`/`EOF`.
+## 4. Contours, lead-ins, cut order
 
-Supported entity types:
-- **LINE** — reads codes 10/20 (start) and 11/21 (end); degenerate (near-zero-length, `dist < 0.5`) lines are dropped.
-- **ARC** — codes 10/20 (center), 40 (radius), 50/51 (start/end angle in degrees).
-- **CIRCLE** — codes 10/20 (center), 40 (radius).
-- **LWPOLYLINE / POLYLINE** — vertex points collected via repeated 10/20 pairs (helper `readEntityProps`), bulge factors from code 42 (per-vertex, keyed by point index), closed flag from bit 0 of code 70.
-- **SPLINE** — control points collected from 10/20 pairs (same collection path as polylines, since `readEntityProps` treats spline control points identically); **splines are NOT true NURBS-evaluated** — they are just treated as a polyline through the raw control points, with a warning logged (`⚠ SPLINE fundet (...) — approksimeres som polyline`). This is a shape-fidelity gotcha: a spline rendered this way will generally NOT match the true curve, especially for coarse control-point spacing.
+- **Chaining** (`chainPaths`): open paths are joined end-to-end when endpoints are within `#chainTol` (Avanceret, default 0.1 mm), using a spatial hash. Chains are extended **forwards and backwards**, reversing paths with `revSegs` as needed; joined endpoints are snapped. Output keeps original drawing order (`ord`).
+- **Normalization** happens in `rebuildPart()` after layer filtering (so turning off a dimension layer re-zeros the part).
+- **Lead-in** (`computeLead`): perpendicular to the start tangent, into the waste — outside for `outer`, inside the hole for `hole` (direction derived from the contour's signed area). Shortened ×0.6 up to 10 times until the point is on the correct side and ≥ ½·length from the contour; falls back to piercing on the contour. Open contours keep the v1 behaviour (backwards along the start tangent). The lead-in is cut as the first `MOVEABS` after the pierce.
+- **Cut order** (`orderContours`): a contour can only be cut after all contours inside it (`parent` links) are done → **holes before the outline they sit in, always**, in both modes. "Som tegnet" = drawing order subject to that rule; "Optimer" = nearest next lead-in from the current position.
 
-Any entity type not explicitly matched (e.g. ELLIPSE, TEXT, MTEXT, DIMENSION, INSERT/block references, HATCH, SOLID, POINT) is **silently ignored** — the `0`-code dispatch has no `else`/fallback branch, so unrecognized entities produce no log message and no error; they simply vanish from the output. There is no block/INSERT expansion, no layer filtering/exclusion UI (layer is captured per entity but never used to filter), and no handling of DXF `LAYER` or `HEADER` sections (units, etc. — units are taken purely from the user's `#dxfUnit` dropdown, not from the DXF's own `$INSUNITS`).
+## 5. Nesting ("04 — Nesting / Plade")
 
-All coordinates are converted to **integer micrometers** via `toUm(v) = Math.round(v * scaleFactor)`, where `scaleFactor` comes from `getScaleFactor()` (mm→1000, m→1000000, inch→25400, µm→1). After parsing, `normalizeEntities()` shifts all geometry so the bounding-box minimum is at (0,0) — logging the applied offset in mm.
+Inputs: sheet X/Y, spacing between parts, edge margin, count (0 = fill), rotation (`free` 0/90/180/270, `flip` 0/180 — keeps grain direction, `none`). Settings are remembered per browser in `localStorage` key `induminati-dxf-nest-v1` (wrapped in try/catch). The whole drawing is treated as **one part** (top-level contours, holes filled). Debounced 200 ms (`scheduleNest`), result cached by `nestParamsKey()`.
 
-**SVG parsing** (`parseSVG`) is a separate, equally hand-rolled path: walks `line/rect/circle/ellipse/polyline/polygon/path` elements, applies cumulative `transform` matrices (`matrix/translate/scale/rotate`, composed via `multiplyMatrix`), attempts to detect mm-vs-user-unit scale from `viewBox`+`width="...mm"`, and has a full custom SVG path-data tokenizer/interpreter supporting M/L/H/V/C/S/Q/T/A/Z (cubic and quadratic Béziers flattened by recursive subdivision `subdivideCubic`/`subdivideQuadratic`; elliptical arcs converted to points by `svgArcToPoints`). Ellipses are always segmented into ~72 points with a warning logged.
+Algorithm (`nestCompute`) — raster no-fit + lattice search:
+1. Cell size `r = max(maxDim/400, 25 µm)`. For each needed orientation, the rotated part's top-level outline is rasterized (`rasterFoot`: scanline fill + edge sampling, as per-row interval lists) and dilated by a disk of `k = ceil(spacing/(2r) + 1.5)` cells (conservative: the real gap ends up ~0.5–1 mm above the requested spacing for 100 mm parts).
+2. `nfp(A,B)` builds a collision bitmap over all relative offsets from interval overlaps (difference arrays per dy).
+3. Shapes: single orientations (0°, and 90° if free) plus **pairs** (0°+180°, 90°+270°) where B's offset minimizes the pair's bbox — this is what lets L/T/triangle parts interlock.
+4. `latticeCands`: for each shape and both directions (rows / columns), `a` = shortest collision-free step, then for each row shift `bx` the smallest row height `by` with no collision against any lattice point → candidate lattices (staggered rows give hex packing for circles).
+5. `placeLattice` lays every candidate on the sheet (each member of a pair placed individually if it fits) and the one with most parts wins (tie → smallest used bbox; with a count N, the first N in row order).
+6. `checkGaps` re-measures the real min distance between neighbouring outlines (exact flattened geometry) — shown as an error if below the requested spacing.
+7. `serpentine` orders the parts row by row, alternating direction; within each part `orderContours` applies (holes first).
 
-## 4. Canvas preview
+With nesting, the outer-contour lead-in is capped at 80 % of the spacing so the pierce never lands in a neighbour (shown as a note).
 
-`renderCanvas()` is the core draw routine: clears the canvas, draws a light grid (`#E3EAF0`, step 10mm or 50mm depending on zoom level) and darker axes at X=0/Y=0 (`#AABDCB`), then iterates `parsedEntities` drawing each with `ctx.beginPath()/stroke()` using a per-type color map:
-- LINE → `#0B4F79` (dark blue / `--accent2`)
-- ARC → `#C9640F` (burnt orange / `--accent-hover`)
-- CIRCLE → `#1C7FBF` (link blue / `--link`)
-- POLYLINE → `#2E9E52` (green / `--success`)
-- SPLINE → `#9A6B00` (amber / `--warn`)
+## 6. UI / output
 
-After stroking all entities, it draws a small green filled dot (`#2E9E52`, r=3px) at the computed start point (`entityStart()`) of every entity — a visual marker for where each cut begins.
+- Left panel: 01 file drop, 02 settings (unit, arc mode, cut order, lead-in), 03 manual shape ("Brug emne & generer" loads the shape and generates immediately), 04 nesting, "Fundet geometri" (part size, contour counts outer/hole/open, source entity badges, **layer checkboxes** when >1 layer), "Maskine & avanceret" (`<details>`: VEL, FASTVEL, pressure, start WAIT, material, chain tolerance — defaults 50000/166000/3800/1000/"POM/Standard/5.000"), log, file name + generate/download.
+- Canvas: Y-up, DPR-sharp, pointer pan, wheel zoom at cursor, +/− zoom about the center, fit. Draws sheet + margin (when nesting), contours by kind (outer `#0B4F79`, hole `#1C7FBF`, open `#9A6B00`), lead-ins orange, pierce dots green, dashed rapid moves, sequence numbers when ≤ 60 pierces.
+- `generateNCP(silent)`: header unchanged from v1 (`IMF_PBL_v1.0`, `;FILE`, `;MATR`, `;DRAWING`, `;DATE`, `;PRESSURE`, `FASTVEL`, `VEL`, `;Valgte dyser : TOOL:1`), then per pierce `;N{10+i}` → `FASTABS` lead-in → `WAIT 10` / `SETPORT A4=00000001` / `WAIT 10` / `WAIT {startWait}` → `MOVEABS` to contour start → moves/arcs → `WAIT 10` / `SETPORT A4=00000000` / `WAIT 10` / `WAIT 200`; `PROGEND`. Zero-length moves after rounding are skipped. Segmented arc mode splits **all** arcs (incl. former polyline bulges) into chords. Once generated, the NCP is regenerated silently whenever settings/geometry change (`ncpWanted`).
+- NCP preview highlights only the first 5000 lines (huge nesting files made the DOM take >10 s); the download is always complete. Download = CRLF, ISO-8859-1 (chars > 255 → `?`).
 
-Zoom/pan: `canvasTransform = {scale, tx, ty}`. Mouse wheel zooms around the cursor position (`wheel` listener, factor 1.12), click-drag pans (`mousedown/mousemove/mouseup`), and the on-screen +/− buttons call `zoom(1.3)`/`zoom(1/1.3)`. `fitView()` recomputes canvas size from its wrapper, computes bbox via `getBBox()`, and centers/scales to fit with 40px padding — called on file load (`renderPreview()`) and on window resize (only if entities exist). Coordinate transform: `toSX(x) = x*scale+tx`, `toSY(y) = y*scale+ty` — note Y is NOT flipped, so DXF/screen Y both increase downward-as-plotted in this canvas (i.e., no inversion for the typical "Y-up" CAD convention — arcs are drawn with `ctx.arc(..., -a2*π/180, -a1*π/180)`, negating angles to compensate).
+## 7. Known historical bugs (fixed in v2.0 — don't reintroduce)
 
-## 5. NCP output generation
+- **Reversed arcs became straight lines.** v1 chained entity *command lists* and reversed them by reversing the list; the arc command lost its start and was dropped by `slice(1)`, so any ARC/bulge that had to be run backwards to join a contour was cut as a straight chord. Now segments carry both endpoints and `revSeg` flips direction.
+- **Hole lead-ins pierced the part.** v1 placed the lead-in backwards along the start tangent; for a hole that point lies in the part material. Now perpendicular into the waste, side chosen from area sign + outer/hole.
+- **Holes could be cut after the outline** in "Optimer" mode (part drops/moves before its holes are cut). Now enforced via `parent` precedence in both modes.
+- **Canvas Y not flipped while arcs were drawn as if it was** → arcs didn't meet lines in the preview and DXF parts looked mirrored. Now one Y-up transform for everything.
+- **Bulges ignored in segmented arc mode** (became chords); **SPLINE drawn through control points**; **old-style POLYLINE/VERTEX ignored** (only a 0,0 point was read); **unknown entities silently dropped**; **unit change after load had no effect**; SVG transform lists composed in the wrong order and only one of each type.
 
-Two entry points produce NCP text, both duplicating the same header/segment-loop structure:
-- `generateNCP()` — driven by parsed DXF/SVG entities, triggered by `#btnConvert`.
-- `generateShapeNCP()` — driven by the manual-shape generator (rect/circle/flange), fully independent code path with its own copy of the emission loop.
+## 8. Remaining limitations
 
-Pipeline for `generateNCP()`:
-1. Optionally reorders entities via `optimizeCutOrder()` (nearest-neighbor greedy travel-salesman heuristic based on `entityStart()`/`entityEnd()`) if cut-order = "optimize".
-2. `buildSegments(entities)` converts each entity into a list of low-level move commands (`cmdsFromEntity`) — `MOVEABS`, `CCWABS`, `CWABS` — and then **chains** consecutive entities whose endpoints touch within `TOLERANCE = 100µm (0.1mm)`, reversing entities as needed (`reverseCmd`) so they connect into one continuous segment. Each resulting segment becomes one pierce-cut-off cycle.
-   - LINE → two MOVEABS.
-   - ARC → MOVEABS to arc start, then either one native `CCWABS` (DXF arcs assumed CCW) or a series of MOVEABS chord segments if arc-mode is a fixed degree step.
-   - CIRCLE → MOVEABS to rightmost point, then either two half-circle `CCWABS` moves (since a single CCWABS can't express 360°) or segmented MOVEABS chords.
-   - POLYLINE/SPLINE → MOVEABS per vertex, using per-vertex bulge (`bulgeToArc()`) to emit `CCWABS`/`CWABS` instead of a straight MOVEABS when a bulge is present and arc-mode is "native". SPLINE entities have no bulge data (bulges only come from LWPOLYLINE), so splines always become straight MOVEABS polylines regardless of arc-mode.
-3. For each segment, `computeLeadIn()` computes a point offset backwards (opposite the initial cut direction) by the configured lead-in distance, outside the contour's start.
-4. Emits per-segment NCP block: `FASTABS` to lead-in point → `WAIT 10` → `SETPORT A4=00000001` (pierce/water on) → `WAIT 10` → `WAIT {startWait}` (dwell) → the chained `MOVEABS`/`CWABS`/`CCWABS` moves → `WAIT 10` → `SETPORT A4=00000000` (off) → `WAIT 10` → `WAIT 200`.
-5. File header: `IMF_PBL_v1.0`, then comment lines `;FILE:`, `;MATR:`, `;DRAWING:`, `;DATE:` (`todayDanish()` → dd-mm-yyyy), `;PRESSURE:`, then `FASTVEL`, `VEL`, `;Valgte dyser : TOOL:1`. Ends with `PROGEND`.
-
-Output is joined with `\r\n` (CRLF) and downloaded via `downloadNCP()`, which manually re-encodes the string to raw bytes (masking each char code with `& 0xff`) to force **ISO-8859-1/Latin-1** output rather than UTF-8 — presumably for controller compatibility.
-
-**Syntax highlighting**: `renderNcpPreview()` splits output by line and wraps each in a `<span>` class based on a simple `startsWith()` prefix check — `cmd-comment` (`;`), `cmd-header` (`IMF_`/`FASTVEL`/`VEL `/`PROGEND`), `cmd-fast` (`FASTABS`), `cmd-move` (`MOVEABS`), `cmd-arc` (`CWABS`/`CCWABS`), `cmd-control` (`SETPORT`/`WAIT`) — each mapped to a CSS color variable in the stylesheet (e.g. `.cmd-move{color:var(--accent2)}`). Text is escaped via `esc()` (only `&` and `<`) before insertion as `innerHTML`.
-
-## 6. Known quirks / gotchas
-
-- **Unsupported DXF entities are silently dropped** with no warning — ELLIPSE, TEXT/MTEXT, DIMENSION, HATCH, SOLID, POINT, INSERT (block references), 3D entities, etc. all vanish without a log line, since the `0`-code dispatch in `parseDXF` has no fallback/else branch (contrast with the SVG parser's ellipse warning, and SPLINE's explicit warning).
-- **SPLINE is not truly evaluated** — it's approximated as a straight-line polyline through the raw control points (not even a proper NURBS sampling), which can differ significantly from the actual curve for sparse control points. A warning is logged but the shape may still be visibly wrong.
-- **No DXF units/HEADER awareness** — the `$INSUNITS` DXF header variable is never read; the user must correctly pick the unit from `#dxfUnit`, and picking wrong silently produces a mis-scaled part.
-- **No block/INSERT expansion** — entities inside DXF block definitions referenced via INSERT are not resolved/flattened, so block-based drawings will parse as mostly empty.
-- **LWPOLYLINE bulge handling only applies in "native" arc mode** — if the user picks a segmented arc mode (5°/2°/1°), bulges are ignored and arcs in polylines become straight chords between vertices (no re-segmentation of the bulge arc itself), unlike ARC/CIRCLE entities which do get properly segmented in that mode.
-- **Entity chaining tolerance is fixed at 100µm (0.1mm)** (`TOLERANCE` constant in `buildSegments`) and not user-configurable — drawings with small gaps between segments beyond that will be split into separate pierce cycles instead of one continuous cut.
-- **Y axis is not flipped** for canvas draw vs. DXF's usual Y-up convention; arc angles are drawn with negated angles (`-a2`, `-a1`) to compensate visually, which is a fragile compensating hack rather than a coordinate-system transform — worth checking carefully if canvas-vs-NCP-output visual mismatch bugs ever arise.
-- **All coordinates rounded to whole micrometers** (`Math.round`) at multiple stages (parse-time `toUm`, arc start/end points, bulge arc centers, lead-in points) — cumulative rounding could introduce sub-micron drift in chained/optimized paths, though this is unlikely to matter practically for waterjet tolerances.
-- **`bulgeToArc()` contains dead code** — it computes `cx`/`cy` via a trig formula (lines ~1654-1655) that is immediately discarded in favor of a second "simplified: midpoint method" calculation a few lines later. Only the midpoint-method result is returned; the first calculation is inert leftover code.
-- **`readEntityProps`'s `_ctrlpts` is effectively unused/dead**: it initializes `ctrlpts = []` but never pushes to it, so `props._ctrlpts` always falls back to `polypts`. SPLINE entities thus get identical point capture behavior to LWPOLYLINE (raw 10/20 pairs), reinforcing that splines are never true curve-fit.
-- **Machine parameters are hardcoded, not exposed in the UI** — velocity, fast-travel velocity, pressure, start-wait dwell, and material string are all fixed hidden `<input>` values (50000, 166000, 3800, 1000, "POM/Standard/5.000"); changing them requires editing the HTML source, not the running page.
-- **Output filename field** (`#outputName`) is also a hidden input, populated automatically from the uploaded file's basename in `handleFile()` — there's no visible UI to rename the output for DXF/SVG conversions (only the manual-shape generator has a visible filename field, `#shapeOutputName`).
-- Title/header/footer inconsistency: `<title>` and the version footer both say "DXF → NCP Konverter" (omitting SVG), while the visible `<h1>` and actual functionality cover both DXF and SVG — a documentation nit, not a functional bug.
+- Nesting handles one part type per file (whole drawing = one part); no nesting of small parts inside other parts' holes; rotations only in 90° steps.
+- No kerf compensation; no lead-out; start point of a closed contour is where the drawing starts it (circles: rightmost point).
+- Arc emission rounds center and endpoints independently to µm (radius mismatch ≤ ~1.5 µm).
+- `HATCH`, `TEXT`, `DIMENSION` etc. are not cut (by design — listed in the log). SVG `<use>` is not expanded.

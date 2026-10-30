@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DXF → NCP Konverter — Induminati</title>
+<title>DXF / SVG → NCP Konverter — Induminati</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 
@@ -36,13 +36,13 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--sans);
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
   }
 
   header {
-    padding: 18px 32px;
+    padding: 18px 28px;
     display: flex;
     align-items: center;
     gap: 14px;
@@ -53,378 +53,8 @@
   .logo-icon { width: 34px; height: 34px; background: var(--accent); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .logo-icon svg { width: 20px; height: 20px; }
 
-  header h1 {
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-    flex: 1;
-    margin: 0;
-  }
-
-  header h1 .tag {
-    font-size: 12px;
-    font-weight: 400;
-    color: #B9D8EA;
-    font-family: var(--mono);
-    letter-spacing: 0.08em;
-    margin-left: 6px;
-  }
-
-  .main {
-    display: grid;
-    grid-template-columns: 380px 1fr;
-    flex: 1;
-    min-height: 0;
-  }
-
-  .panel {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-
-  .section {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .section-title {
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 14px;
-  }
-
-  .drop-zone {
-    border: 1.5px dashed var(--border);
-    border-radius: 8px;
-    padding: 32px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    background: var(--bg);
-  }
-
-  .drop-zone:hover, .drop-zone.drag-over {
-    border-color: var(--accent);
-    background: rgba(232, 121, 30, 0.06);
-  }
-
-  .drop-zone input[type=file] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-  }
-
-  .drop-icon {
-    font-size: 28px;
-    margin-bottom: 10px;
-    display: block;
-  }
-
-  .drop-text {
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-
-  .drop-text strong { color: var(--text); font-weight: 500; }
-
-  .file-loaded {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    background: rgba(46, 158, 82, 0.10);
-    border: 1px solid rgba(46, 158, 82, 0.3);
-    border-radius: 6px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--success);
-  }
-
-  label {
-    display: block;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--muted);
-    margin-bottom: 6px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  input[type=text], input[type=number], select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 13px;
-    padding: 8px 11px;
-    outline: none;
-    transition: border-color 0.15s;
-    margin-bottom: 12px;
-    -moz-appearance: textfield;
-  }
-
-  input[type=text]:focus, input[type=number]:focus, select:focus {
-    border-color: var(--accent);
-  }
-
-  select option { background: #FFFFFF; }
-
-  .row { display: flex; gap: 10px; }
-  .row > * { flex: 1; }
-
-  .btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 11px 16px;
-    border: none;
-    border-radius: 6px;
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #000;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: var(--accent-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(232, 121, 30, 0.3);
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
-
-  .btn-secondary {
-    background: transparent;
-    color: var(--accent2);
-    border: 1px solid var(--accent2);
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background: rgba(11, 79, 121, 0.08);
-  }
-
-  .btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
-
-  .btn-success {
-    background: var(--success);
-    color: #000;
-  }
-
-  .btn-success:hover { background: #3DAE64; transform: translateY(-1px); }
-
-  .log {
-    font-family: var(--mono);
-    font-size: 11px;
-    line-height: 1.7;
-    padding: 14px;
-    background: var(--bg);
-    border-radius: 6px;
-    max-height: 160px;
-    overflow-y: auto;
-    border: 1px solid var(--border);
-  }
-
-  .log .ok { color: var(--success); }
-  .log .warn { color: var(--warn); }
-  .log .err { color: var(--danger); }
-  .log .info { color: var(--muted); }
-  .log .accent { color: var(--accent); }
-
-  .stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .stat {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px 12px;
-  }
-
-  .stat-val {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--accent);
-    line-height: 1;
-    margin-bottom: 3px;
-  }
-
-  .stat-label {
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  /* Preview pane */
-  .preview-area {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .preview-toolbar {
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--surface);
-    flex-shrink: 0;
-  }
-
-  .preview-toolbar span {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  .tab-group {
-    display: flex;
-    gap: 2px;
-    background: var(--bg);
-    border-radius: 5px;
-    padding: 3px;
-  }
-
-  .tab {
-    padding: 5px 12px;
-    border-radius: 3px;
-    font-family: var(--mono);
-    font-size: 11px;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    transition: all 0.15s;
-  }
-
-  .tab.active { background: var(--surface2); color: var(--text); }
-
-  .preview-canvas-wrap {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    background: var(--bg);
-  }
-
-  canvas#preview {
-    display: block;
-    cursor: crosshair;
-  }
-
-  .canvas-overlay {
-    position: absolute;
-    bottom: 16px; left: 16px;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    background: rgba(255,255,255,0.85);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 6px 10px;
-    pointer-events: none;
-    line-height: 1.6;
-  }
-
-  .ncp-preview {
-    flex: 1;
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.65;
-    padding: 20px 24px;
-    overflow-y: auto;
-    background: var(--bg);
-    white-space: pre;
-    color: var(--text);
-  }
-
-  .ncp-preview .cmd-move { color: var(--accent2); }
-  .ncp-preview .cmd-arc { color: var(--accent-hover); }
-  .ncp-preview .cmd-fast { color: var(--success); }
-  .ncp-preview .cmd-comment { color: var(--muted); }
-  .ncp-preview .cmd-control { color: var(--link); }
-  .ncp-preview .cmd-header { color: var(--warn); }
-
-  .zoom-controls {
-    position: absolute;
-    top: 12px; right: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .zoom-btn {
-    width: 28px; height: 28px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text);
-    font-size: 14px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
-  }
-  .zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .entity-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-  }
-
-  .badge-line { background: var(--link-pale); color: var(--accent2); }
-  .badge-arc { background: var(--accent-pale); color: #A3540E; }
-  .badge-circle { background: var(--link-pale); color: var(--link); }
-  .badge-poly { background: var(--success-pale); color: var(--success-text); }
-  .badge-spline { background: var(--warn-pale); color: var(--warn); }
-
-  .entity-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 8px;
-  }
-
-  .hidden { display: none !important; }
-
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  header h1 { font-size: 16px; font-weight: 600; color: #fff; flex: 1; margin: 0; }
+  header h1 .tag { font-size: 12px; font-weight: 400; color: #B9D8EA; font-family: var(--mono); letter-spacing: 0.08em; margin-left: 6px; }
 
   .btn-home {
     display: inline-flex; align-items: center; gap: 6px;
@@ -434,6 +64,131 @@
     transition: color .15s, border-color .15s;
   }
   .btn-home:hover { color: #fff; border-color: var(--accent); }
+
+  .main { display: grid; grid-template-columns: 380px 1fr; flex: 1; min-height: 0; overflow: hidden; }
+
+  .panel { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+
+  .section { padding: 18px 24px; border-bottom: 1px solid var(--border); }
+
+  .section-title { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px; }
+
+  .drop-zone { border: 1.5px dashed var(--border); border-radius: 8px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; background: var(--bg); }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(232, 121, 30, 0.06); }
+  .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .drop-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .drop-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .drop-text strong { color: var(--text); font-weight: 500; }
+
+  .file-loaded { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(46, 158, 82, 0.10); border: 1px solid rgba(46, 158, 82, 0.3); border-radius: 6px; font-family: var(--mono); font-size: 12px; color: var(--success); word-break: break-all; }
+
+  label { display: block; font-size: 11px; font-weight: 500; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  input[type=text], input[type=number], select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; color: var(--text);
+    font-family: var(--mono); font-size: 13px; padding: 8px 11px; outline: none; transition: border-color 0.15s;
+    margin-bottom: 12px; -moz-appearance: textfield;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--accent); }
+  select option { background: #FFFFFF; }
+
+  .hint { font-size: 10.5px; color: var(--muted); line-height: 1.5; margin: -6px 0 12px; }
+
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; margin-bottom: 12px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .check input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; min-width: 0; }
+
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px 16px; border: none; border-radius: 6px;
+    font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(232, 121, 30, 0.3); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-success { background: var(--success); color: #000; }
+  .btn-success:hover { background: #3DAE64; transform: translateY(-1px); }
+
+  .log { font-family: var(--mono); font-size: 11px; line-height: 1.7; padding: 12px 14px; background: var(--bg); border-radius: 6px; max-height: 170px; overflow-y: auto; border: 1px solid var(--border); }
+  .log .ok { color: var(--success); }
+  .log .warn { color: var(--warn); }
+  .log .err { color: var(--danger); }
+  .log .info { color: var(--muted); }
+  .log .accent { color: var(--accent); }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+  .stat-val { font-family: var(--mono); font-size: 17px; font-weight: 600; color: var(--accent); line-height: 1.1; margin-bottom: 3px; overflow-wrap: anywhere; }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .nest-result { margin-top: 2px; font-size: 12px; line-height: 1.55; }
+  .nest-result .warn { color: var(--warn); }
+  .nest-result .err { color: var(--danger); }
+
+  details.adv summary { cursor: pointer; font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; list-style: none; }
+  details.adv summary::-webkit-details-marker { display: none; }
+  details.adv summary::before { content: '▸ '; }
+  details.adv[open] summary::before { content: '▾ '; }
+  details.adv[open] summary { margin-bottom: 14px; }
+
+  .layer-list { margin-top: 12px; display: flex; flex-direction: column; gap: 2px; }
+  .layer-list .check { margin-bottom: 2px; font-family: var(--mono); font-size: 12px; font-weight: 400; }
+  .layer-list .check span.n { color: var(--muted); margin-left: auto; }
+
+  /* Preview pane */
+  .preview-area { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+  .preview-toolbar { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--surface); flex-shrink: 0; flex-wrap: wrap; }
+  .preview-toolbar > span { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .tab-group { display: flex; gap: 2px; background: var(--bg); border-radius: 5px; padding: 3px; }
+  .tab { padding: 5px 12px; border-radius: 3px; font-family: var(--mono); font-size: 11px; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all 0.15s; }
+  .tab.active { background: var(--surface2); color: var(--text); }
+
+  .preview-canvas-wrap { flex: 1; overflow: hidden; position: relative; background: var(--bg); min-height: 0; }
+  canvas#preview { display: block; cursor: grab; touch-action: none; }
+  canvas#preview.dragging { cursor: grabbing; }
+
+  .canvas-overlay { position: absolute; bottom: 16px; left: 16px; font-family: var(--mono); font-size: 10px; color: var(--muted); background: rgba(255,255,255,0.88); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; pointer-events: none; line-height: 1.6; max-width: calc(100% - 32px); }
+  .legend { position: absolute; bottom: 16px; right: 16px; font-family: var(--mono); font-size: 10px; color: var(--muted); background: rgba(255,255,255,0.88); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; pointer-events: none; display: flex; flex-direction: column; gap: 2px; }
+  .legend i { display: inline-block; width: 14px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
+
+  .ncp-preview { flex: 1; font-family: var(--mono); font-size: 12px; line-height: 1.65; padding: 20px 24px; overflow: auto; background: var(--bg); white-space: pre; color: var(--text); }
+  .ncp-preview .cmd-move { color: var(--accent2); }
+  .ncp-preview .cmd-arc { color: var(--accent-hover); }
+  .ncp-preview .cmd-fast { color: var(--success); }
+  .ncp-preview .cmd-comment { color: var(--muted); }
+  .ncp-preview .cmd-control { color: var(--link); }
+  .ncp-preview .cmd-header { color: var(--warn); }
+
+  .zoom-controls { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 4px; }
+  .zoom-btn { width: 28px; height: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .entity-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 3px; font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.05em; }
+  .badge-line { background: var(--link-pale); color: var(--accent2); }
+  .badge-arc { background: var(--accent-pale); color: #A3540E; }
+  .badge-circle { background: var(--link-pale); color: var(--link); }
+  .badge-poly { background: var(--success-pale); color: var(--success-text); }
+  .badge-spline { background: var(--warn-pale); color: var(--warn); }
+  .entity-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+
+  .hidden { display: none !important; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  .footer { text-align: center; font-size: 10px; color: var(--muted); padding: 8px 0; flex-shrink: 0; }
+
+  @media (max-width: 900px) {
+    body { height: auto; min-height: 100vh; }
+    .main { grid-template-columns: 1fr; overflow: visible; }
+    .panel { border-right: none; border-bottom: 1px solid var(--border); overflow: visible; }
+    .preview-canvas-wrap { min-height: 420px; }
+    .ncp-preview { min-height: 420px; }
+  }
 </style>
 </head>
 <body>
@@ -472,19 +227,21 @@
       </div>
     </div>
 
-    <!-- Fixed machine config + output name (not shown) -->
-    <input type="hidden" id="vel"        value="50000">
-    <input type="hidden" id="fastvel"    value="166000">
-    <input type="hidden" id="pressure"   value="3800">
-    <input type="hidden" id="startWait"  value="1000">
-    <input type="hidden" id="material"   value="POM/Standard/5.000">
-    <input type="hidden" id="outputName" value="">
-
     <!-- GEOMETRY SETTINGS -->
     <div class="section">
       <div class="section-title">02 — Indstillinger</div>
 
-      <label>Bue-approksimering (grader pr. segment)</label>
+      <label for="dxfUnit">Enhed i tegningen</label>
+      <select id="dxfUnit">
+        <option value="mm">Millimeter (mm)</option>
+        <option value="cm">Centimeter (cm)</option>
+        <option value="m">Meter (m)</option>
+        <option value="inch">Tommer (inch)</option>
+        <option value="um">Mikrometer (µm) — allerede i NCP-enhed</option>
+      </select>
+      <div class="hint">Sættes automatisk, hvis DXF-filen selv angiver enheden ($INSUNITS).</div>
+
+      <label for="arcMode">Buer</label>
       <select id="arcMode">
         <option value="native">Native CWABS/CCWABS (anbefalet)</option>
         <option value="5">Segmenter — 5° pr. segment</option>
@@ -492,32 +249,21 @@
         <option value="1">Segmenter — 1° pr. segment</option>
       </select>
 
-      <label>Enhed i DXF-fil</label>
-      <select id="dxfUnit">
-        <option value="mm">Millimeter (mm)</option>
-        <option value="m">Meter (m)</option>
-        <option value="inch">Tommer (inch)</option>
-        <option value="um">Mikrometer (µm) — allerede i NCP-enhed</option>
-      </select>
-
-      <label>Skæringsrækkefølge</label>
+      <label for="cutOrder">Skæringsrækkefølge</label>
       <select id="cutOrder">
-        <option value="dxf">DXF-rækkefølge (som tegnet)</option>
-        <option value="optimize">Optimer (korteste rejsevej)</option>
+        <option value="dxf">Som tegnet</option>
+        <option value="optimize">Optimer (korteste kørsel)</option>
       </select>
 
-      <label>Indkøring / udkøring (mm)</label>
-      <input type="number" id="leadIn" value="3" min="0" max="50" step="0.5"
-             style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:4px;-moz-appearance:textfield;">
-      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">
-        Vandskæreren starter 3 mm <em>udenfor</em> konturen og kører ind. Huller starter 3 mm inde i tomrummet og kører ud.
-      </div>
+      <label for="leadIn">Indkøring (mm)</label>
+      <input type="number" id="leadIn" value="3" min="0" max="50" step="0.5">
+      <div class="hint">Ydre konturer stikkes udenfor emnet og kører vinkelret ind. Huller stikkes inde i hullet. Huller skæres altid før konturen, de sidder i.</div>
     </div>
 
     <!-- MANUAL GEOMETRY -->
     <div class="section">
       <div class="section-title">03 — Manuelt emne</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Generer skærefil direkte uden DXF/SVG</div>
+      <div class="hint" style="margin-top:0">Lav et simpelt emne direkte uden DXF/SVG — kan også nestes.</div>
 
       <div class="tab-group" style="margin-bottom:12px">
         <button class="tab active" id="shapeTabRect"   onclick="switchShapeTab('rect')">Firkant</button>
@@ -525,49 +271,56 @@
         <button class="tab"        id="shapeTabFlange" onclick="switchShapeTab('flange')">Flange</button>
       </div>
 
-      <!-- RECT -->
       <div id="shapeRect">
         <div class="row">
-          <div>
-            <label>Bredde X (mm)</label>
-            <input type="number" id="rectW" value="100" min="1" step="0.1"
-                   style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
-          </div>
-          <div>
-            <label>Højde Y (mm)</label>
-            <input type="number" id="rectH" value="100" min="1" step="0.1"
-                   style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
+          <div><label for="rectW">Bredde X (mm)</label><input type="number" id="rectW" value="100" min="1" step="0.1"></div>
+          <div><label for="rectH">Højde Y (mm)</label><input type="number" id="rectH" value="100" min="1" step="0.1"></div>
+        </div>
+        <label for="rectR">Hjørneradius (mm, 0 = spids)</label>
+        <input type="number" id="rectR" value="0" min="0" step="0.5">
+      </div>
+
+      <div id="shapeCircle" style="display:none">
+        <label for="circD">Ø udvendig (mm)</label>
+        <input type="number" id="circD" value="100" min="1" step="0.1">
+      </div>
+
+      <div id="shapeFlange" style="display:none">
+        <label for="flangeOD">Ø udvendig (mm)</label>
+        <input type="number" id="flangeOD" value="150" min="1" step="0.1">
+        <label for="flangeID">Ø indvendig / hul (mm)</label>
+        <input type="number" id="flangeID" value="80" min="1" step="0.1">
+      </div>
+
+      <button class="btn btn-primary" id="btnShapeGen" onclick="generateShape()">⚡ Brug emne &amp; generer</button>
+    </div>
+
+    <!-- NESTING -->
+    <div class="section">
+      <div class="section-title">04 — Nesting / Plade</div>
+      <label class="check"><input type="checkbox" id="nestOn"> Fyld en plade med emnet</label>
+      <div id="nestFields">
+        <div class="row">
+          <div><label for="sheetW">Plade X (mm)</label><input type="number" id="sheetW" value="1000" min="1" step="1"></div>
+          <div><label for="sheetH">Plade Y (mm)</label><input type="number" id="sheetH" value="1000" min="1" step="1"></div>
+        </div>
+        <div class="row">
+          <div><label for="nestGap">Afstand (mm)</label><input type="number" id="nestGap" value="5" min="0" step="0.5"></div>
+          <div><label for="nestMargin">Kantafstand (mm)</label><input type="number" id="nestMargin" value="10" min="0" step="0.5"></div>
+        </div>
+        <div class="row">
+          <div><label for="nestCount">Antal (0 = fyld)</label><input type="number" id="nestCount" value="0" min="0" step="1"></div>
+          <div><label for="nestRot">Rotation</label>
+            <select id="nestRot">
+              <option value="free">0/90/180/270°</option>
+              <option value="flip">Kun 0/180°</option>
+              <option value="none">Ingen</option>
+            </select>
           </div>
         </div>
-        <label>Hjørneradius (mm, 0 = spids)</label>
-        <input type="number" id="rectR" value="0" min="0" step="0.5"
-               style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
+        <div class="hint">Pladens nulpunkt (X0 Y0) er nederste venstre hjørne. "Kun 0/180°" bevarer fiberretningen.</div>
+        <div class="nest-result" id="nestResult"></div>
       </div>
-
-      <!-- CIRCLE -->
-      <div id="shapeCircle" style="display:none">
-        <label>Ø udvendig (mm)</label>
-        <input type="number" id="circD" value="100" min="1" step="0.1"
-               style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
-      </div>
-
-      <!-- FLANGE -->
-      <div id="shapeFlange" style="display:none">
-        <label>Ø udvendig (mm)</label>
-        <input type="number" id="flangeOD" value="150" min="1" step="0.1"
-               style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
-        <label>Ø indvendig / hul (mm)</label>
-        <input type="number" id="flangeID" value="80" min="1" step="0.1"
-               style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;-moz-appearance:textfield;">
-      </div>
-
-      <label>Filnavn</label>
-      <input type="text" id="shapeOutputName" value="" placeholder="Auto"
-             style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;margin-bottom:12px;">
-
-      <button class="btn btn-primary" id="btnShapeGen" onclick="generateShapeNCP()">
-        ⚡ Generer fra mål
-      </button>
     </div>
 
     <!-- ENTITY INFO -->
@@ -575,6 +328,27 @@
       <div class="section-title">Fundet geometri</div>
       <div class="stats" id="statsGrid"></div>
       <div class="entity-list" id="entityBadges"></div>
+      <div class="layer-list" id="layerList"></div>
+    </div>
+
+    <!-- ADVANCED -->
+    <div class="section">
+      <details class="adv">
+        <summary>Maskine &amp; avanceret</summary>
+        <div class="row">
+          <div><label for="vel">VEL</label><input type="number" id="vel" value="50000"></div>
+          <div><label for="fastvel">FASTVEL</label><input type="number" id="fastvel" value="166000"></div>
+        </div>
+        <div class="row">
+          <div><label for="pressure">Tryk (bar)</label><input type="number" id="pressure" value="3800"></div>
+          <div><label for="startWait">Stiktid (WAIT)</label><input type="number" id="startWait" value="1000"></div>
+        </div>
+        <label for="material">Materiale (;MATR)</label>
+        <input type="text" id="material" value="POM/Standard/5.000">
+        <label for="chainTol">Sammenkædningstolerance (mm)</label>
+        <input type="number" id="chainTol" value="0.1" min="0.001" step="0.05">
+        <div class="hint">Linjer/buer hvis endepunkter ligger tættere end dette, skæres som én sammenhængende kontur.</div>
+      </details>
     </div>
 
     <!-- LOG -->
@@ -585,13 +359,11 @@
 
     <!-- ACTIONS -->
     <div class="section" style="border-bottom:none">
-      <button class="btn btn-primary" id="btnConvert" disabled>
-        ⚡ Generer NCP-fil
-      </button>
+      <label for="outputName">Filnavn</label>
+      <input type="text" id="outputName" value="" placeholder="output">
+      <button class="btn btn-primary" id="btnConvert" disabled>⚡ Generer NCP-fil</button>
       <div style="height:8px"></div>
-      <button class="btn btn-success hidden" id="btnDownload">
-        ↓ Download NCP
-      </button>
+      <button class="btn btn-success hidden" id="btnDownload">↓ Download NCP</button>
     </div>
 
   </div>
@@ -610,49 +382,216 @@
     <div id="viewGeom" class="preview-canvas-wrap">
       <canvas id="preview"></canvas>
       <div class="zoom-controls">
-        <button class="zoom-btn" onclick="zoom(1.3)">+</button>
-        <button class="zoom-btn" onclick="zoom(1/1.3)">−</button>
+        <button class="zoom-btn" onclick="zoom(1.3)" title="Zoom ind">+</button>
+        <button class="zoom-btn" onclick="zoom(1/1.3)" title="Zoom ud">−</button>
         <button class="zoom-btn" onclick="fitView()" title="Tilpas">⊡</button>
       </div>
       <div class="canvas-overlay" id="coordOverlay">Ingen data endnu</div>
+      <div class="legend">
+        <div><i style="border-color:#0B4F79"></i>Ydre kontur</div>
+        <div><i style="border-color:#1C7FBF"></i>Hul</div>
+        <div><i style="border-color:#9A6B00"></i>Åben kontur</div>
+        <div><i style="border-color:#E8791E"></i>Indkøring</div>
+        <div><i style="border-color:#9FB3C2;border-top-style:dashed"></i>Kørsel (luft)</div>
+      </div>
     </div>
-    <div id="viewNcp" class="ncp-preview hidden" id="ncpPreview"></div>
+    <div id="viewNcp" class="ncp-preview hidden"></div>
   </div>
 </div>
 
 <script>
 // ─────────────────────────────────────────────
 // STATE
+// Alle koordinater internt er i mikrometer (µm, NCP-enhed), Y op (som i CAD).
 // ─────────────────────────────────────────────
-let parsedEntities = [];
+let srcText = null;          // rå filtekst (så enhedsskift kan genindlæse)
+let srcIsSvg = false;
+let basePaths = [];          // parsede stier: {segs, closed, layer}
+let srcStats = {};           // antal kilde-entiteter pr. type
+let srcLayers = [];          // [{name, n}]
+const disabledLayers = new Set();
+let partContours = [];       // ét emnes konturer, normaliseret til 0,0
+let nest = null;             // nesting-resultat
+let nestKey = '';
+let nestTimer = null;
+let plan = [];               // [{c, lead}] i skærerækkefølge
 let ncpOutput = '';
+let ncpWanted = false;       // NCP er genereret → genberegn automatisk ved ændringer
+let ncpShowNext = false;     // vis NCP-fanen + log næste gang planen er klar (manuelt emne)
 let currentBaseName = 'output';
-let canvasTransform = { scale: 1, tx: 0, ty: 0 };
-let isDragging = false, dragStart = {};
+let view = { scale: 1, tx: 0, ty: 0 };
+let cssW = 800, cssH = 600;
+let dragStart = null;
 let currentTab = 'geom';
 
+const TAU = Math.PI * 2;
+const $ = id => document.getElementById(id);
+const num = (id, def = 0) => { const v = parseFloat($(id).value); return isFinite(v) ? v : def; };
 
 // ─────────────────────────────────────────────
 // LOGGING
 // ─────────────────────────────────────────────
 function log(msg, type = 'info') {
-  const el = document.getElementById('log');
+  const el = $('log');
   const line = document.createElement('div');
-  line.innerHTML = `<span class="${type}">${msg}</span>`;
+  const span = document.createElement('span');
+  span.className = type;
+  span.textContent = msg;
+  line.appendChild(span);
   el.appendChild(line);
   el.scrollTop = el.scrollHeight;
 }
+function clearLog() { $('log').innerHTML = ''; }
 
-function clearLog() {
-  document.getElementById('log').innerHTML = '';
+// ─────────────────────────────────────────────
+// 2D-MATRIX [a,b,c,d,e,f]: x' = a·x + c·y + e, y' = b·x + d·y + f
+// ─────────────────────────────────────────────
+const mat = {
+  id: () => [1, 0, 0, 1, 0, 0],
+  mul: (a, b) => [
+    a[0]*b[0] + a[2]*b[1], a[1]*b[0] + a[3]*b[1],
+    a[0]*b[2] + a[2]*b[3], a[1]*b[2] + a[3]*b[3],
+    a[0]*b[4] + a[2]*b[5] + a[4], a[1]*b[4] + a[3]*b[5] + a[5]
+  ],
+  tr: (x, y) => [1, 0, 0, 1, x, y],
+  sc: (sx, sy = sx) => [sx, 0, 0, sy, 0, 0],
+  rot: deg => { const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); return [c, s, -s, c, 0, 0]; },
+  rot90: q => [[1,0,0,1,0,0], [0,1,-1,0,0,0], [-1,0,0,-1,0,0], [0,-1,1,0,0,0]][((q % 4) + 4) % 4],
+  ap: (m, x, y) => [m[0]*x + m[2]*y + m[4], m[1]*x + m[3]*y + m[5]],
+  det: m => m[0]*m[3] - m[1]*m[2],
+  // Ligedannet (rotation + ensartet skala, evt. spejling)? Kun da kan buer forblive buer.
+  isSim: m => {
+    const l1 = Math.hypot(m[0], m[1]), l2 = Math.hypot(m[2], m[3]);
+    return Math.abs(l1 - l2) <= 1e-7 * Math.max(l1, l2) && Math.abs(m[0]*m[2] + m[1]*m[3]) <= 1e-7 * l1 * l2;
+  }
+};
+
+// ─────────────────────────────────────────────
+// SEGMENTER: {t:'L', x0,y0,x1,y1} eller {t:'A', x0,y0,x1,y1,cx,cy,ccw}
+// ─────────────────────────────────────────────
+const Lseg = (x0, y0, x1, y1) => ({ t: 'L', x0, y0, x1, y1 });
+const Aseg = (x0, y0, x1, y1, cx, cy, ccw) => ({ t: 'A', x0, y0, x1, y1, cx, cy, ccw });
+const arcR = s => Math.hypot(s.x0 - s.cx, s.y0 - s.cy);
+const arcA0 = s => Math.atan2(s.y0 - s.cy, s.x0 - s.cx);
+function arcSweep(s) { // fortegnsbestemt vinkel i radianer (CCW positiv)
+  let d = Math.atan2(s.y1 - s.cy, s.x1 - s.cx) - arcA0(s);
+  if (s.ccw) { while (d <= 1e-9) d += TAU; while (d > TAU) d -= TAU; }
+  else       { while (d >= -1e-9) d -= TAU; while (d < -TAU) d += TAU; }
+  return d;
+}
+const segLen = s => s.t === 'L' ? Math.hypot(s.x1 - s.x0, s.y1 - s.y0) : arcR(s) * Math.abs(arcSweep(s));
+const revSeg = s => s.t === 'L' ? Lseg(s.x1, s.y1, s.x0, s.y0) : Aseg(s.x1, s.y1, s.x0, s.y0, s.cx, s.cy, !s.ccw);
+const revSegs = segs => segs.slice().reverse().map(revSeg);
+
+function arcSteps(r, sweep, tol) {
+  const st = r > tol ? 2 * Math.acos(1 - tol / r) : Math.PI / 2;
+  return Math.max(1, Math.min(1440, Math.ceil(Math.abs(sweep) / Math.max(st, 1e-4))));
+}
+// Tilføjer punkter (efter startpunktet) til out
+function flattenSeg(s, tol, out) {
+  if (s.t === 'L') { out.push([s.x1, s.y1]); return; }
+  const r = arcR(s), a0 = arcA0(s), d = arcSweep(s), n = Math.max(2, arcSteps(r, d, tol));
+  for (let i = 1; i < n; i++) { const a = a0 + d * i / n; out.push([s.cx + r * Math.cos(a), s.cy + r * Math.sin(a)]); }
+  out.push([s.x1, s.y1]);
+}
+function flattenSegs(segs, tol) {
+  if (!segs.length) return [];
+  const pts = [[segs[0].x0, segs[0].y0]];
+  segs.forEach(s => flattenSeg(s, tol, pts));
+  return pts;
+}
+function xfSegs(segs, m) {
+  const flip = mat.det(m) < 0, sim = mat.isSim(m), out = [];
+  for (const s of segs) {
+    if (s.t === 'A' && !sim) { // ikke-ensartet skalering → buen er en ellipse; opdel
+      const pts = [[s.x0, s.y0]]; flattenSeg(s, arcR(s) * 0.0005, pts);
+      for (let i = 1; i < pts.length; i++) {
+        const [a, b] = mat.ap(m, pts[i-1][0], pts[i-1][1]), [c, d] = mat.ap(m, pts[i][0], pts[i][1]);
+        out.push(Lseg(a, b, c, d));
+      }
+      continue;
+    }
+    const [x0, y0] = mat.ap(m, s.x0, s.y0), [x1, y1] = mat.ap(m, s.x1, s.y1);
+    if (s.t === 'L') out.push(Lseg(x0, y0, x1, y1));
+    else { const [cx, cy] = mat.ap(m, s.cx, s.cy); out.push(Aseg(x0, y0, x1, y1, cx, cy, flip ? !s.ccw : s.ccw)); }
+  }
+  return out;
+}
+
+const newBB = () => ({ minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
+function extBB(b, x, y) { if (x < b.minX) b.minX = x; if (x > b.maxX) b.maxX = x; if (y < b.minY) b.minY = y; if (y > b.maxY) b.maxY = y; }
+function segBB(s, b) {
+  extBB(b, s.x0, s.y0); extBB(b, s.x1, s.y1);
+  if (s.t !== 'A') return;
+  const r = arcR(s), a0 = arcA0(s), d = Math.abs(arcSweep(s));
+  for (let q = 0; q < 4; q++) {
+    const th = q * Math.PI / 2;
+    let rel = s.ccw ? th - a0 : a0 - th;
+    rel = ((rel % TAU) + TAU) % TAU;
+    if (rel <= d) extBB(b, s.cx + r * Math.cos(th), s.cy + r * Math.sin(th));
+  }
+}
+function segsBB(segs) { const b = newBB(); segs.forEach(s => segBB(s, b)); return b; }
+function unionBB(list) { const b = newBB(); list.forEach(o => { extBB(b, o.bb.minX, o.bb.minY); extBB(b, o.bb.maxX, o.bb.maxY); }); return b; }
+
+function polyArea(p) { let a = 0; for (let i = 0, j = p.length - 1; i < p.length; j = i++) a += (p[j][0] * p[i][1] - p[i][0] * p[j][1]); return a / 2; }
+function pointInPoly(x, y, p) {
+  let ins = false;
+  for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+    const xi = p[i][0], yi = p[i][1], xj = p[j][0], yj = p[j][1];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) ins = !ins;
+  }
+  return ins;
+}
+function distPtSeg(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1, l2 = dx*dx + dy*dy;
+  let t = l2 ? ((px - x1) * dx + (py - y1) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - x1 - t * dx, py - y1 - t * dy);
+}
+function distToPoly(x, y, p) { let d = Infinity; for (let i = 1; i < p.length; i++) d = Math.min(d, distPtSeg(x, y, p[i-1][0], p[i-1][1], p[i][0], p[i][1])); return d; }
+
+// Standardformer (i vilkårlige enheder)
+function circleSegs(cx, cy, r, startDeg = 0) {
+  const a = startDeg * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+  const x0 = cx + r * ca, y0 = cy + r * sa, x1 = cx - r * ca, y1 = cy - r * sa;
+  return [Aseg(x0, y0, x1, y1, cx, cy, true), Aseg(x1, y1, x0, y0, cx, cy, true)]; // 2 halvbuer (CCWABS kan ikke 360°)
+}
+function ptsToSegs(pts, closed) {
+  const segs = [];
+  const n = closed ? pts.length : pts.length - 1;
+  for (let i = 0; i < n; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    if (a[0] !== b[0] || a[1] !== b[1]) segs.push(Lseg(a[0], a[1], b[0], b[1]));
+  }
+  return segs;
+}
+function roundedRectSegs(x, y, w, h, R) {
+  R = Math.max(0, Math.min(R, w / 2, h / 2));
+  if (R <= 0) return ptsToSegs([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], true);
+  const s = [];
+  const ln = (a, b, c, d) => { if (Math.hypot(c - a, d - b) > 1e-9) s.push(Lseg(a, b, c, d)); };
+  ln(x + R, y, x + w - R, y);           s.push(Aseg(x + w - R, y, x + w, y + R, x + w - R, y + R, true));
+  ln(x + w, y + R, x + w, y + h - R);   s.push(Aseg(x + w, y + h - R, x + w - R, y + h, x + w - R, y + h - R, true));
+  ln(x + w - R, y + h, x + R, y + h);   s.push(Aseg(x + R, y + h, x, y + h - R, x + R, y + h - R, true));
+  ln(x, y + h - R, x, y + R);           s.push(Aseg(x, y + R, x + R, y, x + R, y + R, true));
+  return s;
+}
+// DXF bulge → bue (bulge = tan(vinkel/4), positiv = CCW)
+function bulgeSeg(x0, y0, x1, y1, b) {
+  const d = Math.hypot(x1 - x0, y1 - y0);
+  if (d < 1e-12) return null;
+  if (!b || Math.abs(b) < 1e-9) return Lseg(x0, y0, x1, y1);
+  const h = d * (1 - b * b) / (4 * b);          // fortegnsbestemt afstand midtpunkt → centrum
+  const nx = -(y1 - y0) / d, ny = (x1 - x0) / d; // venstre normal
+  const cx = (x0 + x1) / 2 + nx * h, cy = (y0 + y1) / 2 + ny * h;
+  return Aseg(x0, y0, x1, y1, cx, cy, b > 0);
 }
 
 // ─────────────────────────────────────────────
 // FILE HANDLING
 // ─────────────────────────────────────────────
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-
+const dropZone = $('dropZone');
+const fileInput = $('fileInput');
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
@@ -660,1304 +599,1418 @@ dropZone.addEventListener('drop', e => {
   dropZone.classList.remove('drag-over');
   if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 });
-fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); fileInput.value = ''; });
 
 function handleFile(file) {
-  clearLog();
-  document.getElementById('btnDownload').classList.add('hidden');
-  ncpOutput = '';
-
   const reader = new FileReader();
   reader.onload = e => {
-    const baseName = file.name.replace(/\.(dxf|svg)$/i, '');
-    currentBaseName = baseName;
-    const outField = document.getElementById('outputName');
-    if (outField) outField.value = baseName;
-
-    document.getElementById('fileName').textContent = file.name;
-    document.getElementById('fileLoaded').classList.remove('hidden');
-
+    clearLog();
+    srcText = e.target.result;
+    srcIsSvg = file.name.toLowerCase().endsWith('.svg');
+    currentBaseName = file.name.replace(/\.(dxf|svg)$/i, '');
+    $('outputName').value = currentBaseName;
+    $('fileName').textContent = file.name;
+    $('fileLoaded').classList.remove('hidden');
+    disabledLayers.clear();
+    resetNcp();
     log(`Indlæser: ${file.name}`, 'accent');
-    try {
-      const isSvg = file.name.toLowerCase().endsWith('.svg');
-      parsedEntities = isSvg ? parseSVG(e.target.result) : parseDXF(e.target.result);
-      updateEntitySection();
-      renderPreview();
-      document.getElementById('btnConvert').disabled = false;
-      log(`✓ ${parsedEntities.length} entiteter parset`, 'ok');
-    } catch(err) {
-      log(`✗ Parse fejl: ${err.message}`, 'err');
-    }
+    loadSource(true);
   };
   reader.readAsText(file, 'utf-8');
 }
 
-// ─────────────────────────────────────────────
-// SVG PARSER
-// ─────────────────────────────────────────────
-function parseSVG(text) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(text, 'image/svg+xml');
-  const svg = doc.querySelector('svg');
-  if (!svg) throw new Error('Ingen SVG-rod fundet');
-
-  const entities = [];
-  const scale = getScaleFactor();
-
-  // SVG viewBox / width+height → find px-to-mm factor
-  // We'll apply user unit scale. SVG user units are typically px (1px = 0.264583mm)
-  // But if the SVG has explicit mm units in width/height, we use that.
-  let svgScale = 1; // multiplier on top of user's dxfUnit selection
-  const widthAttr  = svg.getAttribute('width')  || '';
-  const heightAttr = svg.getAttribute('height') || '';
-  const viewBox    = svg.getAttribute('viewBox');
-
-  // Try to detect if SVG is already in mm
-  if (widthAttr.includes('mm') && viewBox) {
-    const wMm = parseFloat(widthAttr);
-    const vb  = viewBox.trim().split(/[\s,]+/);
-    const vbW = parseFloat(vb[2]);
-    if (wMm > 0 && vbW > 0) {
-      // 1 SVG user unit = wMm/vbW mm → in µm: * (wMm/vbW * 1000)
-      svgScale = (wMm / vbW) * 1000;
-      log(`SVG enhed: ${(wMm/vbW).toFixed(4)} mm/unit (fra viewBox+width)`, 'info');
-    }
-  } else if (!widthAttr.includes('mm') && viewBox) {
-    // Assume px units — but let user's dxfUnit setting decide mm/inch etc.
-    // Default: treat SVG user units as mm (most CAD exports do this)
-    svgScale = scale; // as chosen in selector
-    log(`SVG enhed: behandles som valgt enhed (${document.getElementById('dxfUnit').value})`, 'info');
-  } else {
-    svgScale = scale;
-  }
-
-  function toUm(v) { return Math.round(v * svgScale); }
-
-  // Walk all shape elements, respecting nested transforms
-  function getTransformMatrix(el) {
-    const t = el.getAttribute('transform') || '';
-    return parseTransform(t);
-  }
-
-  function applyMatrix(m, x, y) {
-    return {
-      x: m[0]*x + m[2]*y + m[4],
-      y: m[1]*x + m[3]*y + m[5]
-    };
-  }
-
-  // Collect transforms walking up the tree
-  function getCumulativeMatrix(el) {
-    let m = [1,0,0,1,0,0];
-    const chain = [];
-    let cur = el;
-    while (cur && cur !== doc.documentElement) {
-      if (cur.getAttribute && cur.getAttribute('transform')) {
-        chain.unshift(parseTransform(cur.getAttribute('transform')));
-      }
-      cur = cur.parentElement;
-    }
-    chain.forEach(tm => { m = multiplyMatrix(m, tm); });
-    return m;
-  }
-
-  function parseTransform(t) {
-    let m = [1,0,0,1,0,0];
-    if (!t) return m;
-
-    const matMatch = t.match(/matrix\(([^)]+)\)/);
-    if (matMatch) {
-      const v = matMatch[1].trim().split(/[\s,]+/).map(Number);
-      if (v.length === 6) return v;
-    }
-    const transMatch = t.match(/translate\(([^)]+)\)/);
-    if (transMatch) {
-      const v = transMatch[1].trim().split(/[\s,]+/).map(Number);
-      m[4] = v[0] || 0; m[5] = v[1] || 0;
-    }
-    const scaleMatch = t.match(/scale\(([^)]+)\)/);
-    if (scaleMatch) {
-      const v = scaleMatch[1].trim().split(/[\s,]+/).map(Number);
-      const sx = v[0] || 1, sy = v[1] !== undefined ? v[1] : sx;
-      m = multiplyMatrix([sx,0,0,sy,0,0], m);
-    }
-    const rotMatch = t.match(/rotate\(([^)]+)\)/);
-    if (rotMatch) {
-      const v = rotMatch[1].trim().split(/[\s,]+/).map(Number);
-      const angle = (v[0] || 0) * Math.PI / 180;
-      const cx = v[1] || 0, cy = v[2] || 0;
-      const cos = Math.cos(angle), sin = Math.sin(angle);
-      const rm = [cos, sin, -sin, cos, cx - cos*cx + sin*cy, cy - sin*cx - cos*cy];
-      m = multiplyMatrix(rm, m);
-    }
-    return m;
-  }
-
-  function multiplyMatrix(a, b) {
-    return [
-      a[0]*b[0] + a[2]*b[1],
-      a[1]*b[0] + a[3]*b[1],
-      a[0]*b[2] + a[2]*b[3],
-      a[1]*b[2] + a[3]*b[3],
-      a[0]*b[4] + a[2]*b[5] + a[4],
-      a[1]*b[4] + a[3]*b[5] + a[5]
-    ];
-  }
-
-  const shapeSelector = 'line, rect, circle, ellipse, polyline, polygon, path';
-  const elements = doc.querySelectorAll(shapeSelector);
-
-  elements.forEach(el => {
-    const layer = el.getAttribute('inkscape:label') || el.getAttribute('id') || el.closest('[id]')?.id || '0';
-    const m = getCumulativeMatrix(el);
-    const tx = (x, y) => { const p = applyMatrix(m, x, y); return { x: toUm(p.x), y: toUm(p.y) }; };
-
-    const tag = el.tagName.toLowerCase();
-
-    if (tag === 'line') {
-      const x1 = parseFloat(el.getAttribute('x1')||0);
-      const y1 = parseFloat(el.getAttribute('y1')||0);
-      const x2 = parseFloat(el.getAttribute('x2')||0);
-      const y2 = parseFloat(el.getAttribute('y2')||0);
-      const p1 = tx(x1, y1), p2 = tx(x2, y2);
-      if (dist(p1.x, p1.y, p2.x, p2.y) > 0.5)
-        entities.push({ type: 'LINE', x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, layer });
-    }
-
-    else if (tag === 'rect') {
-      const x  = parseFloat(el.getAttribute('x')||0);
-      const y  = parseFloat(el.getAttribute('y')||0);
-      const w  = parseFloat(el.getAttribute('width')||0);
-      const h  = parseFloat(el.getAttribute('height')||0);
-      const rx = parseFloat(el.getAttribute('rx')||0);
-      const ry = parseFloat(el.getAttribute('ry')||el.getAttribute('rx')||0);
-      if (w <= 0 || h <= 0) return;
-
-      if (rx === 0 && ry === 0) {
-        // Simple rect as 4 lines
-        const corners = [[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]];
-        for (let i = 0; i < 4; i++) {
-          const p1 = tx(corners[i][0], corners[i][1]);
-          const p2 = tx(corners[i+1][0], corners[i+1][1]);
-          entities.push({ type: 'LINE', x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, layer });
-        }
-      } else {
-        // Rounded rect as polyline with arc bulges — approximate with segments
-        const pts = roundedRectPoints(x, y, w, h, rx, ry, m, svgScale);
-        entities.push({ type: 'POLYLINE', pts, bulges: {}, closed: true, layer });
-      }
-    }
-
-    else if (tag === 'circle') {
-      const cx = parseFloat(el.getAttribute('cx')||0);
-      const cy = parseFloat(el.getAttribute('cy')||0);
-      const r  = parseFloat(el.getAttribute('r')||0);
-      if (r <= 0) return;
-      const c = tx(cx, cy);
-      entities.push({ type: 'CIRCLE', cx: c.x, cy: c.y, r: toUm(r * Math.sqrt(Math.abs(m[0]*m[3] - m[1]*m[2]))), layer });
-    }
-
-    else if (tag === 'ellipse') {
-      const cx = parseFloat(el.getAttribute('cx')||0);
-      const cy = parseFloat(el.getAttribute('cy')||0);
-      const rx2 = parseFloat(el.getAttribute('rx')||0);
-      const ry2 = parseFloat(el.getAttribute('ry')||0);
-      if (rx2 <= 0 || ry2 <= 0) return;
-      log(`⚠ ELLIPSE approksimeres med 72 segmenter`, 'warn');
-      const pts = [];
-      for (let a = 0; a <= 360; a += 5) {
-        const rad = a * Math.PI / 180;
-        const p = tx(cx + rx2 * Math.cos(rad), cy + ry2 * Math.sin(rad));
-        pts.push([p.x, p.y]);
-      }
-      entities.push({ type: 'POLYLINE', pts, bulges: {}, closed: true, layer });
-    }
-
-    else if (tag === 'polyline' || tag === 'polygon') {
-      const raw = (el.getAttribute('points')||'').trim().split(/[\s,]+/).map(Number);
-      const pts = [];
-      for (let i = 0; i < raw.length - 1; i += 2) {
-        const p = tx(raw[i], raw[i+1]);
-        pts.push([p.x, p.y]);
-      }
-      if (pts.length >= 2)
-        entities.push({ type: 'POLYLINE', pts, bulges: {}, closed: tag === 'polygon', layer });
-    }
-
-    else if (tag === 'path') {
-      const pathEnts = parseSVGPath(el.getAttribute('d') || '', m, toUm, svgScale, layer);
-      entities.push(...pathEnts);
-    }
-  });
-
-  log(`SVG: ${elements.length} elementer → ${entities.length} entiteter`, 'ok');
-  return normalizeEntities(entities);
-}
-
-function roundedRectPoints(x, y, w, h, rx, ry, m, svgScale) {
-  const pts = [];
-  const steps = 8;
-  function addArc(cx, cy, fromAngle, toAngle) {
-    for (let s = 0; s <= steps; s++) {
-      const a = (fromAngle + (toAngle - fromAngle) * s / steps) * Math.PI / 180;
-      const px = cx + rx * Math.cos(a);
-      const py = cy + ry * Math.sin(a);
-      const tp = applyMatrixSimple(m, px, py);
-      pts.push([Math.round(tp.x * svgScale), Math.round(tp.y * svgScale)]);
-    }
-  }
-  function applyMatrixSimple(m, px, py) {
-    return { x: m[0]*px + m[2]*py + m[4], y: m[1]*px + m[3]*py + m[5] };
-  }
-  addArc(x+rx,     y+ry,     180, 270);
-  addArc(x+w-rx,   y+ry,     270, 360);
-  addArc(x+w-rx,   y+h-ry,     0,  90);
-  addArc(x+rx,     y+h-ry,    90, 180);
-  return pts;
-}
-
-function parseSVGPath(d, m, toUm, svgScale, layer) {
-  const entities = [];
-  if (!d) return entities;
-
-  function applyM(x, y) {
-    const px = m[0]*x + m[2]*y + m[4];
-    const py = m[1]*x + m[3]*y + m[5];
-    return [toUm(px), toUm(py)];
-  }
-
-  // Tokenize path
-  const tokens = [];
-  const re = /([MmLlHhVvCcSsQqTtAaZz])|([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)/g;
-  let match;
-  while ((match = re.exec(d)) !== null) {
-    tokens.push(match[1] || parseFloat(match[2]));
-  }
-
-  let i = 0;
-  let cx = 0, cy = 0;        // current point
-  let startX = 0, startY = 0; // subpath start
-  let lastCmd = '';
-  let lastCtrlX = cx, lastCtrlY = cy;
-  let currentPts = [];        // accumulate polyline points
-
-  function num() { return typeof tokens[i] === 'number' ? tokens[i++] : 0; }
-
-  function flushPoly() {
-    if (currentPts.length >= 2) {
-      entities.push({ type: 'POLYLINE', pts: [...currentPts], bulges: {}, closed: false, layer });
-    }
-    currentPts = [];
-  }
-
-  function addPt(x, y) {
-    const p = applyM(x, y);
-    if (currentPts.length === 0 || currentPts[currentPts.length-1][0] !== p[0] || currentPts[currentPts.length-1][1] !== p[1]) {
-      currentPts.push(p);
-    }
-  }
-
-  while (i < tokens.length) {
-    const cmd = tokens[i];
-    if (typeof cmd !== 'string') { i++; continue; }
-    i++;
-    lastCmd = cmd;
-
-    if (cmd === 'M' || cmd === 'm') {
-      flushPoly();
-      const abs = cmd === 'M';
-      let first = true;
-      while (i < tokens.length && typeof tokens[i] === 'number') {
-        const dx = num(), dy = num();
-        cx = abs ? dx : cx + dx;
-        cy = abs ? dy : cy + dy;
-        if (first) { startX = cx; startY = cy; first = false; }
-        addPt(cx, cy);
-      }
-    }
-    else if (cmd === 'L' || cmd === 'l') {
-      const abs = cmd === 'L';
-      while (i < tokens.length && typeof tokens[i] === 'number') {
-        const dx = num(), dy = num();
-        cx = abs ? dx : cx + dx;
-        cy = abs ? dy : cy + dy;
-        addPt(cx, cy);
-      }
-    }
-    else if (cmd === 'H' || cmd === 'h') {
-      const abs = cmd === 'H';
-      while (i < tokens.length && typeof tokens[i] === 'number') {
-        cx = abs ? num() : cx + num();
-        addPt(cx, cy);
-      }
-    }
-    else if (cmd === 'V' || cmd === 'v') {
-      const abs = cmd === 'V';
-      while (i < tokens.length && typeof tokens[i] === 'number') {
-        cy = abs ? num() : cy + num();
-        addPt(cx, cy);
-      }
-    }
-    else if (cmd === 'C' || cmd === 'c') {
-      // Cubic bezier — subdivide into segments
-      const abs = cmd === 'C';
-      while (i < tokens.length && typeof tokens[i] === 'number') {
-        const x1 = abs ? num() : cx + num(), y1 = abs ? num() : cy + num();
-        const x2 = abs ? num() : cx + num(), y2 = abs ? num() : cy + num();
-        const ex = abs ? num() : cx + num(), ey = abs ? num() : cy + num();
-        lastCtrlX = x2; lastCtrlY = y2;
-        subdivideCubic(cx, cy, x1, y1, x2, y2, ex, ey, addPt);
-        cx = ex; cy = ey;
-      }
-    }
-    else if (cmd === 'S' || cmd === 's') {
-      const abs = cmd === 'S';
-      while (i < tokens.length && typeof tokens[i] === 'number') {
-        const x1 = 2*cx - lastCtrlX, y1 = 2*cy - lastCtrlY;
-        const x2 = abs ? num() : cx + num(), y2 = abs ? num() : cy + num();
-        const ex = abs ? num() : cx + num(), ey = abs ? num() : cy + num();
-        lastCtrlX = x2; lastCtrlY = y2;
-        subdivideCubic(cx, cy, x1, y1, x2, y2, ex, ey, addPt);
-        cx = ex; cy = ey;
-      }
-    }
-    else if (cmd === 'Q' || cmd === 'q') {
-      const abs = cmd === 'Q';
-      while (i < tokens.length && typeof tokens[i] === 'number') {
-        const x1 = abs ? num() : cx + num(), y1 = abs ? num() : cy + num();
-        const ex = abs ? num() : cx + num(), ey = abs ? num() : cy + num();
-        lastCtrlX = x1; lastCtrlY = y1;
-        subdivideQuadratic(cx, cy, x1, y1, ex, ey, addPt);
-        cx = ex; cy = ey;
-      }
-    }
-    else if (cmd === 'T' || cmd === 't') {
-      const abs = cmd === 'T';
-      while (i < tokens.length && typeof tokens[i] === 'number') {
-        const x1 = 2*cx - lastCtrlX, y1 = 2*cy - lastCtrlY;
-        const ex = abs ? num() : cx + num(), ey = abs ? num() : cy + num();
-        lastCtrlX = x1; lastCtrlY = y1;
-        subdivideQuadratic(cx, cy, x1, y1, ex, ey, addPt);
-        cx = ex; cy = ey;
-      }
-    }
-    else if (cmd === 'A' || cmd === 'a') {
-      const abs = cmd === 'A';
-      while (i < tokens.length && typeof tokens[i] === 'number') {
-        const rx = num(), ry = num();
-        const xRot = num();
-        const largeArc = num();
-        const sweep = num();
-        const ex = abs ? num() : cx + num();
-        const ey = abs ? num() : cy + num();
-        // Convert SVG arc to points
-        svgArcToPoints(cx, cy, rx, ry, xRot, largeArc, sweep, ex, ey, addPt);
-        cx = ex; cy = ey;
-      }
-    }
-    else if (cmd === 'Z' || cmd === 'z') {
-      // Close path
-      addPt(startX, startY);
-      if (currentPts.length >= 2) {
-        entities.push({ type: 'POLYLINE', pts: [...currentPts], bulges: {}, closed: true, layer });
-        currentPts = [];
-      }
-      cx = startX; cy = startY;
-    }
-  }
-
-  flushPoly();
-  return entities;
-}
-
-function subdivideCubic(x0, y0, x1, y1, x2, y2, x3, y3, addPt, depth) {
-  depth = depth || 0;
-  if (depth > 6) { addPt(x3, y3); return; }
-  const flatness = Math.max(
-    Math.abs(x1 - x0) + Math.abs(y1 - y0),
-    Math.abs(x2 - x3) + Math.abs(y2 - y3)
-  );
-  if (flatness < 0.5) { addPt(x3, y3); return; }
-  const mx01 = (x0+x1)/2, my01 = (y0+y1)/2;
-  const mx12 = (x1+x2)/2, my12 = (y1+y2)/2;
-  const mx23 = (x2+x3)/2, my23 = (y2+y3)/2;
-  const mx012 = (mx01+mx12)/2, my012 = (my01+my12)/2;
-  const mx123 = (mx12+mx23)/2, my123 = (my12+my23)/2;
-  const mx = (mx012+mx123)/2, my = (my012+my123)/2;
-  subdivideCubic(x0,y0, mx01,my01, mx012,my012, mx,my, addPt, depth+1);
-  subdivideCubic(mx,my, mx123,my123, mx23,my23, x3,y3, addPt, depth+1);
-}
-
-function subdivideQuadratic(x0, y0, x1, y1, x2, y2, addPt, depth) {
-  depth = depth || 0;
-  if (depth > 6) { addPt(x2, y2); return; }
-  const flatness = Math.abs(x1 - (x0+x2)/2) + Math.abs(y1 - (y0+y2)/2);
-  if (flatness < 0.5) { addPt(x2, y2); return; }
-  const mx01 = (x0+x1)/2, my01 = (y0+y1)/2;
-  const mx12 = (x1+x2)/2, my12 = (y1+y2)/2;
-  const mx = (mx01+mx12)/2, my = (my01+my12)/2;
-  subdivideQuadratic(x0,y0, mx01,my01, mx,my, addPt, depth+1);
-  subdivideQuadratic(mx,my, mx12,my12, x2,y2, addPt, depth+1);
-}
-
-function svgArcToPoints(x1, y1, rx, ry, phi, largeArc, sweep, x2, y2, addPt) {
-  if (rx === 0 || ry === 0) { addPt(x2, y2); return; }
-  const cosPhi = Math.cos(phi * Math.PI/180);
-  const sinPhi = Math.sin(phi * Math.PI/180);
-  const dx = (x1 - x2) / 2, dy = (y1 - y2) / 2;
-  const x1p =  cosPhi*dx + sinPhi*dy;
-  const y1p = -sinPhi*dx + cosPhi*dy;
-  let rxSq = rx*rx, rySq = ry*ry;
-  const x1pSq = x1p*x1p, y1pSq = y1p*y1p;
-  let sq = (rxSq*rySq - rxSq*y1pSq - rySq*x1pSq) / (rxSq*y1pSq + rySq*x1pSq);
-  sq = sq < 0 ? 0 : Math.sqrt(sq);
-  const sign = largeArc === sweep ? -1 : 1;
-  const cxp =  sign * sq * rx * y1p / ry;
-  const cyp = -sign * sq * ry * x1p / rx;
-  const cx = cosPhi*cxp - sinPhi*cyp + (x1+x2)/2;
-  const cy = sinPhi*cxp + cosPhi*cyp + (y1+y2)/2;
-  const ux = (x1p - cxp) / rx, uy = (y1p - cyp) / ry;
-  const vx = (-x1p - cxp) / rx, vy = (-y1p - cyp) / ry;
-  let startAngle = Math.atan2(uy, ux);
-  let dAngle = Math.atan2(vy, vx) - startAngle;
-  if (sweep === 0 && dAngle > 0) dAngle -= 2*Math.PI;
-  if (sweep === 1 && dAngle < 0) dAngle += 2*Math.PI;
-  const steps = Math.max(8, Math.ceil(Math.abs(dAngle) * Math.max(rx,ry) / 2));
-  for (let s = 1; s <= steps; s++) {
-    const a = startAngle + dAngle * s / steps;
-    const x = cosPhi*rx*Math.cos(a) - sinPhi*ry*Math.sin(a) + cx;
-    const y = sinPhi*rx*Math.cos(a) + cosPhi*ry*Math.sin(a) + cy;
-    addPt(x, y);
+// Parser kildeteksten med den aktuelle enhed. firstLoad → må sætte enhed ud fra $INSUNITS.
+function loadSource(firstLoad) {
+  if (srcText == null) return;
+  try {
+    const res = srcIsSvg ? parseSVG(srcText) : parseDXF(srcText, firstLoad);
+    basePaths = res.paths;
+    srcStats = res.stats;
+    const lc = {};
+    basePaths.forEach(p => lc[p.layer] = (lc[p.layer] || 0) + 1);
+    srcLayers = Object.keys(lc).sort().map(name => ({ name, n: lc[name] }));
+    if (!basePaths.length) log('⚠ Ingen skærbar geometri fundet i filen', 'warn');
+    rebuildPart(true);
+  } catch (err) {
+    log(`✗ Parse fejl: ${err.message}`, 'err');
+    console.error(err);
   }
 }
 
-// ─────────────────────────────────────────────
-// DXF PARSER
-// ─────────────────────────────────────────────
-function parseDXF(text) {
-  const lines = text.split(/\r?\n/);
-  const entities = [];
-  let i = 0;
-
-  // Find ENTITIES section
-  while (i < lines.length && lines[i].trim() !== 'ENTITIES') i++;
-  i++;
-
-  const scaleFactor = getScaleFactor();
-
-  function toUm(v) { return Math.round(v * scaleFactor); }
-
-  while (i < lines.length) {
-    const code = lines[i]?.trim();
-    const val = lines[i+1]?.trim();
-    i += 2;
-    if (code === undefined) break;
-
-    if (code === '0') {
-      if (val === 'ENDSEC' || val === 'EOF') break;
-
-      if (val === 'LINE') {
-        const props = readEntityProps(lines, i);
-        i = props.nextI;
-        const x1 = toUm(parseF(props['10']));
-        const y1 = toUm(parseF(props['20']));
-        const x2 = toUm(parseF(props['11']));
-        const y2 = toUm(parseF(props['21']));
-        if (dist(x1,y1,x2,y2) > 0.5) {
-          entities.push({ type: 'LINE', x1, y1, x2, y2, layer: props['8'] || '0' });
-        }
-      }
-
-      else if (val === 'ARC') {
-        const props = readEntityProps(lines, i);
-        i = props.nextI;
-        const cx = toUm(parseF(props['10']));
-        const cy = toUm(parseF(props['20']));
-        const r  = toUm(parseF(props['40']));
-        const a1 = parseF(props['50']); // start angle deg
-        const a2 = parseF(props['51']); // end angle deg
-        entities.push({ type: 'ARC', cx, cy, r, a1, a2, layer: props['8'] || '0' });
-      }
-
-      else if (val === 'CIRCLE') {
-        const props = readEntityProps(lines, i);
-        i = props.nextI;
-        const cx = toUm(parseF(props['10']));
-        const cy = toUm(parseF(props['20']));
-        const r  = toUm(parseF(props['40']));
-        entities.push({ type: 'CIRCLE', cx, cy, r, layer: props['8'] || '0' });
-      }
-
-      else if (val === 'LWPOLYLINE' || val === 'POLYLINE') {
-        const props = readEntityProps(lines, i);
-        i = props.nextI;
-        const pts = props._polypts || [];
-        const closed = (parseInt(props['70'] || '0') & 1) === 1;
-        const bulges = props._bulges || {};
-        if (pts.length >= 2) {
-          entities.push({ type: 'POLYLINE', pts: pts.map(p => [toUm(p[0]), toUm(p[1])]), bulges, closed, layer: props['8'] || '0' });
-        }
-      }
-
-      else if (val === 'SPLINE') {
-        const props = readEntityProps(lines, i);
-        i = props.nextI;
-        const pts = props._ctrlpts || [];
-        if (pts.length >= 2) {
-          log(`⚠ SPLINE fundet (${pts.length} kontrolpunkter) — approksimeres som polyline`, 'warn');
-          entities.push({ type: 'SPLINE', pts: pts.map(p => [toUm(p[0]), toUm(p[1])]), layer: props['8'] || '0' });
-        }
-      }
-    }
-  }
-
-  // Normalize: shift all coordinates so min(X,Y) = 0,0
-  return normalizeEntities(entities);
-}
-
-function normalizeEntities(entities) {
-  if (!entities.length) return entities;
-
-  // Find global min X and min Y across all geometry
-  let minX = Infinity, minY = Infinity;
-
-  entities.forEach(e => {
-    if (e.type === 'LINE') {
-      minX = Math.min(minX, e.x1, e.x2);
-      minY = Math.min(minY, e.y1, e.y2);
-    } else if (e.type === 'ARC') {
-      minX = Math.min(minX, e.cx - e.r);
-      minY = Math.min(minY, e.cy - e.r);
-    } else if (e.type === 'CIRCLE') {
-      minX = Math.min(minX, e.cx - e.r);
-      minY = Math.min(minY, e.cy - e.r);
-    } else if (e.pts) {
-      e.pts.forEach(([px, py]) => {
-        minX = Math.min(minX, px);
-        minY = Math.min(minY, py);
-      });
-    }
-  });
-
-  // Only shift if needed
-  if (minX === 0 && minY === 0) return entities;
-
-  const ox = minX < 0 ? -minX : (minX > 0 ? -minX : 0);
-  const oy = minY < 0 ? -minY : (minY > 0 ? -minY : 0);
-
-  if (ox !== 0 || oy !== 0) {
-    log(`Offset: X${ox > 0 ? '+' : ''}${(ox/1000).toFixed(3)} mm, Y${oy > 0 ? '+' : ''}${(oy/1000).toFixed(3)} mm → nulpunkt sat til 0,0`, 'warn');
-  }
-
-  return entities.map(e => {
-    if (e.type === 'LINE') {
-      return { ...e, x1: e.x1 + ox, y1: e.y1 + oy, x2: e.x2 + ox, y2: e.y2 + oy };
-    } else if (e.type === 'ARC') {
-      return { ...e, cx: e.cx + ox, cy: e.cy + oy };
-    } else if (e.type === 'CIRCLE') {
-      return { ...e, cx: e.cx + ox, cy: e.cy + oy };
-    } else if (e.pts) {
-      return { ...e, pts: e.pts.map(([px, py]) => [px + ox, py + oy]) };
-    }
-    return e;
-  });
-}
-
-function readEntityProps(lines, startI) {
-  const props = { nextI: startI };
-  let i = startI;
-  let ptX = null, ptY = null;
-  const polypts = [];
-  const bulges = {};
-  const ctrlpts = [];
-  let ctrlX = null, ctrlY = null;
-  let ptCount = 0;
-
-  while (i < lines.length) {
-    const code = lines[i]?.trim();
-    const val  = lines[i+1]?.trim();
-    if (code === undefined || val === undefined) break;
-    i += 2;
-
-    if (code === '0') { i -= 2; break; }
-
-    if (code === '10') {
-      if (ptX !== null && ptY !== null) { polypts.push([ptX, ptY]); ptCount++; }
-      ptX = parseF(val);
-    } else if (code === '20') {
-      ptY = parseF(val);
-    }
-    // Spline control pts use 10/20 too, but also have knots etc
-    // For SPLINE we also collect 10/20
-    if (code === '42') { bulges[ptCount] = parseF(val); }
-
-    props[code] = val;
-  }
-
-  if (ptX !== null && ptY !== null) polypts.push([ptX, ptY]);
-
-  props._polypts = polypts;
-  props._bulges = bulges;
-  props._ctrlpts = ctrlpts.length > 0 ? ctrlpts : polypts;
-  props.nextI = i;
-  return props;
-}
-
-function getScaleFactor() {
-  const unit = document.getElementById('dxfUnit').value;
-  switch(unit) {
+function getUnitUm() {
+  switch ($('dxfUnit').value) {
     case 'mm': return 1000;
-    case 'm':  return 1000000;
+    case 'cm': return 10000;
+    case 'm': return 1000000;
     case 'inch': return 25400;
     case 'um': return 1;
     default: return 1000;
   }
 }
 
-function parseF(v) { return parseFloat(v) || 0; }
-function dist(x1,y1,x2,y2) { return Math.sqrt((x2-x1)**2+(y2-y1)**2); }
+// ─────────────────────────────────────────────
+// DXF PARSER
+// ─────────────────────────────────────────────
+function readPairs(text) {
+  const ln = text.split(/\r\n|\r|\n/);
+  const out = [];
+  for (let i = 0; i + 1 < ln.length; i += 2) {
+    const c = parseInt(ln[i].trim(), 10);
+    if (isNaN(c)) continue;
+    out.push([c, ln[i + 1].trim()]);
+  }
+  return out;
+}
+// Læser poster fra P[i] (en (0, TYPE)-linje) indtil en af stop-typerne
+function readRecords(P, i, stops) {
+  const recs = [];
+  while (i < P.length) {
+    if (P[i][0] !== 0) { i++; continue; }
+    if (stops.includes(P[i][1])) return { recs, i };
+    const rec = { type: P[i][1], d: [] };
+    i++;
+    while (i < P.length && P[i][0] !== 0) { rec.d.push(P[i]); i++; }
+    recs.push(rec);
+  }
+  return { recs, i };
+}
+const dg = (rec, code, def) => { for (const [c, v] of rec.d) if (c === code) return v; return def; };
+const dgf = (rec, code, def = 0) => { const f = parseFloat(dg(rec, code)); return isFinite(f) ? f : def; };
+
+// Hæfter VERTEX-poster på POLYLINE og fjerner ATTRIB/SEQEND
+function groupSeq(recs) {
+  const out = [];
+  for (let i = 0; i < recs.length; i++) {
+    const r = recs[i];
+    if (r.type === 'POLYLINE') {
+      r.vertices = [];
+      while (i + 1 < recs.length && recs[i + 1].type === 'VERTEX') r.vertices.push(recs[++i]);
+      if (i + 1 < recs.length && recs[i + 1].type === 'SEQEND') i++;
+      out.push(r);
+    } else if (r.type === 'INSERT') {
+      while (i + 1 < recs.length && recs[i + 1].type === 'ATTRIB') i++;
+      if (i + 1 < recs.length && recs[i + 1].type === 'SEQEND') i++;
+      out.push(r);
+    } else if (r.type !== 'VERTEX' && r.type !== 'SEQEND' && r.type !== 'ATTRIB') {
+      out.push(r);
+    }
+  }
+  return out;
+}
+
+const INSUNITS = { 1: 'inch', 4: 'mm', 5: 'cm', 6: 'm', 13: 'um' };
+
+function parseDXF(text, firstLoad) {
+  const P = readPairs(text);
+  const blocks = {};
+  let ents = null, insunits = 0, i = 0;
+  while (i < P.length) {
+    if (P[i][0] === 0 && P[i][1] === 'SECTION') {
+      const name = (P[i + 1] && P[i + 1][0] === 2) ? P[i + 1][1] : '';
+      i += 2;
+      if (name === 'HEADER') {
+        while (i < P.length && !(P[i][0] === 0 && P[i][1] === 'ENDSEC')) {
+          if (P[i][0] === 9 && P[i][1] === '$INSUNITS' && P[i + 1]) insunits = parseInt(P[i + 1][1], 10) || 0;
+          i++;
+        }
+      } else if (name === 'BLOCKS') {
+        while (i < P.length && !(P[i][0] === 0 && P[i][1] === 'ENDSEC')) {
+          if (P[i][0] === 0 && P[i][1] === 'BLOCK') {
+            const hdr = { type: 'BLOCK', d: [] };
+            i++;
+            while (i < P.length && P[i][0] !== 0) { hdr.d.push(P[i]); i++; }
+            const res = readRecords(P, i, ['ENDBLK', 'ENDSEC']);
+            i = res.i;
+            blocks[dg(hdr, 2, '')] = { bx: dgf(hdr, 10), by: dgf(hdr, 20), recs: groupSeq(res.recs) };
+          } else i++;
+        }
+      } else if (name === 'ENTITIES') {
+        const res = readRecords(P, i, ['ENDSEC']);
+        i = res.i;
+        ents = groupSeq(res.recs);
+      }
+    } else i++;
+  }
+  if (!ents) throw new Error('Ingen ENTITIES-sektion fundet — er det en gyldig ASCII-DXF?');
+
+  if (firstLoad && INSUNITS[insunits]) {
+    $('dxfUnit').value = INSUNITS[insunits];
+    log(`Enhed fra DXF ($INSUNITS=${insunits}): ${$('dxfUnit').selectedOptions[0].textContent}`, 'info');
+  } else if (firstLoad) {
+    log(`Ingen enhed i DXF — bruger valgt enhed (${$('dxfUnit').value})`, 'info');
+  }
+
+  const stats = {}, ignored = {}, paths = [];
+  const bump = (o, k) => o[k] = (o[k] || 0) + 1;
+  let splineFit = 0, missingBlocks = new Set();
+
+  function conv(rec, M, depth, inheritLayer, top) {
+    if (top && dg(rec, 67) === '1') return; // paper space (tegningshoved m.m.)
+    let layer = dg(rec, 8, '0');
+    if (layer === '0' && inheritLayer) layer = inheritLayer;
+    const ocsFlip = dgf(rec, 230, 1) < 0;              // spejlet OCS (extrusion 0,0,-1) → X spejles
+    const Mo = ocsFlip ? mat.mul(M, [-1, 0, 0, 1, 0, 0]) : M;
+    const push = (segs, closed, m) => {
+      segs = segs.filter(Boolean);
+      if (segs.length) paths.push({ segs: xfSegs(segs, m), closed, layer });
+    };
+    switch (rec.type) {
+      case 'LINE': {
+        const s = Lseg(dgf(rec, 10), dgf(rec, 20), dgf(rec, 11), dgf(rec, 21));
+        if (segLen(s) > 1e-9) { push([s], false, M); bump(stats, 'LINE'); }
+        break;
+      }
+      case 'CIRCLE': {
+        const r = dgf(rec, 40);
+        if (r > 0) { push(circleSegs(dgf(rec, 10), dgf(rec, 20), r), true, Mo); bump(stats, 'CIRCLE'); }
+        break;
+      }
+      case 'ARC': {
+        const r = dgf(rec, 40), cx = dgf(rec, 10), cy = dgf(rec, 20), a1 = dgf(rec, 50), a2 = dgf(rec, 51);
+        if (r <= 0) break;
+        let sw = a2 - a1; while (sw <= 0) sw += 360; while (sw > 360) sw -= 360;
+        if (sw >= 359.9999) push(circleSegs(cx, cy, r, a1), true, Mo);
+        else {
+          const p = a => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)];
+          const [x0, y0] = p(a1), [x1, y1] = p(a1 + sw);
+          push([Aseg(x0, y0, x1, y1, cx, cy, true)], false, Mo);
+        }
+        bump(stats, 'ARC');
+        break;
+      }
+      case 'LWPOLYLINE': {
+        const v = []; let cur = null;
+        for (const [c, val] of rec.d) {
+          if (c === 10) { cur = { x: parseFloat(val) || 0, y: 0, b: 0 }; v.push(cur); }
+          else if (cur && c === 20) cur.y = parseFloat(val) || 0;
+          else if (cur && c === 42) cur.b = parseFloat(val) || 0;
+        }
+        const pl = polyFromVerts(v, (parseInt(dg(rec, 70, '0'), 10) & 1) === 1);
+        if (pl.segs.length) { push(pl.segs, pl.closed, Mo); bump(stats, 'POLYLINE'); }
+        break;
+      }
+      case 'POLYLINE': {
+        const flags = parseInt(dg(rec, 70, '0'), 10) || 0;
+        if (flags & (16 | 64)) { bump(ignored, 'POLYFACE/MESH'); break; }
+        const v = (rec.vertices || [])
+          .filter(vr => !((parseInt(dg(vr, 70, '0'), 10) || 0) & 16))
+          .map(vr => ({ x: dgf(vr, 10), y: dgf(vr, 20), b: dgf(vr, 42) }));
+        const pl = polyFromVerts(v, (flags & 1) === 1);
+        if (pl.segs.length) { push(pl.segs, pl.closed, (flags & 8) ? M : Mo); bump(stats, 'POLYLINE'); }
+        break;
+      }
+      case 'SPLINE': {
+        const sp = splinePts(rec);
+        if (!sp) break;
+        if (sp.fit) splineFit++;
+        const closed = ((parseInt(dg(rec, 70, '0'), 10) || 0) & 1) === 1 ||
+          Math.hypot(sp.pts[0][0] - sp.pts[sp.pts.length - 1][0], sp.pts[0][1] - sp.pts[sp.pts.length - 1][1]) < 1e-9;
+        push(ptsToSegs(closed ? dropLastIfDup(sp.pts) : sp.pts, closed), closed, M);
+        bump(stats, 'SPLINE');
+        break;
+      }
+      case 'ELLIPSE': {
+        const cx = dgf(rec, 10), cy = dgf(rec, 20), mx = dgf(rec, 11), my = dgf(rec, 21);
+        const ratio = dgf(rec, 40, 1), t0 = dgf(rec, 41, 0), t1 = dgf(rec, 42, TAU);
+        let sw = t1 - t0; while (sw <= 1e-12) sw += TAU; if (sw > TAU) sw = TAU;
+        const nx = ocsFlip ? my : -my, ny = ocsFlip ? -mx : mx; // lilleakse-retning
+        const full = sw >= TAU - 1e-6;
+        const n = Math.max(16, Math.ceil(sw / TAU * 180));
+        const pts = [];
+        for (let k = 0; k <= (full ? n - 1 : n); k++) {
+          const t = t0 + sw * k / n;
+          pts.push([cx + mx * Math.cos(t) + nx * ratio * Math.sin(t), cy + my * Math.cos(t) + ny * ratio * Math.sin(t)]);
+        }
+        push(ptsToSegs(pts, full), full, M);
+        bump(stats, 'ELLIPSE');
+        break;
+      }
+      case 'INSERT': {
+        const name = dg(rec, 2, '');
+        const blk = blocks[name];
+        if (!blk) { missingBlocks.add(name); break; }
+        if (depth > 8) break;
+        const px = dgf(rec, 10), py = dgf(rec, 20), sx = dgf(rec, 41, 1), sy = dgf(rec, 42, 1), rot = dgf(rec, 50);
+        const cols = Math.max(1, parseInt(dg(rec, 70, '1'), 10) || 1), rows = Math.max(1, parseInt(dg(rec, 71, '1'), 10) || 1);
+        const csp = dgf(rec, 44), rsp = dgf(rec, 45);
+        for (let ci = 0; ci < cols; ci++) for (let ri = 0; ri < rows; ri++) {
+          let Mi = mat.mul(Mo, mat.tr(px, py));
+          Mi = mat.mul(Mi, mat.rot(rot));
+          Mi = mat.mul(Mi, mat.tr(ci * csp, ri * rsp));
+          Mi = mat.mul(Mi, mat.sc(sx, sy));
+          Mi = mat.mul(Mi, mat.tr(-blk.bx, -blk.by));
+          blk.recs.forEach(child => conv(child, Mi, depth + 1, layer, false));
+        }
+        bump(stats, 'INSERT');
+        break;
+      }
+      default:
+        bump(ignored, rec.type);
+    }
+  }
+
+  const M0 = mat.sc(getUnitUm());
+  ents.forEach(rec => conv(rec, M0, 0, null, true));
+
+  if (splineFit) log(`⚠ ${splineFit} SPLINE uden kontrolpunkter — tilnærmet gennem fitpunkter`, 'warn');
+  if (missingBlocks.size) log(`⚠ Blok(ke) mangler: ${[...missingBlocks].join(', ')}`, 'warn');
+  const ign = Object.entries(ignored);
+  if (ign.length) log(`⚠ Ignoreret (ikke skærbar geometri): ${ign.map(([t, n]) => `${t} ×${n}`).join(', ')}`, 'warn');
+  return { paths, stats };
+}
+
+function dropLastIfDup(pts) {
+  const a = pts[0], b = pts[pts.length - 1];
+  return (pts.length > 2 && Math.hypot(a[0] - b[0], a[1] - b[1]) < 1e-9) ? pts.slice(0, -1) : pts;
+}
+
+function polyFromVerts(v, closed) {
+  v = v.filter((p, k) => k === 0 || p.x !== v[k - 1].x || p.y !== v[k - 1].y || closed);
+  if (v.length < 2) return { segs: [], closed: false };
+  const a = v[0], z = v[v.length - 1];
+  if (!closed && v.length > 2 && Math.hypot(a.x - z.x, a.y - z.y) < 1e-9) { closed = true; v = v.slice(0, -1); }
+  const segs = [];
+  const n = closed ? v.length : v.length - 1;
+  for (let k = 0; k < n; k++) {
+    const p = v[k], q = v[(k + 1) % v.length];
+    const s = bulgeSeg(p.x, p.y, q.x, q.y, p.b);
+    if (s) segs.push(s);
+  }
+  return { segs, closed: closed && segs.length > 1 };
+}
+
+// SPLINE → punkter (ægte NURBS-evaluering via de Boor)
+function splinePts(rec) {
+  const deg = parseInt(dg(rec, 71, '3'), 10) || 3;
+  const knots = [], w = [], cp = [], fp = [];
+  let cur = null, fcur = null;
+  for (const [c, v] of rec.d) {
+    const f = parseFloat(v);
+    if (c === 40) knots.push(f);
+    else if (c === 41) w.push(f);
+    else if (c === 10) { cur = { x: f, y: 0 }; cp.push(cur); }
+    else if (c === 20 && cur) cur.y = f;
+    else if (c === 11) { fcur = { x: f, y: 0 }; fp.push(fcur); }
+    else if (c === 21 && fcur) fcur.y = f;
+  }
+  if (cp.length > deg) return { pts: nurbsPts(deg, knots, cp, w), fit: false };
+  if (fp.length >= 2) return { pts: fp.map(p => [p.x, p.y]), fit: true };
+  if (cp.length >= 2) return { pts: cp.map(p => [p.x, p.y]), fit: true };
+  return null;
+}
+function nurbsPts(p, U, P, W) {
+  const n = P.length;
+  if (U.length !== n + p + 1) { U = []; for (let i = 0; i < n + p + 1; i++) U.push(i <= p ? 0 : i >= n ? n - p : i - p); }
+  if (W.length !== n) W = P.map(() => 1);
+  const t0 = U[p], t1 = U[n];
+  const N = Math.min(4000, Math.max(32, (n - p) * 24));
+  const out = [];
+  for (let s = 0; s <= N; s++) out.push(deBoor(p, U, P, W, s === N ? t1 : t0 + (t1 - t0) * s / N));
+  return out;
+}
+function deBoor(p, U, P, W, t) {
+  const n = P.length;
+  let k = p;
+  while (k < n - 1 && t >= U[k + 1]) k++;
+  const d = [];
+  for (let j = 0; j <= p; j++) { const q = P[j + k - p], w = W[j + k - p]; d.push([q.x * w, q.y * w, w]); }
+  for (let r = 1; r <= p; r++) {
+    for (let j = p; j >= r; j--) {
+      const i0 = j + k - p, den = U[i0 + p - r + 1] - U[i0];
+      const al = den === 0 ? 0 : (t - U[i0]) / den;
+      for (let q = 0; q < 3; q++) d[j][q] = (1 - al) * d[j - 1][q] + al * d[j][q];
+    }
+  }
+  return [d[p][0] / d[p][2], d[p][1] / d[p][2]];
+}
+
+// ─────────────────────────────────────────────
+// SVG PARSER (SVG har Y nedad → spejles til Y op, så emnet skæres som det ser ud)
+// ─────────────────────────────────────────────
+function parseSVG(text) {
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const svg = doc.querySelector('svg');
+  if (!svg || doc.querySelector('parsererror')) throw new Error('Ingen gyldig SVG-rod fundet');
+
+  const ABS = { mm: 1000, cm: 10000, in: 25400, pt: 25400 / 72, pc: 25400 / 6 };
+  let svgScale = getUnitUm(); // µm pr. SVG-brugerenhed
+  const wAttr = (svg.getAttribute('width') || '').trim();
+  const vb = (svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+  const mU = wAttr.match(/^([\d.eE+-]+)\s*(mm|cm|in|pt|pc)$/);
+  if (mU && vb.length === 4 && vb[2] > 0) {
+    svgScale = parseFloat(mU[1]) * ABS[mU[2]] / vb[2];
+    log(`SVG-enhed: ${(svgScale / 1000).toFixed(4)} mm/enhed (fra viewBox + width)`, 'info');
+  } else {
+    log(`SVG-enhed: behandles som valgt enhed (${$('dxfUnit').value})`, 'info');
+  }
+  const root = [svgScale, 0, 0, -svgScale, 0, 0];
+
+  function cumMatrix(el) {
+    const chain = [];
+    for (let cur = el; cur && cur !== svg && cur.getAttribute; cur = cur.parentElement) {
+      const t = cur.getAttribute('transform');
+      if (t) chain.unshift(parseTransform(t));
+    }
+    return chain.reduce((m, t) => mat.mul(m, t), mat.id());
+  }
+  function layerOf(el) {
+    for (let g = el.parentElement; g && g !== svg; g = g.parentElement) {
+      if (g.tagName.toLowerCase() === 'g') {
+        const l = g.getAttribute('inkscape:label') || g.getAttribute('id');
+        if (l) return l;
+      }
+    }
+    return '0';
+  }
+  const attr = (el, n) => parseFloat(el.getAttribute(n) || 0) || 0;
+
+  const paths = [], stats = {};
+  const bump = k => stats[k] = (stats[k] || 0) + 1;
+  const uses = doc.querySelectorAll('use').length;
+
+  doc.querySelectorAll('line, rect, circle, ellipse, polyline, polygon, path').forEach(el => {
+    if (el.closest('defs, clipPath, mask, symbol, marker, pattern')) return;
+    const cum = cumMatrix(el);
+    const M = mat.mul(root, cum);
+    const layer = layerOf(el);
+    const tolUser = 10 / (svgScale * Math.sqrt(Math.abs(mat.det(cum))) || 1); // 10 µm kordefejl
+    const add = (segs, closed) => { segs = segs.filter(Boolean); if (segs.length) paths.push({ segs: xfSegs(segs, M), closed, layer }); };
+    const tag = el.tagName.toLowerCase();
+
+    if (tag === 'line') {
+      add(ptsToSegs([[attr(el, 'x1'), attr(el, 'y1')], [attr(el, 'x2'), attr(el, 'y2')]], false), false); bump('LINE');
+    } else if (tag === 'rect') {
+      const x = attr(el, 'x'), y = attr(el, 'y'), w = attr(el, 'width'), h = attr(el, 'height');
+      if (w <= 0 || h <= 0) return;
+      let rx = attr(el, 'rx'), ry = attr(el, 'ry');
+      if (!el.hasAttribute('ry')) ry = rx;
+      if (!el.hasAttribute('rx')) rx = ry;
+      rx = Math.min(rx, w / 2); ry = Math.min(ry, h / 2);
+      if (Math.abs(rx - ry) < 1e-9) add(roundedRectSegs(x, y, w, h, rx), true);
+      else {
+        const pts = [];
+        const q = (cx, cy, a0) => { for (let s = 0; s <= 24; s++) { const a = (a0 + 90 * s / 24) * Math.PI / 180; pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]); } };
+        q(x + w - rx, y + ry, 270); q(x + w - rx, y + h - ry, 0); q(x + rx, y + h - ry, 90); q(x + rx, y + ry, 180);
+        add(ptsToSegs(pts, true), true);
+      }
+      bump('RECT');
+    } else if (tag === 'circle') {
+      const r = attr(el, 'r');
+      if (r > 0) { add(circleSegs(attr(el, 'cx'), attr(el, 'cy'), r), true); bump('CIRCLE'); }
+    } else if (tag === 'ellipse') {
+      const cx = attr(el, 'cx'), cy = attr(el, 'cy'), rx = attr(el, 'rx'), ry = attr(el, 'ry');
+      if (rx <= 0 || ry <= 0) return;
+      const pts = [];
+      for (let k = 0; k < 180; k++) { const a = k * TAU / 180; pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]); }
+      add(ptsToSegs(pts, true), true); bump('ELLIPSE');
+    } else if (tag === 'polyline' || tag === 'polygon') {
+      const raw = (el.getAttribute('points') || '').trim().split(/[\s,]+/).filter(s => s !== '').map(Number);
+      const pts = [];
+      for (let k = 0; k + 1 < raw.length; k += 2) pts.push([raw[k], raw[k + 1]]);
+      if (pts.length >= 2) { add(ptsToSegs(pts, tag === 'polygon'), tag === 'polygon'); bump('POLYLINE'); }
+    } else if (tag === 'path') {
+      parseSVGPath(el.getAttribute('d') || '', tolUser).forEach(sp => add(ptsToSegs(sp.pts, sp.closed), sp.closed));
+      bump('PATH');
+    }
+  });
+
+  if (uses) log(`⚠ ${uses} <use>-element(er) ignoreret — konverter til stier i dit tegneprogram`, 'warn');
+  log(`SVG: ${paths.length} stier`, 'ok');
+  return { paths, stats };
+}
+
+function parseTransform(t) {
+  let m = mat.id();
+  const re = /(matrix|translate|scale|rotate|skewX|skewY)\s*\(([^)]*)\)/g;
+  let x;
+  while ((x = re.exec(t))) {
+    const v = x[2].trim().split(/[\s,]+/).filter(s => s !== '').map(Number);
+    let t2 = mat.id();
+    switch (x[1]) {
+      case 'matrix': if (v.length === 6) t2 = v; break;
+      case 'translate': t2 = mat.tr(v[0] || 0, v[1] || 0); break;
+      case 'scale': t2 = mat.sc(v[0] ?? 1, v[1] ?? v[0] ?? 1); break;
+      case 'rotate': {
+        const r = mat.rot(v[0] || 0);
+        t2 = v.length >= 3 ? mat.mul(mat.tr(v[1], v[2]), mat.mul(r, mat.tr(-v[1], -v[2]))) : r;
+        break;
+      }
+      case 'skewX': t2 = [1, 0, Math.tan((v[0] || 0) * Math.PI / 180), 1, 0, 0]; break;
+      case 'skewY': t2 = [1, Math.tan((v[0] || 0) * Math.PI / 180), 0, 1, 0, 0]; break;
+    }
+    m = mat.mul(m, t2);
+  }
+  return m;
+}
+
+// SVG path-data → [{pts, closed}] i brugerenheder
+function parseSVGPath(d, tol) {
+  const out = [];
+  const tokens = [];
+  const re = /([MmLlHhVvCcSsQqTtAaZz])|([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)/g;
+  let mt;
+  while ((mt = re.exec(d)) !== null) tokens.push(mt[1] || parseFloat(mt[2]));
+
+  let i = 0, cx = 0, cy = 0, sx = 0, sy = 0, lcx = 0, lcy = 0, prev = '';
+  let pts = [];
+  const nm = () => typeof tokens[i] === 'number' ? tokens[i++] : 0;
+  const more = () => i < tokens.length && typeof tokens[i] === 'number';
+  const flush = closed => { if (pts.length >= 2) out.push({ pts, closed }); pts = []; };
+  const add = (x, y) => { const l = pts[pts.length - 1]; if (!l || l[0] !== x || l[1] !== y) pts.push([x, y]); };
+
+  while (i < tokens.length) {
+    const cmd = tokens[i];
+    if (typeof cmd !== 'string') { i++; continue; }
+    i++;
+    const abs = cmd === cmd.toUpperCase();
+    const C = cmd.toUpperCase();
+    if (C !== 'M' && C !== 'Z' && !pts.length) add(cx, cy);
+    if (C === 'M') {
+      flush(false);
+      let first = true;
+      while (more()) {
+        const x = nm(), y = nm();
+        cx = abs ? x : cx + x; cy = abs ? y : cy + y;
+        if (first) { sx = cx; sy = cy; first = false; }
+        add(cx, cy);
+      }
+    } else if (C === 'L') {
+      while (more()) { const x = nm(), y = nm(); cx = abs ? x : cx + x; cy = abs ? y : cy + y; add(cx, cy); }
+    } else if (C === 'H') {
+      while (more()) { const x = nm(); cx = abs ? x : cx + x; add(cx, cy); }
+    } else if (C === 'V') {
+      while (more()) { const y = nm(); cy = abs ? y : cy + y; add(cx, cy); }
+    } else if (C === 'C' || C === 'S') {
+      while (more()) {
+        let x1, y1;
+        if (C === 'C') { x1 = nm(); y1 = nm(); if (!abs) { x1 += cx; y1 += cy; } }
+        else if ('CS'.includes(prev)) { x1 = 2 * cx - lcx; y1 = 2 * cy - lcy; }
+        else { x1 = cx; y1 = cy; }
+        let x2 = nm(), y2 = nm(), ex = nm(), ey = nm();
+        if (!abs) { x2 += cx; y2 += cy; ex += cx; ey += cy; }
+        flatCubic(cx, cy, x1, y1, x2, y2, ex, ey, tol, add, 0);
+        lcx = x2; lcy = y2; cx = ex; cy = ey; prev = C;
+      }
+    } else if (C === 'Q' || C === 'T') {
+      while (more()) {
+        let x1, y1;
+        if (C === 'Q') { x1 = nm(); y1 = nm(); if (!abs) { x1 += cx; y1 += cy; } }
+        else if ('QT'.includes(prev)) { x1 = 2 * cx - lcx; y1 = 2 * cy - lcy; }
+        else { x1 = cx; y1 = cy; }
+        let ex = nm(), ey = nm();
+        if (!abs) { ex += cx; ey += cy; }
+        flatCubic(cx, cy, cx + 2 / 3 * (x1 - cx), cy + 2 / 3 * (y1 - cy), ex + 2 / 3 * (x1 - ex), ey + 2 / 3 * (y1 - ey), ex, ey, tol, add, 0);
+        lcx = x1; lcy = y1; cx = ex; cy = ey; prev = C;
+      }
+    } else if (C === 'A') {
+      while (more()) {
+        const rx = Math.abs(nm()), ry = Math.abs(nm()), rot = nm(), large = nm(), sweep = nm();
+        let ex = nm(), ey = nm();
+        if (!abs) { ex += cx; ey += cy; }
+        svgArcToPoints(cx, cy, rx, ry, rot, large, sweep, ex, ey, tol, add);
+        cx = ex; cy = ey;
+      }
+    } else if (C === 'Z') {
+      add(sx, sy);
+      flush(true);
+      cx = sx; cy = sy;
+      pts = [];
+    }
+    if (C !== 'C' && C !== 'S' && C !== 'Q' && C !== 'T') prev = C;
+  }
+  flush(false);
+  // Lukkede stier: fjern dubleret slutpunkt (ptsToSegs lukker selv)
+  out.forEach(o => { if (o.closed) o.pts = dropLastIfDup(o.pts); });
+  return out;
+}
+
+function flatCubic(x0, y0, x1, y1, x2, y2, x3, y3, tol, add, depth) {
+  const dx = x3 - x0, dy = y3 - y0, L = Math.hypot(dx, dy);
+  const d1 = L < 1e-12 ? Math.hypot(x1 - x0, y1 - y0) : Math.abs((x1 - x0) * dy - (y1 - y0) * dx) / L;
+  const d2 = L < 1e-12 ? Math.hypot(x2 - x0, y2 - y0) : Math.abs((x2 - x0) * dy - (y2 - y0) * dx) / L;
+  if (depth >= 12 || Math.max(d1, d2) <= tol) { add(x3, y3); return; }
+  const x01 = (x0 + x1) / 2, y01 = (y0 + y1) / 2, x12 = (x1 + x2) / 2, y12 = (y1 + y2) / 2, x23 = (x2 + x3) / 2, y23 = (y2 + y3) / 2;
+  const x012 = (x01 + x12) / 2, y012 = (y01 + y12) / 2, x123 = (x12 + x23) / 2, y123 = (y12 + y23) / 2;
+  const mx = (x012 + x123) / 2, my = (y012 + y123) / 2;
+  flatCubic(x0, y0, x01, y01, x012, y012, mx, my, tol, add, depth + 1);
+  flatCubic(mx, my, x123, y123, x23, y23, x3, y3, tol, add, depth + 1);
+}
+
+function svgArcToPoints(x1, y1, rx, ry, phi, largeArc, sweep, x2, y2, tol, add) {
+  if (rx === 0 || ry === 0 || (x1 === x2 && y1 === y2)) { add(x2, y2); return; }
+  const cosP = Math.cos(phi * Math.PI / 180), sinP = Math.sin(phi * Math.PI / 180);
+  const dx = (x1 - x2) / 2, dy = (y1 - y2) / 2;
+  const x1p = cosP * dx + sinP * dy, y1p = -sinP * dx + cosP * dy;
+  const lam = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
+  if (lam > 1) { const s = Math.sqrt(lam); rx *= s; ry *= s; } // for lille radius → skaler op (SVG-spec)
+  const rxSq = rx * rx, rySq = ry * ry;
+  let sq = (rxSq * rySq - rxSq * y1p * y1p - rySq * x1p * x1p) / (rxSq * y1p * y1p + rySq * x1p * x1p);
+  sq = sq < 0 ? 0 : Math.sqrt(sq);
+  const sign = (largeArc ? 1 : 0) === (sweep ? 1 : 0) ? -1 : 1;
+  const cxp = sign * sq * rx * y1p / ry, cyp = -sign * sq * ry * x1p / rx;
+  const cx = cosP * cxp - sinP * cyp + (x1 + x2) / 2, cy = sinP * cxp + cosP * cyp + (y1 + y2) / 2;
+  const a1 = Math.atan2((y1p - cyp) / ry, (x1p - cxp) / rx);
+  let da = Math.atan2((-y1p - cyp) / ry, (-x1p - cxp) / rx) - a1;
+  if (!sweep && da > 0) da -= TAU;
+  if (sweep && da < 0) da += TAU;
+  const steps = Math.max(4, arcSteps(Math.max(rx, ry), da, tol));
+  for (let s = 1; s <= steps; s++) {
+    const a = a1 + da * s / steps;
+    if (s === steps) { add(x2, y2); break; }
+    add(cosP * rx * Math.cos(a) - sinP * ry * Math.sin(a) + cx, sinP * rx * Math.cos(a) + cosP * ry * Math.sin(a) + cy);
+  }
+}
+
+// ─────────────────────────────────────────────
+// KONTURER: sammenkædning, hul/ydre-klassifikation
+// ─────────────────────────────────────────────
+function chainPaths(paths, tol) {
+  const out = [], open = [];
+  paths.forEach((p, ord) => {
+    if (!p.segs.length) return;
+    if (p.closed) out.push({ segs: p.segs.slice(), closed: true, layer: p.layer, ord });
+    else open.push({ ...p, ord });
+  });
+  const cell = Math.max(tol, 1);
+  const grid = new Map();
+  const key = (gx, gy) => gx + ',' + gy;
+  const S = p => [p.segs[0].x0, p.segs[0].y0];
+  const E = p => { const s = p.segs[p.segs.length - 1]; return [s.x1, s.y1]; };
+  open.forEach((p, i) => {
+    [[S(p), 0], [E(p), 1]].forEach(([pt, end]) => {
+      const k = key(Math.floor(pt[0] / cell), Math.floor(pt[1] / cell));
+      if (!grid.has(k)) grid.set(k, []);
+      grid.get(k).push({ i, end });
+    });
+  });
+  const used = new Uint8Array(open.length);
+  function find(pt) {
+    const gx = Math.floor(pt[0] / cell), gy = Math.floor(pt[1] / cell);
+    let best = null, bd = tol;
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
+      const l = grid.get(key(gx + a, gy + b));
+      if (!l) continue;
+      for (const e of l) {
+        if (used[e.i]) continue;
+        const q = e.end ? E(open[e.i]) : S(open[e.i]);
+        const dd = Math.hypot(q[0] - pt[0], q[1] - pt[1]);
+        if (dd <= bd) { bd = dd; best = e; }
+      }
+    }
+    return best;
+  }
+  const isClosed = segs => {
+    const a = segs[0], z = segs[segs.length - 1];
+    return (segs.length > 1 || a.t === 'A') && Math.hypot(z.x1 - a.x0, z.y1 - a.y0) <= tol && segs.reduce((s, g) => s + segLen(g), 0) > 4 * tol;
+  };
+  for (let i = 0; i < open.length; i++) {
+    if (used[i]) continue;
+    used[i] = 1;
+    let segs = open[i].segs.slice();
+    while (!isClosed(segs)) { // frem
+      const z = segs[segs.length - 1];
+      const f = find([z.x1, z.y1]);
+      if (!f) break;
+      used[f.i] = 1;
+      const add = f.end ? revSegs(open[f.i].segs) : open[f.i].segs.slice();
+      add[0] = { ...add[0], x0: z.x1, y0: z.y1 };
+      segs = segs.concat(add);
+    }
+    while (!isClosed(segs)) { // tilbage
+      const a = segs[0];
+      const f = find([a.x0, a.y0]);
+      if (!f) break;
+      used[f.i] = 1;
+      const add = f.end ? open[f.i].segs.slice() : revSegs(open[f.i].segs);
+      add[add.length - 1] = { ...add[add.length - 1], x1: a.x0, y1: a.y0 };
+      segs = add.concat(segs);
+    }
+    const closed = isClosed(segs);
+    if (closed) segs[segs.length - 1] = { ...segs[segs.length - 1], x1: segs[0].x0, y1: segs[0].y0 };
+    out.push({ segs, closed, layer: open[i].layer, ord: open[i].ord });
+  }
+  out.sort((a, b) => a.ord - b.ord);
+  return out;
+}
+
+function makeContour(segs, closed, layer) {
+  const poly = flattenSegs(segs, 10);
+  return { segs, closed, layer, poly, bb: segsBB(segs), area: closed ? polyArea(poly) : 0, depth: 0, parent: -1, kind: 'open' };
+}
+
+function buildContours(chains) {
+  const cs = chains.map(ch => makeContour(ch.segs, ch.closed, ch.layer));
+  const bbIn = (a, b) => a.minX >= b.minX - 1 && a.maxX <= b.maxX + 1 && a.minY >= b.minY - 1 && a.maxY <= b.maxY + 1;
+  cs.forEach(c => {
+    const p0 = c.poly[0], p1 = c.poly[1] || p0;
+    const tx = (p0[0] + p1[0]) / 2, ty = (p0[1] + p1[1]) / 2;
+    let best = Infinity;
+    cs.forEach((o, j) => {
+      if (o === c || !o.closed || Math.abs(o.area) <= Math.abs(c.area) || !bbIn(c.bb, o.bb)) return;
+      if (pointInPoly(tx, ty, o.poly)) {
+        c.depth++;
+        if (Math.abs(o.area) < best) { best = Math.abs(o.area); c.parent = j; }
+      }
+    });
+  });
+  cs.forEach(c => c.kind = !c.closed ? 'open' : (c.depth % 2 ? 'hole' : 'outer'));
+  return cs;
+}
+
+function transformContours(cs, m) {
+  const sgn = Math.sign(mat.det(m)) || 1;
+  return cs.map(c => {
+    const segs = xfSegs(c.segs, m);
+    return { ...c, segs, poly: c.poly.map(p => mat.ap(m, p[0], p[1])), bb: segsBB(segs), area: c.area * sgn,
+             lead: c.lead ? (([x, y]) => ({ x, y }))(mat.ap(m, c.lead.x, c.lead.y)) : undefined };
+  });
+}
+
+// ─────────────────────────────────────────────
+// PIPELINE: stier → emne → (nesting) → skæreplan
+// ─────────────────────────────────────────────
+function rebuildPart(fit) {
+  const paths = basePaths.filter(p => !disabledLayers.has(p.layer));
+  const tol = Math.max(1, num('chainTol', 0.1) * 1000);
+  let cs = buildContours(chainPaths(paths, tol));
+  if (cs.length) {
+    const bb = unionBB(cs);
+    if (Math.abs(bb.minX) > 0.5 || Math.abs(bb.minY) > 0.5) {
+      cs = transformContours(cs, mat.tr(-bb.minX, -bb.minY));
+      if (fit) log(`Nulpunkt flyttet: X${(-bb.minX / 1000).toFixed(3)} Y${(-bb.minY / 1000).toFixed(3)} mm → emnet starter i 0,0`, 'info');
+    }
+  }
+  partContours = cs;
+  nestKey = '';
+  updateEntitySection(fit);
+  const nOpen = cs.filter(c => c.kind === 'open').length;
+  if (fit && cs.length) {
+    log(`✓ ${cs.length} kontur(er): ${cs.filter(c => c.kind === 'outer').length} ydre, ${cs.filter(c => c.kind === 'hole').length} huller, ${nOpen} åbne`, 'ok');
+    if (nOpen) log(`⚠ ${nOpen} åben(ne) kontur(er) — tjek for huller i tegningen eller hæv sammenkædningstolerancen`, 'warn');
+  }
+  rebuildPlan(fit);
+}
+
+function rebuildPlan(fit) {
+  if ($('nestOn').checked && partContours.length) {
+    const key = nestParamsKey();
+    if (key !== nestKey) { scheduleNest(fit); return; }
+  } else {
+    nest = null;
+    nestKey = '';
+    $('nestResult').innerHTML = $('nestOn').checked ? '<span class="info">Indlæs et emne først.</span>' : '';
+  }
+  buildPlan();
+  $('btnConvert').disabled = !plan.length;
+  if (fit) fitView(); else renderCanvas();
+  if (ncpWanted && plan.length) { generateNCP(!ncpShowNext); ncpShowNext = false; }
+  else if (ncpWanted) resetNcp();
+}
+
+function resetNcp() {
+  ncpOutput = '';
+  ncpWanted = false;
+  $('btnDownload').classList.add('hidden');
+  $('viewNcp').textContent = 'Tryk "Generer NCP-fil" for at se koden.';
+  $('previewInfo').textContent = '';
+}
+
+// Indkøringspunkt: vinkelret på konturen, ud i spildet (udenfor ydre konturer, inde i huller)
+function tangentAtStart(s) {
+  if (s.t === 'L') { const dx = s.x1 - s.x0, dy = s.y1 - s.y0, l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; }
+  const rx = s.x0 - s.cx, ry = s.y0 - s.cy, l = Math.hypot(rx, ry) || 1;
+  return s.ccw ? [-ry / l, rx / l] : [ry / l, -rx / l];
+}
+function computeLead(c, L) {
+  const s0 = c.segs[0], P = { x: s0.x0, y: s0.y0 };
+  if (!(L > 0)) return P;
+  const [tx, ty] = tangentAtStart(s0);
+  if (!c.closed) return { x: P.x - tx * L, y: P.y - ty * L }; // åben kontur: bagud langs starten
+  const inX = c.area > 0 ? -ty : ty, inY = c.area > 0 ? tx : -tx;  // normal ind i konturen
+  const sg = c.kind === 'hole' ? 1 : -1;
+  let l = L;
+  for (let it = 0; it < 10; it++) {
+    const qx = P.x + sg * inX * l, qy = P.y + sg * inY * l;
+    const inside = pointInPoly(qx, qy, c.poly);
+    if ((c.kind === 'hole') === inside && distToPoly(qx, qy, c.poly) >= l * 0.5) return { x: qx, y: qy };
+    l *= 0.6;
+  }
+  return P;
+}
+
+// Rækkefølge: en kontur må først skæres når alle konturer inde i den er skåret
+function orderContours(cs, mode, pos) {
+  const n = cs.length, done = new Uint8Array(n), pending = new Int32Array(n), res = [];
+  cs.forEach(c => { if (c.parent >= 0) pending[c.parent]++; });
+  let cur = pos;
+  for (let step = 0; step < n; step++) {
+    let best = -1, bd = Infinity;
+    for (let i = 0; i < n; i++) {
+      if (done[i] || pending[i]) continue;
+      if (mode !== 'optimize') { best = i; break; }
+      const d = Math.hypot(cs[i].lead.x - cur.x, cs[i].lead.y - cur.y);
+      if (d < bd) { bd = d; best = i; }
+    }
+    if (best < 0) best = done.indexOf(0);
+    done[best] = 1;
+    if (cs[best].parent >= 0) pending[cs[best].parent]--;
+    res.push(best);
+    const z = cs[best].segs[cs[best].segs.length - 1];
+    cur = { x: z.x1, y: z.y1 };
+  }
+  return res;
+}
+
+function withLeads(cs, Lout, Lhole) {
+  return cs.map(c => ({ ...c, lead: computeLead(c, c.kind === 'hole' ? Lhole : Lout) }));
+}
+
+function buildPlan() {
+  plan = [];
+  if (!partContours.length || (nest && !nest.placements.length)) return;
+  const L = Math.max(0, num('leadIn', 3)) * 1000;
+  const mode = $('cutOrder').value;
+  if (!nest) {
+    const cs = withLeads(partContours, L, L);
+    orderContours(cs, mode, { x: 0, y: 0 }).forEach(i => plan.push({ c: cs[i], lead: cs[i].lead }));
+    return;
+  }
+  // Ved nesting: indkøringen må ikke nå ind i nabo-emnet
+  const Lout = Math.min(L, nest.spacing * 0.8);
+  const leadCache = {};
+  for (const a of Object.keys(nest.orient)) leadCache[a] = withLeads(nest.orient[a].cs, Lout, L);
+  let pos = { x: 0, y: 0 };
+  for (const p of nest.ordered) {
+    const cs = transformContours(leadCache[p.a], mat.tr(p.x, p.y));
+    orderContours(cs, mode, pos).forEach(i => plan.push({ c: cs[i], lead: cs[i].lead }));
+    const last = plan[plan.length - 1].c.segs;
+    pos = { x: last[last.length - 1].x1, y: last[last.length - 1].y1 };
+  }
+}
+
+// ─────────────────────────────────────────────
+// NESTING
+// Emnets omrids rastreres (fyldt, udvidet med halv afstand) og gentages i et gitter-mønster
+// (evt. forskudte rækker og par af 0°/180°-emner der griber ind i hinanden). Mønstret med
+// flest emner på pladen vælges. Afstande efterkontrolleres på den rigtige geometri.
+// ─────────────────────────────────────────────
+function nestParams() {
+  return {
+    W: Math.max(0, num('sheetW', 1000)) * 1000,
+    H: Math.max(0, num('sheetH', 1000)) * 1000,
+    spacing: Math.max(0, num('nestGap', 5)) * 1000,
+    margin: Math.max(0, num('nestMargin', 10)) * 1000,
+    count: Math.max(0, Math.floor(num('nestCount', 0))),
+    rot: $('nestRot').value
+  };
+}
+function nestParamsKey() {
+  return JSON.stringify(nestParams()) + '|' + partContours.length + '|' + basePaths.length + '|' + [...disabledLayers].join(',') + '|' + $('chainTol').value + '|' + $('dxfUnit').value;
+}
+function scheduleNest(fit) {
+  clearTimeout(nestTimer);
+  $('nestResult').innerHTML = '<span class="info">Beregner nesting…</span>';
+  nestTimer = setTimeout(() => {
+    const key = nestParamsKey();
+    const t0 = performance.now();
+    try { nest = nestCompute(partContours, nestParams()); }
+    catch (err) { nest = null; console.error(err); log(`✗ Nesting fejlede: ${err.message}`, 'err'); }
+    nestKey = key;
+    showNestResult(performance.now() - t0);
+    rebuildPlan(true);
+  }, 200);
+}
+
+function showNestResult(ms) {
+  const el = $('nestResult');
+  if (!nest) { el.innerHTML = '<span class="err">Nesting kunne ikke beregnes.</span>'; return; }
+  if (!nest.placements.length) { el.innerHTML = '<span class="err">Emnet kan ikke være på pladen med den valgte kantafstand.</span>'; return; }
+  const o = nest.params;
+  const util = nest.netArea > 0 ? (nest.placements.length * nest.netArea / (o.W * o.H) * 100) : 0;
+  let h = `<div class="stats" style="margin-bottom:8px">
+    <div class="stat"><div class="stat-val">${nest.placements.length}</div><div class="stat-label">Emner på pladen</div></div>
+    <div class="stat"><div class="stat-val">${util.toFixed(1)} %</div><div class="stat-label">Udnyttelse</div></div></div>`;
+  h += `<div class="info" style="color:var(--muted)">Mønster: ${nest.desc} · ${Math.round(ms)} ms</div>`;
+  if (o.count && nest.capacity < o.count) h += `<div class="warn">⚠ Kun plads til ${nest.capacity} af ${o.count} emner.</div>`;
+  if (num('leadIn', 3) * 1000 > nest.spacing * 0.8 + 1) h += `<div class="warn">Indkøring på ydre konturer begrænset til ${(nest.spacing * 0.8 / 1000).toFixed(1)} mm (80 % af afstanden), så den ikke rammer naboemnet.</div>`;
+  if (nest.minGap !== null && nest.minGap < nest.spacing - 50) h += `<div class="err">⚠ Kontrol: mindste målte afstand ${(nest.minGap / 1000).toFixed(2)} mm er under den ønskede.</div>`;
+  el.innerHTML = h;
+  log(`✓ Nesting: ${nest.placements.length} emner, udnyttelse ${util.toFixed(1)} % (${nest.desc})`, 'ok');
+}
+
+function mergeIv(a) {
+  if (a.length <= 2) return a;
+  const pairs = [];
+  for (let i = 0; i < a.length; i += 2) pairs.push([a[i], a[i + 1]]);
+  pairs.sort((p, q) => p[0] - q[0]);
+  const out = [pairs[0][0], pairs[0][1]];
+  for (let i = 1; i < pairs.length; i++) {
+    const [s, e] = pairs[i];
+    if (s <= out[out.length - 1] + 1) { if (e > out[out.length - 1]) out[out.length - 1] = e; }
+    else out.push(s, e);
+  }
+  return out;
+}
+
+// Fyldt + udvidet bitmap af emnets omrids, som interval-lister pr. række (cellestørrelse r µm, udvidelse k celler)
+function rasterFoot(foot, w, h, r, k) {
+  const W = Math.ceil(w / r) + 2 * k + 2, H = Math.ceil(h / r) + 2 * k + 2;
+  const raw = Array.from({ length: H }, () => []);
+  const closed = foot.filter(f => f.closed);
+  for (let y = 0; y < H; y++) {
+    const yc = (y - k + 0.5) * r, xs = [];
+    for (const f of closed) {
+      const p = f.pts;
+      for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+        const y1 = p[j][1], y2 = p[i][1];
+        if ((y1 <= yc) !== (y2 <= yc)) xs.push(p[j][0] + (yc - y1) * (p[i][0] - p[j][0]) / (y2 - y1));
+      }
+    }
+    xs.sort((a, b) => a - b);
+    for (let i = 0; i + 1 < xs.length; i += 2) {
+      const a = Math.ceil(xs[i] / r - 0.5) + k, b = Math.floor(xs[i + 1] / r - 0.5) + k;
+      if (a <= b) raw[y].push(a, b);
+    }
+  }
+  for (const f of foot) { // kanter (fanger også smalle detaljer og åbne konturer)
+    const p = f.pts, n = f.closed ? p.length : p.length - 1;
+    for (let i = 0; i < n; i++) {
+      const [x1, y1] = p[i], [x2, y2] = p[(i + 1) % p.length];
+      const steps = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / (r * 0.5)));
+      for (let s = 0; s <= steps; s++) {
+        const ix = Math.floor((x1 + (x2 - x1) * s / steps) / r) + k, iy = Math.floor((y1 + (y2 - y1) * s / steps) / r) + k;
+        if (iy >= 0 && iy < H) raw[iy].push(ix, ix);
+      }
+    }
+  }
+  const rows0 = raw.map(mergeIv);
+  const rows = Array.from({ length: H }, () => []);
+  for (let y = 0; y < H; y++) {
+    const iv = rows0[y];
+    if (!iv.length) continue;
+    for (let dy = -k; dy <= k; dy++) {
+      const ty = y + dy;
+      if (ty < 0 || ty >= H) continue;
+      const hw = Math.floor(Math.sqrt(k * k - dy * dy));
+      for (let i = 0; i < iv.length; i += 2) rows[ty].push(iv[i] - hw, iv[i + 1] + hw);
+    }
+  }
+  return { rows: rows.map(mergeIv), W, H };
+}
+
+// No-fit-bitmap: coll(dx,dy) = true hvis B forskudt (dx,dy) celler overlapper A
+function nfp(A, B) {
+  const Wn = A.W + B.W - 1, Hn = A.H + B.H - 1, ox = B.W - 1, oy = B.H - 1;
+  const data = new Uint8Array(Wn * Hn), diff = new Int32Array(Wn + 1);
+  for (let dy = -(B.H - 1); dy <= A.H - 1; dy++) {
+    let any = false;
+    const y0 = Math.max(0, dy), y1 = Math.min(A.H - 1, B.H - 1 + dy);
+    for (let ya = y0; ya <= y1; ya++) {
+      const ra = A.rows[ya], rb = B.rows[ya - dy];
+      if (!ra.length || !rb.length) continue;
+      for (let i = 0; i < ra.length; i += 2) for (let j = 0; j < rb.length; j += 2) {
+        if (!any) { diff.fill(0); any = true; }
+        diff[ra[i] - rb[j + 1] + ox]++;
+        diff[ra[i + 1] - rb[j] + ox + 1]--;
+      }
+    }
+    if (!any) continue;
+    let acc = 0;
+    const base = (dy + oy) * Wn;
+    for (let x = 0; x < Wn; x++) { acc += diff[x]; if (acc > 0) data[base + x] = 1; }
+  }
+  return (dx, dy) => { const x = dx + ox, y = dy + oy; return x >= 0 && x < Wn && y >= 0 && y < Hn && data[y * Wn + x] === 1; };
+}
+
+function makeShape(members, orient) {
+  const mx = Math.min(...members.map(m => m.ox)), my = Math.min(...members.map(m => m.oy));
+  members = members.map(m => ({ ...m, ox: m.ox - mx, oy: m.oy - my }));
+  const W = Math.max(...members.map(m => m.ox + orient[m.a].W)), H = Math.max(...members.map(m => m.oy + orient[m.a].H));
+  const rows = Array.from({ length: H }, () => []);
+  members.forEach(m => {
+    const o = orient[m.a];
+    for (let y = 0; y < o.H; y++) for (let i = 0; i < o.rows[y].length; i++) rows[y + m.oy].push(o.rows[y][i] + m.ox);
+  });
+  return { members, rows: rows.map(mergeIv), W, H };
+}
+
+// Gitter-kandidater for en form: a = korteste kollisionsfri vandrette vektor, b = (forskydning, rækkehøjde)
+function latticeCands(coll, W, H, swap) {
+  const C = swap ? (x, y) => coll(y, x) : coll;
+  const Wl = swap ? H : W, Hl = swap ? W : H;
+  let ax = 1;
+  for (; ax < Wl; ax++) {
+    let ok = true;
+    for (let m = 1; m * ax < Wl; m++) if (C(m * ax, 0)) { ok = false; break; }
+    if (ok) break;
+  }
+  const validB = (bx, by) => {
+    for (let j = 1; j * by < Hl; j++) {
+      const xj = j * bx;
+      const k0 = Math.ceil((-(Wl - 1) - xj) / ax), k1 = Math.floor((Wl - 1 - xj) / ax);
+      for (let kk = k0; kk <= k1; kk++) if (C(xj + kk * ax, j * by)) return false;
+    }
+    return true;
+  };
+  const res = [], step = Math.max(1, Math.ceil(ax / 120));
+  for (let bx = 0; bx < ax; bx += step) {
+    for (let by = 1; by <= Hl; by++) {
+      if (validB(bx, by)) { res.push(swap ? { a: [0, ax], b: [by, bx] } : { a: [ax, 0], b: [bx, by] }); break; }
+    }
+  }
+  return res;
+}
+
+function placeLattice(shape, lat, orient, o, r, k) {
+  const mem = shape.members.map(m => ({ a: m.a, dx: (m.ox + k) * r, dy: (m.oy + k) * r, w: orient[m.a].w, h: orient[m.a].h }));
+  const Ox = o.margin - Math.min(...mem.map(m => m.dx)), Oy = o.margin - Math.min(...mem.map(m => m.dy));
+  const ax = lat.a[0] * r, ay = lat.a[1] * r, bx = lat.b[0] * r, by = lat.b[1] * r;
+  const det = ax * by - ay * bx;
+  if (Math.abs(det) < 1e-9) return [];
+  const X0 = -shape.W * r - Ox, X1 = o.W - Ox, Y0 = -shape.H * r - Oy, Y1 = o.H - Oy;
+  let i0 = Infinity, i1 = -Infinity, j0 = Infinity, j1 = -Infinity;
+  for (const [x, y] of [[X0, Y0], [X1, Y0], [X0, Y1], [X1, Y1]]) {
+    const i = (by * x - bx * y) / det, j = (-ay * x + ax * y) / det;
+    i0 = Math.min(i0, i); i1 = Math.max(i1, i); j0 = Math.min(j0, j); j1 = Math.max(j1, j);
+  }
+  i0 = Math.floor(i0) - 1; i1 = Math.ceil(i1) + 1; j0 = Math.floor(j0) - 1; j1 = Math.ceil(j1) + 1;
+  if ((i1 - i0) * (j1 - j0) > 400000) return null;
+  const out = [], eps = 1, xMax = o.W - o.margin + eps, yMax = o.H - o.margin + eps, lo = o.margin - eps;
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+    const px = Ox + i * ax + j * bx, py = Oy + i * ay + j * by;
+    for (const m of mem) {
+      const x = px + m.dx, y = py + m.dy;
+      if (x >= lo && y >= lo && x + m.w <= xMax && y + m.h <= yMax) out.push({ a: m.a, x, y });
+    }
+  }
+  out.sort((p, q) => (p.y - q.y) || (p.x - q.x));
+  return out;
+}
+
+function placementsArea(pl, orient) {
+  if (!pl.length) return 0;
+  let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+  pl.forEach(p => { x1 = Math.min(x1, p.x); y1 = Math.min(y1, p.y); x2 = Math.max(x2, p.x + orient[p.a].w); y2 = Math.max(y2, p.y + orient[p.a].h); });
+  return (x2 - x1) * (y2 - y1);
+}
+
+function nestCompute(cs, o) {
+  const top = cs.filter(c => c.depth === 0);
+  if (!top.length) throw new Error('Ingen geometri');
+  const bb = unionBB(top);
+  const maxDim = Math.max(bb.maxX - bb.minX, bb.maxY - bb.minY, 1);
+  const r = Math.max(maxDim / 400, 25);                    // cellestørrelse (µm)
+  const k = Math.ceil(o.spacing / (2 * r) + 1.5);          // udvidelse (celler), konservativ
+  const rots = o.rot === 'free' ? [0, 90] : [0];
+  const pairs = o.rot === 'free' ? [[0, 180], [90, 270]] : o.rot === 'flip' ? [[0, 180]] : [];
+  const need = new Set([...rots, ...pairs.flat()]);
+
+  const orient = {};
+  for (const a of need) {
+    let cr = transformContours(cs, mat.rot90(a / 90));
+    const b = unionBB(cr.filter(c => c.depth === 0));
+    cr = transformContours(cr, mat.tr(-b.minX, -b.minY));
+    const w = b.maxX - b.minX, h = b.maxY - b.minY;
+    const foot = cr.filter(c => c.depth === 0).map(c => ({ pts: flattenSegs(c.segs, r / 4), closed: c.closed }));
+    const ras = rasterFoot(foot, w, h, r, k);
+    orient[a] = { cs: cr, w, h, rows: ras.rows, W: ras.W, H: ras.H };
+  }
+
+  const shapes = rots.map(a => ({ shape: makeShape([{ a, ox: 0, oy: 0 }], orient), desc: `${a}°` }));
+  for (const [a, b] of pairs) {
+    const A = orient[a], B = orient[b], coll = nfp(A, B);
+    let best = null, bestArea = Infinity;
+    for (let dy = -B.H; dy <= A.H; dy++) for (let dx = -B.W; dx <= A.W; dx++) {
+      if (coll(dx, dy)) continue;
+      const area = (Math.max(A.W, dx + B.W) - Math.min(0, dx)) * (Math.max(A.H, dy + B.H) - Math.min(0, dy));
+      if (area < bestArea) { bestArea = area; best = [dx, dy]; }
+    }
+    if (best) shapes.push({ shape: makeShape([{ a, ox: 0, oy: 0 }, { a: b, ox: best[0], oy: best[1] }], orient), desc: `par ${a}°+${b}°` });
+  }
+
+  const N = o.count;
+  const estMax = (o.W * o.H) / Math.max(1, orient[0].w * orient[0].h);
+  let best = null;
+  for (const { shape, desc } of shapes) {
+    const coll = nfp(shape, shape);
+    for (const swap of [false, true]) {
+      let cands = latticeCands(coll, shape.W, shape.H, swap);
+      if (estMax > 300) cands = cands.sort((p, q) => Math.abs(p.a[0] * p.b[1] - p.a[1] * p.b[0]) - Math.abs(q.a[0] * q.b[1] - q.a[1] * q.b[0])).slice(0, 6);
+      for (const lat of cands) {
+        const pl = placeLattice(shape, lat, orient, o, r, k);
+        if (!pl) continue;
+        const use = N ? pl.slice(0, N) : pl;
+        const sc = { n: use.length, area: placementsArea(use, orient) };
+        if (!best || sc.n > best.n || (sc.n === best.n && sc.area < best.area - 1)) {
+          best = { ...sc, pl: use, capacity: pl.length, desc: `${desc}, ${swap ? 'kolonner' : 'rækker'}${(swap ? lat.b[1] : lat.b[0]) ? ' (forskudt)' : ''}` };
+        }
+      }
+    }
+  }
+
+  const netArea = cs.filter(c => c.closed).reduce((s, c) => s + (c.depth % 2 ? -1 : 1) * Math.abs(c.area), 0);
+  const placements = best ? best.pl : [];
+  return {
+    params: o, spacing: o.spacing, r, orient, placements,
+    ordered: serpentine(placements, orient),
+    capacity: best ? best.capacity : 0,
+    desc: best ? best.desc : '—',
+    netArea,
+    minGap: placements.length > 1 ? checkGaps(placements, orient, o.spacing) : null
+  };
+}
+
+// Skærerækkefølge for emnerne: række for række, skiftevis venstre→højre og højre→venstre
+function serpentine(pl, orient) {
+  const items = pl.map(p => ({ ...p, cy: p.y + orient[p.a].h / 2, cx: p.x + orient[p.a].w / 2 })).sort((a, b) => a.cy - b.cy);
+  const rows = [];
+  items.forEach(p => {
+    const row = rows[rows.length - 1];
+    if (row && Math.abs(p.cy - row.y) < orient[p.a].h / 2) row.items.push(p);
+    else rows.push({ y: p.cy, items: [p] });
+  });
+  const out = [];
+  rows.forEach((row, i) => { row.items.sort((a, b) => i % 2 ? b.cx - a.cx : a.cx - b.cx); out.push(...row.items); });
+  return out;
+}
+
+// Efterkontrol: mindste afstand mellem nabo-emners ydre konturer (rigtig geometri)
+function checkGaps(pl, orient, spacing) {
+  const foot = {};
+  for (const a of Object.keys(orient)) foot[a] = orient[a].cs.filter(c => c.depth === 0).map(c => ({ pts: flattenSegs(c.segs, 20), closed: c.closed }));
+  const sample = pl.slice(0, 40);
+  let minD = Infinity;
+  for (const p of sample) for (const q of pl) {
+    if (p === q) continue;
+    const op = orient[p.a], oq = orient[q.a];
+    const gx = Math.max(q.x - (p.x + op.w), p.x - (q.x + oq.w)), gy = Math.max(q.y - (p.y + op.h), p.y - (q.y + oq.h));
+    if (Math.max(gx, gy) > spacing + 1000) continue;
+    for (const fa of foot[p.a]) for (const fb of foot[q.a]) {
+      const A = fa.pts, B = fb.pts;
+      for (let i = 1; i < A.length; i++) for (let j = 1; j < B.length; j++) {
+        const d = segSegDist(A[i-1][0] + p.x, A[i-1][1] + p.y, A[i][0] + p.x, A[i][1] + p.y, B[j-1][0] + q.x, B[j-1][1] + q.y, B[j][0] + q.x, B[j][1] + q.y);
+        if (d < minD) minD = d;
+      }
+      if (fb.closed && pointInPoly(A[0][0] + p.x - q.x, A[0][1] + p.y - q.y, B)) minD = 0;
+    }
+  }
+  return minD === Infinity ? null : minD;
+}
+function segSegDist(ax, ay, bx, by, cx, cy, dx, dy) {
+  const o = (px, py, qx, qy, rx, ry) => (qx - px) * (ry - py) - (qy - py) * (rx - px);
+  const o1 = o(ax, ay, bx, by, cx, cy), o2 = o(ax, ay, bx, by, dx, dy), o3 = o(cx, cy, dx, dy, ax, ay), o4 = o(cx, cy, dx, dy, bx, by);
+  if (((o1 > 0) !== (o2 > 0)) && ((o3 > 0) !== (o4 > 0))) return 0;
+  return Math.min(distPtSeg(ax, ay, cx, cy, dx, dy), distPtSeg(bx, by, cx, cy, dx, dy), distPtSeg(cx, cy, ax, ay, bx, by), distPtSeg(dx, dy, ax, ay, bx, by));
+}
 
 // ─────────────────────────────────────────────
 // ENTITY INFO PANEL
 // ─────────────────────────────────────────────
 function updateEntitySection() {
-  const counts = {};
-  parsedEntities.forEach(e => counts[e.type] = (counts[e.type]||0) + 1);
-
-  const grid = document.getElementById('statsGrid');
-  const total = parsedEntities.length;
-  const bbox = getBBox();
-  const wMm = ((bbox.maxX - bbox.minX) / 1000).toFixed(1);
-  const hMm = ((bbox.maxY - bbox.minY) / 1000).toFixed(1);
-
-  grid.innerHTML = `
-    <div class="stat"><div class="stat-val">${total}</div><div class="stat-label">Entiteter</div></div>
-    <div class="stat"><div class="stat-val">${wMm}×${hMm}</div><div class="stat-label">Størrelse (mm)</div></div>
-  `;
-
-  const badges = document.getElementById('entityBadges');
-  const typeMap = { LINE: 'line', ARC: 'arc', CIRCLE: 'circle', POLYLINE: 'poly', SPLINE: 'spline' };
-  badges.innerHTML = Object.entries(counts).map(([t,n]) =>
-    `<span class="entity-badge badge-${typeMap[t]||'line'}">${t} ×${n}</span>`
-  ).join('');
-
-  document.getElementById('entitySection').style.display = 'block';
+  const cs = partContours;
+  if (!basePaths.length) { $('entitySection').style.display = 'none'; return; }
+  const bb = cs.length ? unionBB(cs) : { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+  const cnt = k => cs.filter(c => c.kind === k).length;
+  $('statsGrid').innerHTML = `
+    <div class="stat"><div class="stat-val">${((bb.maxX - bb.minX) / 1000).toFixed(1)}×${((bb.maxY - bb.minY) / 1000).toFixed(1)}</div><div class="stat-label">Emne (mm)</div></div>
+    <div class="stat"><div class="stat-val">${cs.length}</div><div class="stat-label">Konturer</div></div>
+    <div class="stat"><div class="stat-val">${cnt('outer')} / ${cnt('hole')}</div><div class="stat-label">Ydre / huller</div></div>
+    <div class="stat"><div class="stat-val" style="color:${cnt('open') ? 'var(--warn)' : 'var(--success)'}">${cnt('open')}</div><div class="stat-label">Åbne konturer</div></div>`;
+  const typeMap = { LINE: 'line', ARC: 'arc', CIRCLE: 'circle', POLYLINE: 'poly', RECT: 'poly', PATH: 'poly', SPLINE: 'spline', ELLIPSE: 'spline', INSERT: 'arc' };
+  const nameMap = { INSERT: 'BLOK' };
+  $('entityBadges').innerHTML = Object.entries(srcStats).map(([t, n]) =>
+    `<span class="entity-badge badge-${typeMap[t] || 'line'}">${nameMap[t] || t} ×${n}</span>`).join('');
+  const ll = $('layerList');
+  ll.innerHTML = '';
+  if (srcLayers.length > 1) {
+    const h = document.createElement('label');
+    h.textContent = 'Lag (fravælg fx mål/ramme)';
+    h.style.marginBottom = '4px';
+    ll.appendChild(h);
+    srcLayers.forEach(l => {
+      const row = document.createElement('label');
+      row.className = 'check';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !disabledLayers.has(l.name);
+      cb.addEventListener('change', () => { cb.checked ? disabledLayers.delete(l.name) : disabledLayers.add(l.name); rebuildPart(false); });
+      const t = document.createElement('span'); t.textContent = l.name;
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = l.n;
+      row.append(cb, t, n);
+      ll.appendChild(row);
+    });
+  }
+  $('entitySection').style.display = 'block';
 }
 
 // ─────────────────────────────────────────────
 // NCP GENERATION
 // ─────────────────────────────────────────────
-document.getElementById('btnConvert').addEventListener('click', generateNCP);
+$('btnConvert').addEventListener('click', () => generateNCP(false));
 
-function generateNCP() {
-  if (!parsedEntities.length) return;
-  clearLog();
-  log('Genererer NCP...', 'accent');
+function generateNCP(silent) {
+  if (!plan.length) return;
+  const vel = $('vel').value, fastvel = $('fastvel').value, pressure = $('pressure').value;
+  const material = $('material').value, startWait = $('startWait').value, arcMode = $('arcMode').value;
+  const rawName = ($('outputName').value || currentBaseName || 'output').trim();
+  const fname = /\.ncp$/i.test(rawName) ? rawName : rawName + '.ncp';
+  const R = v => Math.round(v);
 
-  const vel      = document.getElementById('vel').value;
-  const fastvel  = document.getElementById('fastvel').value;
-  const pressure = document.getElementById('pressure').value;
-  const material = document.getElementById('material').value;
-  const startWait= document.getElementById('startWait').value;
-  const arcMode  = document.getElementById('arcMode').value;
-  const rawName  = document.getElementById('outputName')?.value || currentBaseName || 'output';
-  const fname    = rawName.endsWith('.ncp') ? rawName : rawName + '.ncp';
-  const cutOrder = document.getElementById('cutOrder').value;
+  const lines = [
+    'IMF_PBL_v1.0',
+    `;FILE: ${fname}`,
+    `;MATR: ${material}`,
+    `;DRAWING: ${fname.replace(/\.ncp$/i, '')}.dig`,
+    `;DATE: ${todayDanish()}`,
+    `;PRESSURE: ${pressure} BAR`,
+    `FASTVEL ${fastvel}`,
+    `VEL ${vel}`,
+    ';Valgte dyser : TOOL:1'
+  ];
 
-  let entities = [...parsedEntities];
-  if (cutOrder === 'optimize') {
-    entities = optimizeCutOrder(entities);
-    log(`Optimeret rækkefølge: korteste rejsevej`, 'ok');
-  }
-
-  // Group into cut segments (each SETPORT ON → OFF block)
-  const segments = buildSegments(entities);
-  log(`${segments.length} skæresegment(er) fundet`, 'ok');
-
-  let lines = [];
-
-  // Header
-  lines.push('IMF_PBL_v1.0');
-  lines.push(`;FILE: ${fname}`);
-  lines.push(`;MATR: ${material}`);
-  lines.push(`;DRAWING: ${fname.replace('.ncp','')}.dig`);
-  lines.push(`;DATE: ${todayDanish()}`);
-  lines.push(`;PRESSURE: ${pressure} BAR`);
-  lines.push(`FASTVEL ${fastvel}`);
-  lines.push(`VEL ${vel}`);
-  lines.push(';Valgte dyser : TOOL:1');
-
-  let totalMoves = 0;
-  let totalArcs = 0;
-
-  const leadInMm = parseFloat(document.getElementById('leadIn')?.value || 3);
-  const leadInUm = Math.round(leadInMm * 1000);
-
-  segments.forEach((seg, si) => {
-    const label = 10 + si;
-    lines.push(`;N${label} `);
-
-    // Compute lead-in: move perpendicular to first segment direction, outside contour
-    const leadin = computeLeadIn(seg, leadInUm);
-
-    // Fast move to lead-in start (outside contour)
-    lines.push(`FASTABS X${leadin.x} Y${leadin.y}`);
-    lines.push('WAIT 10');
-    lines.push('SETPORT A4=00000001');
-    lines.push('WAIT 10');
-    lines.push(`WAIT ${startWait}`);
-
-    // Cut moves (including the first move to contour start = the leadin move)
-    seg.forEach(cmd => {
-      if (cmd.type === 'MOVEABS') {
-        lines.push(`MOVEABS X${cmd.x} Y${cmd.y}`);
-        totalMoves++;
-      } else if (cmd.type === 'CCWABS') {
-        lines.push(`CCWABS I${cmd.i} J${cmd.j} X${cmd.x} Y${cmd.y}`);
-        totalArcs++;
-      } else if (cmd.type === 'CWABS') {
-        lines.push(`CWABS I${cmd.i} J${cmd.j} X${cmd.x} Y${cmd.y}`);
-        totalArcs++;
+  let nMoves = 0, nArcs = 0, cutLen = 0, rapidLen = 0, pos = { x: 0, y: 0 };
+  plan.forEach((it, si) => {
+    const segs = it.c.segs, s0 = segs[0];
+    lines.push(`;N${10 + si} `);
+    lines.push(`FASTABS X${R(it.lead.x)} Y${R(it.lead.y)}`);
+    rapidLen += Math.hypot(it.lead.x - pos.x, it.lead.y - pos.y);
+    lines.push('WAIT 10', 'SETPORT A4=00000001', 'WAIT 10', `WAIT ${startWait}`);
+    let lx = R(it.lead.x), ly = R(it.lead.y);
+    const move = (x, y) => { x = R(x); y = R(y); if (x === lx && y === ly) return; lines.push(`MOVEABS X${x} Y${y}`); lx = x; ly = y; nMoves++; };
+    move(s0.x0, s0.y0); // indkøring
+    cutLen += Math.hypot(s0.x0 - it.lead.x, s0.y0 - it.lead.y);
+    for (const s of segs) {
+      cutLen += segLen(s);
+      if (s.t === 'L') { move(s.x1, s.y1); continue; }
+      if (arcMode === 'native') {
+        const x = R(s.x1), y = R(s.y1);
+        if (x === lx && y === ly && Math.abs(arcSweep(s)) < 0.01) continue;
+        lines.push(`${s.ccw ? 'CCWABS' : 'CWABS'} I${R(s.cx)} J${R(s.cy)} X${x} Y${y}`);
+        lx = x; ly = y; nArcs++;
+      } else {
+        const step = parseFloat(arcMode) * Math.PI / 180, r = arcR(s), a0 = arcA0(s), d = arcSweep(s);
+        const n = Math.max(1, Math.ceil(Math.abs(d) / step - 1e-9));
+        for (let i = 1; i < n; i++) { const a = a0 + d * i / n; move(s.cx + r * Math.cos(a), s.cy + r * Math.sin(a)); }
+        move(s.x1, s.y1);
       }
-    });
-
-    lines.push('WAIT 10');
-    lines.push('SETPORT A4=00000000');
-    lines.push('WAIT 10');
-    lines.push('WAIT 200');
+    }
+    const z = segs[segs.length - 1];
+    pos = { x: z.x1, y: z.y1 };
+    lines.push('WAIT 10', 'SETPORT A4=00000000', 'WAIT 10', 'WAIT 200');
   });
-
   lines.push('PROGEND');
 
   ncpOutput = lines.join('\r\n') + '\r\n';
-
-  log(`✓ ${totalMoves} MOVEABS, ${totalArcs} buer`, 'ok');
-  log(`✓ Fil: ${fname}`, 'ok');
-
-  document.getElementById('btnDownload').classList.remove('hidden');
-  document.getElementById('btnDownload').onclick = () => downloadNCP(fname);
-
-  // Show NCP preview
+  ncpWanted = true;
+  $('btnDownload').classList.remove('hidden');
+  $('btnDownload').onclick = () => downloadNCP(fname);
   renderNcpPreview(ncpOutput);
-  switchTab('ncp');
-}
 
-function buildSegments(entities) {
-  // Each entity = one segment (FASTABS to start, cut, then off)
-  // But consecutive connected entities can be merged
-  const segments = [];
-  let current = [];
-
-  const cmdsFromEntity = (ent) => {
-    const cmds = [];
-    const mode = document.getElementById('arcMode').value;
-
-    if (ent.type === 'LINE') {
-      cmds.push({ type: 'MOVEABS', x: ent.x1, y: ent.y1 });
-      cmds.push({ type: 'MOVEABS', x: ent.x2, y: ent.y2 });
-    }
-    else if (ent.type === 'ARC') {
-      const { cx, cy, r, a1, a2 } = ent;
-      // Determine direction: DXF arcs go CCW
-      const sx = Math.round(cx + r * Math.cos(a1 * Math.PI / 180));
-      const sy = Math.round(cy + r * Math.sin(a1 * Math.PI / 180));
-      const ex = Math.round(cx + r * Math.cos(a2 * Math.PI / 180));
-      const ey = Math.round(cy + r * Math.sin(a2 * Math.PI / 180));
-      cmds.push({ type: 'MOVEABS', x: sx, y: sy });
-      if (mode === 'native') {
-        cmds.push({ type: 'CCWABS', i: cx, j: cy, x: ex, y: ey });
-      } else {
-        const seg = parseInt(mode);
-        let ang = a1;
-        let endAng = a2;
-        if (endAng <= ang) endAng += 360;
-        while (ang < endAng - seg/2) {
-          ang = Math.min(ang + seg, endAng);
-          const px = Math.round(cx + r * Math.cos(ang * Math.PI / 180));
-          const py = Math.round(cy + r * Math.sin(ang * Math.PI / 180));
-          cmds.push({ type: 'MOVEABS', x: px, y: py });
-        }
-      }
-    }
-    else if (ent.type === 'CIRCLE') {
-      const { cx, cy, r } = ent;
-      const sx = Math.round(cx + r);
-      const sy = cy;
-      cmds.push({ type: 'MOVEABS', x: sx, y: sy });
-      if (mode === 'native') {
-        // Full circle: two half-arcs (CCWABS can't do 360°)
-        const mx = Math.round(cx - r);
-        const my = cy;
-        cmds.push({ type: 'CCWABS', i: cx, j: cy, x: mx, y: my });
-        cmds.push({ type: 'CCWABS', i: cx, j: cy, x: sx, y: sy });
-      } else {
-        const seg = parseInt(mode);
-        for (let a = seg; a <= 360; a += seg) {
-          const rad = a * Math.PI / 180;
-          cmds.push({ type: 'MOVEABS', x: Math.round(cx + r*Math.cos(rad)), y: Math.round(cy + r*Math.sin(rad)) });
-        }
-      }
-    }
-    else if (ent.type === 'POLYLINE' || ent.type === 'SPLINE') {
-      const pts = ent.pts;
-      const bulges = ent.bulges || {};
-      for (let pi = 0; pi < pts.length; pi++) {
-        const [px, py] = pts[pi];
-        const bulge = bulges[pi];
-        if (pi === 0) {
-          cmds.push({ type: 'MOVEABS', x: px, y: py });
-        } else {
-          const [px0, py0] = pts[pi-1];
-          if (bulge && bulge !== 0 && mode === 'native') {
-            // Convert bulge to arc
-            const arc = bulgeToArc(px0, py0, px, py, bulge);
-            if (arc) {
-              const cmd = bulge > 0 ? 'CCWABS' : 'CWABS';
-              cmds.push({ type: cmd, i: arc.cx, j: arc.cy, x: px, y: py });
-            } else {
-              cmds.push({ type: 'MOVEABS', x: px, y: py });
-            }
-          } else {
-            cmds.push({ type: 'MOVEABS', x: px, y: py });
-          }
-        }
-      }
-      if (ent.closed && pts.length > 0) {
-        cmds.push({ type: 'MOVEABS', x: pts[0][0], y: pts[0][1] });
-      }
-    }
-    return cmds;
-  };
-
-  // Try to chain connected entities
-  // Simple approach: group into segments with proximity tolerance
-  const TOLERANCE = 100; // µm = 0.1mm
-
-  const used = new Set();
-  const allCmds = entities.map(e => ({ ent: e, cmds: cmdsFromEntity(e) }));
-
-  // Chain segments
-  while (used.size < allCmds.size || used.size < entities.length) {
-    // Find first unused
-    let startIdx = -1;
-    for (let i = 0; i < allCmds.length; i++) {
-      if (!used.has(i)) { startIdx = i; break; }
-    }
-    if (startIdx === -1) break;
-
-    used.add(startIdx);
-    let seg = [...allCmds[startIdx].cmds];
-    let lastPt = lastPoint(seg);
-
-    // Try to chain
-    let found = true;
-    while (found) {
-      found = false;
-      for (let i = 0; i < allCmds.length; i++) {
-        if (used.has(i)) continue;
-        const firstPt = firstPoint(allCmds[i].cmds);
-        const lastPtEnt = lastPoint(allCmds[i].cmds);
-        if (ptDist(lastPt, firstPt) < TOLERANCE) {
-          used.add(i);
-          seg = seg.concat(allCmds[i].cmds.slice(1));
-          lastPt = lastPoint(seg);
-          found = true;
-          break;
-        } else if (ptDist(lastPt, lastPtEnt) < TOLERANCE) {
-          // Reverse
-          const rev = [...allCmds[i].cmds].reverse().map(reverseCmd);
-          used.add(i);
-          seg = seg.concat(rev.slice(1));
-          lastPt = lastPoint(seg);
-          found = true;
-          break;
-        }
-      }
-    }
-
-    segments.push(seg);
+  if (!silent) {
+    clearLog();
+    log('Genererer NCP...', 'accent');
+    if (nest) log(`Nesting: ${nest.placements.length} emner på ${(nest.params.W / 1000)}×${(nest.params.H / 1000)} mm plade`, 'info');
+    log(`✓ ${plan.length} stik/konturer, ${nMoves} MOVEABS, ${nArcs} buer`, 'ok');
+    log(`Skærelængde ${(cutLen / 1000).toFixed(0)} mm · kørsel i luft ${(rapidLen / 1000).toFixed(0)} mm`, 'info');
+    log(`✓ Fil: ${fname}`, 'ok');
+    switchTab('ncp');
   }
-
-  return segments;
-}
-
-function reverseCmd(cmd) {
-  if (cmd.type === 'MOVEABS') return cmd;
-  if (cmd.type === 'CCWABS') return { ...cmd, type: 'CWABS' };
-  if (cmd.type === 'CWABS')  return { ...cmd, type: 'CCWABS' };
-  return cmd;
-}
-
-function firstPoint(cmds) {
-  const f = cmds[0];
-  return f ? { x: f.x || 0, y: f.y || 0 } : { x: 0, y: 0 };
-}
-
-function lastPoint(cmds) {
-  const l = cmds[cmds.length - 1];
-  return l ? { x: l.x || 0, y: l.y || 0 } : { x: 0, y: 0 };
-}
-
-function ptDist(a, b) {
-  return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2);
-}
-
-function segmentStart(seg) {
-  return firstPoint(seg);
-}
-
-function optimizeCutOrder(entities) {
-  if (entities.length <= 1) return entities;
-  const result = [entities[0]];
-  const rem = entities.slice(1);
-  while (rem.length) {
-    const last = result[result.length - 1];
-    const lastEnd = entityEnd(last);
-    let best = 0, bestD = Infinity;
-    rem.forEach((e, i) => {
-      const d = ptDist(lastEnd, entityStart(e));
-      if (d < bestD) { bestD = d; best = i; }
-    });
-    result.push(rem.splice(best, 1)[0]);
-  }
-  return result;
-}
-
-function entityStart(e) {
-  if (e.type === 'LINE') return { x: e.x1, y: e.y1 };
-  if (e.type === 'ARC') {
-    return { x: Math.round(e.cx + e.r * Math.cos(e.a1 * Math.PI/180)),
-             y: Math.round(e.cy + e.r * Math.sin(e.a1 * Math.PI/180)) };
-  }
-  if (e.type === 'CIRCLE') return { x: Math.round(e.cx + e.r), y: e.cy };
-  if (e.pts && e.pts.length) return { x: e.pts[0][0], y: e.pts[0][1] };
-  return { x: 0, y: 0 };
-}
-
-function entityEnd(e) {
-  if (e.type === 'LINE') return { x: e.x2, y: e.y2 };
-  if (e.type === 'ARC') {
-    return { x: Math.round(e.cx + e.r * Math.cos(e.a2 * Math.PI/180)),
-             y: Math.round(e.cy + e.r * Math.sin(e.a2 * Math.PI/180)) };
-  }
-  if (e.type === 'CIRCLE') return { x: Math.round(e.cx + e.r), y: e.cy };
-  if (e.pts && e.pts.length) return { x: e.pts[e.pts.length-1][0], y: e.pts[e.pts.length-1][1] };
-  return { x: 0, y: 0 };
-}
-
-function bulgeToArc(x1, y1, x2, y2, bulge) {
-  try {
-    const d = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-    const r = d * (bulge**2 + 1) / (4 * Math.abs(bulge));
-    const a = Math.atan2(y2 - y1, x2 - x1);
-    const s = Math.atan(bulge) * 2;
-    const cx = x1 + r * Math.cos(a + Math.PI/2 - s/2) * Math.cos(s/2 - Math.PI/2) ;
-    const cy = y1 + r * Math.sin(a + Math.PI/2 - s/2) * Math.cos(s/2 - Math.PI/2);
-    // Simplified: midpoint method
-    const mx = (x1 + x2) / 2;
-    const my = (y1 + y2) / 2;
-    const sagitta = bulge * d / 2;
-    const nx = -(y2 - y1) / d;
-    const ny = (x2 - x1) / d;
-    return { cx: Math.round(mx + nx * (r - sagitta)), cy: Math.round(my + ny * (r - sagitta)) };
-  } catch { return null; }
-}
-
-// ─────────────────────────────────────────────
-// LEAD-IN / LEAD-OUT
-// ─────────────────────────────────────────────
-function computeLeadIn(seg, leadUm) {
-  // Find first actual movement direction
-  const p0 = firstPoint(seg);
-  let p1 = p0;
-  for (let i = 1; i < seg.length; i++) {
-    const c = seg[i];
-    const px = c.x !== undefined ? c.x : 0;
-    const py = c.y !== undefined ? c.y : 0;
-    if (px !== p0.x || py !== p0.y) { p1 = { x: px, y: py }; break; }
-  }
-  // Direction vector from p0 toward p1
-  const dx = p1.x - p0.x, dy = p1.y - p0.y;
-  const len = Math.sqrt(dx*dx + dy*dy) || 1;
-  const nx = dx / len, ny = dy / len;
-  // Lead-in point: go BACKWARDS from p0 along that direction
-  return { x: Math.round(p0.x - nx * leadUm), y: Math.round(p0.y - ny * leadUm) };
 }
 
 // ─────────────────────────────────────────────
 // MANUAL SHAPE GENERATOR
 // ─────────────────────────────────────────────
 let currentShapeTab = 'rect';
-
 function switchShapeTab(tab) {
   currentShapeTab = tab;
-  ['rect','circle','flange'].forEach(t => {
-    document.getElementById('shape'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t === tab ? 'block' : 'none';
-    document.getElementById('shapeTab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t === tab);
+  ['rect', 'circle', 'flange'].forEach(t => {
+    const T = t.charAt(0).toUpperCase() + t.slice(1);
+    $('shape' + T).style.display = t === tab ? 'block' : 'none';
+    $('shapeTab' + T).classList.toggle('active', t === tab);
   });
 }
 
-function generateShapeNCP() {
-  const leadInMm = parseFloat(document.getElementById('leadIn')?.value || 3);
-  const leadInUm = Math.round(leadInMm * 1000);
-  const vel      = document.getElementById('vel').value;
-  const fastvel  = document.getElementById('fastvel').value;
-  const pressure = document.getElementById('pressure').value;
-  const material = document.getElementById('material').value;
-  const startWait= document.getElementById('startWait').value;
-
-  let shapeEntities = [];
-  let autoName = 'emne';
-
+function generateShape() {
+  clearLog();
+  const um = v => Math.round(v * 1000);
+  let paths = [], autoName = 'emne';
   if (currentShapeTab === 'rect') {
-    const W = Math.round(parseFloat(document.getElementById('rectW').value) * 1000);
-    const H = Math.round(parseFloat(document.getElementById('rectH').value) * 1000);
-    const R = Math.round(parseFloat(document.getElementById('rectR').value || 0) * 1000);
-    autoName = (W/1000)+'x'+(H/1000);
-    if (R === 0) {
-      shapeEntities.push({ type: 'POLYLINE', pts: [[0,0],[W,0],[W,H],[0,H],[0,0]], bulges:{}, closed:true, layer:'0' });
-    } else {
-      // Rounded rect as polyline with arc commands
-      const pts = [];
-      const steps = 16;
-      function addArcPts(cx, cy, fromDeg, toDeg) {
-        for (let s = 0; s <= steps; s++) {
-          const a = (fromDeg + (toDeg-fromDeg)*s/steps) * Math.PI/180;
-          pts.push([Math.round(cx + R*Math.cos(a)), Math.round(cy + R*Math.sin(a))]);
-        }
-      }
-      addArcPts(R, R, 180, 270);
-      addArcPts(W-R, R, 270, 360);
-      addArcPts(W-R, H-R, 0, 90);
-      addArcPts(R, H-R, 90, 180);
-      pts.push(pts[0]);
-      shapeEntities.push({ type: 'POLYLINE', pts, bulges:{}, closed:true, layer:'0' });
-    }
+    const W = num('rectW'), H = num('rectH'), R = Math.max(0, num('rectR'));
+    if (!(W > 0 && H > 0)) { log('✗ Bredde og højde skal være større end 0', 'err'); return; }
+    if (R > Math.min(W, H) / 2) log(`⚠ Hjørneradius begrænset til ${(Math.min(W, H) / 2)} mm`, 'warn');
+    paths.push({ segs: roundedRectSegs(0, 0, um(W), um(H), um(R)), closed: true, layer: '0' });
+    autoName = `${W}x${H}` + (R > 0 ? `_R${R}` : '');
+  } else if (currentShapeTab === 'circle') {
+    const D = num('circD');
+    if (!(D > 0)) { log('✗ Diameter skal være større end 0', 'err'); return; }
+    paths.push({ segs: circleSegs(um(D / 2), um(D / 2), um(D / 2)), closed: true, layer: '0' });
+    autoName = 'ø' + D;
+  } else {
+    const OD = num('flangeOD'), ID = num('flangeID');
+    if (!(OD > 0 && ID > 0 && ID < OD)) { log('✗ Indvendig Ø skal være mindre end udvendig Ø', 'err'); return; }
+    const c = um(OD / 2);
+    paths.push({ segs: circleSegs(c, c, um(ID / 2)), closed: true, layer: '0' });
+    paths.push({ segs: circleSegs(c, c, um(OD / 2)), closed: true, layer: '0' });
+    autoName = `flange_od${OD}_id${ID}`;
   }
-  else if (currentShapeTab === 'circle') {
-    const D = parseFloat(document.getElementById('circD').value);
-    const r = Math.round(D * 500);
-    const cx = r, cy = r;
-    autoName = 'ø'+D;
-    shapeEntities.push({ type: 'CIRCLE', cx, cy, r, layer:'0' });
-  }
-  else if (currentShapeTab === 'flange') {
-    const OD = parseFloat(document.getElementById('flangeOD').value);
-    const ID = parseFloat(document.getElementById('flangeID').value);
-    const ro = Math.round(OD * 500);
-    const ri = Math.round(ID * 500);
-    const cx = ro, cy = ro;
-    autoName = 'flange_od'+OD+'_id'+ID;
-    // Inner hole first, then outer
-    shapeEntities.push({ type: 'CIRCLE', cx, cy, r: ri, layer:'0' });
-    shapeEntities.push({ type: 'CIRCLE', cx, cy, r: ro, layer:'0' });
-  }
-
-  const rawName = document.getElementById('shapeOutputName')?.value || autoName;
-  const fname = rawName.endsWith('.ncp') ? rawName : rawName + '.ncp';
-
-  // Build segments from shape entities
-  parsedEntities = shapeEntities;
-  updateEntitySection();
-  renderPreview();
-
-  const segments = buildSegments(shapeEntities);
-  const lines = [];
-  lines.push('IMF_PBL_v1.0');
-  lines.push(`;FILE: ${fname}`);
-  lines.push(`;MATR: ${material}`);
-  lines.push(`;DRAWING: ${fname.replace('.ncp','')}.dig`);
-  lines.push(`;DATE: ${todayDanish()}`);
-  lines.push(`;PRESSURE: ${pressure} BAR`);
-  lines.push(`FASTVEL ${fastvel}`);
-  lines.push(`VEL ${vel}`);
-  lines.push(';Valgte dyser : TOOL:1');
-
-  segments.forEach((seg, si) => {
-    lines.push(`;N${10+si} `);
-    const leadin = computeLeadIn(seg, leadInUm);
-    lines.push(`FASTABS X${leadin.x} Y${leadin.y}`);
-    lines.push('WAIT 10');
-    lines.push('SETPORT A4=00000001');
-    lines.push('WAIT 10');
-    lines.push(`WAIT ${startWait}`);
-    seg.forEach(cmd => {
-      if (cmd.type === 'MOVEABS') lines.push(`MOVEABS X${cmd.x} Y${cmd.y}`);
-      else if (cmd.type === 'CCWABS') lines.push(`CCWABS I${cmd.i} J${cmd.j} X${cmd.x} Y${cmd.y}`);
-      else if (cmd.type === 'CWABS')  lines.push(`CWABS I${cmd.i} J${cmd.j} X${cmd.x} Y${cmd.y}`);
-    });
-    lines.push('WAIT 10');
-    lines.push('SETPORT A4=00000000');
-    lines.push('WAIT 10');
-    lines.push('WAIT 200');
-  });
-  lines.push('PROGEND');
-
-  ncpOutput = lines.join('\r\n') + '\r\n';
-  currentBaseName = rawName;
-  renderNcpPreview(ncpOutput);
-  document.getElementById('btnDownload').classList.remove('hidden');
-  document.getElementById('btnDownload').onclick = () => downloadNCP(fname);
-  switchTab('ncp');
-  log(`✓ Shape genereret: ${fname}`, 'ok');
+  srcText = null;
+  basePaths = paths;
+  srcStats = { [currentShapeTab === 'rect' ? 'POLYLINE' : 'CIRCLE']: paths.length };
+  srcLayers = [{ name: '0', n: paths.length }];
+  disabledLayers.clear();
+  currentBaseName = autoName;
+  $('outputName').value = autoName;
+  $('fileName').textContent = 'Manuelt emne: ' + autoName;
+  $('fileLoaded').classList.remove('hidden');
+  log(`Manuelt emne: ${autoName}`, 'accent');
+  ncpWanted = true; ncpShowNext = true; // generér så snart planen (evt. nesting) er klar
+  rebuildPart(true);
 }
 
 // ─────────────────────────────────────────────
-// CANVAS PREVIEW
+// CANVAS PREVIEW (Y op)
 // ─────────────────────────────────────────────
-const canvas = document.getElementById('preview');
+const canvas = $('preview');
 const ctx = canvas.getContext('2d');
+const COLORS = { outer: '#0B4F79', hole: '#1C7FBF', open: '#9A6B00' };
 
-function getBBox() {
-  if (!parsedEntities.length) return { minX:0, minY:0, maxX:100, maxY:100 };
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  parsedEntities.forEach(e => {
-    if (e.type === 'LINE') {
-      minX = Math.min(minX, e.x1, e.x2); maxX = Math.max(maxX, e.x1, e.x2);
-      minY = Math.min(minY, e.y1, e.y2); maxY = Math.max(maxY, e.y1, e.y2);
-    } else if (e.type === 'ARC' || e.type === 'CIRCLE') {
-      minX = Math.min(minX, e.cx - e.r); maxX = Math.max(maxX, e.cx + e.r);
-      minY = Math.min(minY, e.cy - e.r); maxY = Math.max(maxY, e.cy + e.r);
-    } else if (e.pts) {
-      e.pts.forEach(([px,py]) => {
-        minX = Math.min(minX, px); maxX = Math.max(maxX, px);
-        minY = Math.min(minY, py); maxY = Math.max(maxY, py);
-      });
-    }
-  });
-  return { minX, minY, maxX, maxY };
+function resizeCanvas() {
+  const wrap = canvas.parentElement, dpr = window.devicePixelRatio || 1;
+  cssW = wrap.clientWidth || 800; cssH = wrap.clientHeight || 600;
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function sceneBB() {
+  if (nest) return { minX: 0, minY: 0, maxX: nest.params.W, maxY: nest.params.H };
+  if (partContours.length) { const b = unionBB(partContours); plan.forEach(p => extBB(b, p.lead.x, p.lead.y)); return b; }
+  return { minX: 0, minY: 0, maxX: 100000, maxY: 100000 };
 }
 
 function fitView() {
-  const wrap = canvas.parentElement;
-  canvas.width = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
-  const bbox = getBBox();
-  const pad = 40;
-  const scaleX = (canvas.width - pad*2) / Math.max(bbox.maxX - bbox.minX, 1);
-  const scaleY = (canvas.height - pad*2) / Math.max(bbox.maxY - bbox.minY, 1);
-  const scale = Math.min(scaleX, scaleY);
-  canvasTransform = {
+  if (currentTab !== 'geom') return;
+  resizeCanvas();
+  const bb = sceneBB(), pad = 40;
+  const w = Math.max(bb.maxX - bb.minX, 1), h = Math.max(bb.maxY - bb.minY, 1);
+  const scale = Math.min((cssW - pad * 2) / w, (cssH - pad * 2) / h);
+  view = {
     scale,
-    tx: pad - bbox.minX * scale + ((canvas.width - pad*2) - (bbox.maxX - bbox.minX) * scale) / 2,
-    ty: pad - bbox.minY * scale + ((canvas.height - pad*2) - (bbox.maxY - bbox.minY) * scale) / 2
+    tx: pad - bb.minX * scale + ((cssW - pad * 2) - w * scale) / 2,
+    ty: pad + bb.maxY * scale + ((cssH - pad * 2) - h * scale) / 2
   };
   renderCanvas();
 }
 
-function zoom(factor) {
-  canvasTransform.scale *= factor;
+function zoom(f) {
+  const mx = cssW / 2, my = cssH / 2;
+  view.tx = mx - (mx - view.tx) * f;
+  view.ty = my - (my - view.ty) * f;
+  view.scale *= f;
   renderCanvas();
 }
 
-function renderPreview() {
-  if (currentTab === 'geom') fitView();
+function tracePath(segs, sx, sy, scale) {
+  const s0 = segs[0];
+  ctx.moveTo(sx(s0.x0), sy(s0.y0));
+  for (const s of segs) {
+    if (s.t === 'L') ctx.lineTo(sx(s.x1), sy(s.y1));
+    else { const a0 = arcA0(s), a1 = a0 + arcSweep(s); ctx.arc(sx(s.cx), sy(s.cy), arcR(s) * scale, -a0, -a1, s.ccw); }
+  }
 }
 
 function renderCanvas() {
-  const w = canvas.width, h = canvas.height;
-  const { scale, tx, ty } = canvasTransform;
-
+  const w = cssW, h = cssH, { scale, tx, ty } = view;
+  const sx = x => x * scale + tx, sy = y => -y * scale + ty;
   ctx.clearRect(0, 0, w, h);
 
-  // Grid
-  ctx.strokeStyle = '#E3EAF0';
-  ctx.lineWidth = 1;
-  const gridStep = Math.round(10000 * scale) > 8 ? 10000 : 50000; // 10mm or 50mm
-  const bbox = getBBox();
-  // grid from 0
-  const gStartX = Math.floor(-tx / scale / gridStep) * gridStep;
-  const gStartY = Math.floor(-ty / scale / gridStep) * gridStep;
-  for (let gx = gStartX; gx < (w - tx) / scale; gx += gridStep) {
-    const sx = gx * scale + tx;
-    if (sx < 0 || sx > w) continue;
-    ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, h); ctx.stroke();
-  }
-  for (let gy = gStartY; gy < (h - ty) / scale; gy += gridStep) {
-    const sy = gy * scale + ty;
-    if (sy < 0 || sy > h) continue;
-    ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(w, sy); ctx.stroke();
-  }
-
-  // Axes
+  // Gitter (mm-trin tilpasset zoom)
+  const steps = [1, 5, 10, 50, 100, 500, 1000, 5000];
+  let step = steps.find(s => s * 1000 * scale >= 14) || 5000;
+  step *= 1000;
+  ctx.strokeStyle = '#E3EAF0'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let gx = Math.floor(-tx / scale / step) * step; gx <= (w - tx) / scale; gx += step) { const X = Math.round(sx(gx)) + 0.5; ctx.moveTo(X, 0); ctx.lineTo(X, h); }
+  for (let gy = Math.floor((ty - h) / scale / step) * step; gy <= ty / scale; gy += step) { const Y = Math.round(sy(gy)) + 0.5; ctx.moveTo(0, Y); ctx.lineTo(w, Y); }
+  ctx.stroke();
   ctx.strokeStyle = '#AABDCB';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(tx, 0); ctx.lineTo(tx, h); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(w, ty); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(Math.round(tx) + 0.5, 0); ctx.lineTo(Math.round(tx) + 0.5, h); ctx.moveTo(0, Math.round(ty) + 0.5); ctx.lineTo(w, Math.round(ty) + 0.5); ctx.stroke();
 
-  const toSX = x => x * scale + tx;
-  const toSY = y => y * scale + ty;
+  // Plade
+  if (nest) {
+    const o = nest.params;
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#5F7C90'; ctx.lineWidth = 1.5;
+    ctx.fillRect(sx(0), sy(o.H), o.W * scale, o.H * scale);
+    ctx.strokeRect(sx(0), sy(o.H), o.W * scale, o.H * scale);
+    if (o.margin > 0) {
+      ctx.setLineDash([4, 4]); ctx.strokeStyle = '#C5D5E1'; ctx.lineWidth = 1;
+      ctx.strokeRect(sx(o.margin), sy(o.H - o.margin), (o.W - 2 * o.margin) * scale, (o.H - 2 * o.margin) * scale);
+      ctx.setLineDash([]);
+    }
+  }
 
-  const colors = {
-    LINE: '#0B4F79',
-    ARC: '#C9640F',
-    CIRCLE: '#1C7FBF',
-    POLYLINE: '#2E9E52',
-    SPLINE: '#9A6B00'
-  };
+  // Kørsel i luft
+  ctx.strokeStyle = 'rgba(95,124,144,0.45)'; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+  ctx.beginPath();
+  let pos = { x: 0, y: 0 };
+  plan.forEach(it => { ctx.moveTo(sx(pos.x), sy(pos.y)); ctx.lineTo(sx(it.lead.x), sy(it.lead.y)); const z = it.c.segs[it.c.segs.length - 1]; pos = { x: z.x1, y: z.y1 }; });
+  ctx.stroke(); ctx.setLineDash([]);
 
-  parsedEntities.forEach(e => {
-    ctx.strokeStyle = colors[e.type] || '#0B4F79';
-    ctx.lineWidth = 1.5;
+  // Konturer
+  ctx.lineWidth = 1.5;
+  for (const kind of ['outer', 'hole', 'open']) {
+    ctx.strokeStyle = COLORS[kind];
     ctx.beginPath();
-
-    if (e.type === 'LINE') {
-      ctx.moveTo(toSX(e.x1), toSY(e.y1));
-      ctx.lineTo(toSX(e.x2), toSY(e.y2));
-    }
-    else if (e.type === 'ARC') {
-      const r = e.r * scale;
-      ctx.arc(toSX(e.cx), toSY(e.cy), r, -e.a2 * Math.PI/180, -e.a1 * Math.PI/180);
-    }
-    else if (e.type === 'CIRCLE') {
-      ctx.arc(toSX(e.cx), toSY(e.cy), e.r * scale, 0, Math.PI*2);
-    }
-    else if (e.type === 'POLYLINE' || e.type === 'SPLINE') {
-      e.pts.forEach(([px,py], i) => {
-        if (i === 0) ctx.moveTo(toSX(px), toSY(py));
-        else ctx.lineTo(toSX(px), toSY(py));
-      });
-      if (e.closed) ctx.closePath();
-    }
-
+    plan.forEach(it => { if (it.c.kind === kind) tracePath(it.c.segs, sx, sy, scale); });
     ctx.stroke();
-  });
+  }
 
-  // Start points
-  parsedEntities.forEach(e => {
-    const s = entityStart(e);
-    ctx.fillStyle = '#2E9E52';
-    ctx.beginPath();
-    ctx.arc(toSX(s.x), toSY(s.y), 3, 0, Math.PI*2);
-    ctx.fill();
-  });
+  // Indkøring + stikpunkt
+  ctx.strokeStyle = '#E8791E'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  plan.forEach(it => { const s0 = it.c.segs[0]; ctx.moveTo(sx(it.lead.x), sy(it.lead.y)); ctx.lineTo(sx(s0.x0), sy(s0.y0)); });
+  ctx.stroke();
+  ctx.fillStyle = '#2E9E52';
+  ctx.beginPath();
+  plan.forEach(it => { ctx.moveTo(sx(it.lead.x) + 2.5, sy(it.lead.y)); ctx.arc(sx(it.lead.x), sy(it.lead.y), 2.5, 0, TAU); });
+  ctx.fill();
+
+  // Rækkefølge-numre (kun når der er plads)
+  if (plan.length && plan.length <= 60) {
+    ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = '#5F7C90';
+    plan.forEach((it, i) => ctx.fillText(String(i + 1), sx(it.lead.x) + 4, sy(it.lead.y) - 4));
+  }
 
   // Info
-  const bbox2 = getBBox();
-  const wMm = ((bbox2.maxX - bbox2.minX) / 1000).toFixed(1);
-  const hMm = ((bbox2.maxY - bbox2.minY) / 1000).toFixed(1);
-  document.getElementById('coordOverlay').textContent =
-    `Størrelse: ${wMm} × ${hMm} mm  |  Zoom: ${(scale*1000).toFixed(0)}  |  Entiteter: ${parsedEntities.length}`;
+  let info = 'Ingen data endnu';
+  if (partContours.length) {
+    const bb = unionBB(partContours);
+    info = `Emne: ${((bb.maxX - bb.minX) / 1000).toFixed(1)} × ${((bb.maxY - bb.minY) / 1000).toFixed(1)} mm  |  Konturer: ${partContours.length}`;
+    if (nest) info += `  |  Plade: ${nest.params.W / 1000} × ${nest.params.H / 1000} mm, ${nest.placements.length} emner`;
+    info += `  |  Stik: ${plan.length}`;
+  }
+  $('coordOverlay').textContent = info;
 }
 
-// Pan
-canvas.addEventListener('mousedown', e => { isDragging = true; dragStart = { x: e.clientX - canvasTransform.tx, y: e.clientY - canvasTransform.ty }; });
-canvas.addEventListener('mousemove', e => {
-  if (!isDragging) return;
-  canvasTransform.tx = e.clientX - dragStart.x;
-  canvasTransform.ty = e.clientY - dragStart.y;
+// Pan / zoom
+canvas.addEventListener('pointerdown', e => { dragStart = { x: e.clientX - view.tx, y: e.clientY - view.ty }; canvas.classList.add('dragging'); canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointermove', e => {
+  if (!dragStart) return;
+  view.tx = e.clientX - dragStart.x;
+  view.ty = e.clientY - dragStart.y;
   renderCanvas();
 });
-canvas.addEventListener('mouseup', () => isDragging = false);
+const endDrag = () => { dragStart = null; canvas.classList.remove('dragging'); };
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
-  const factor = e.deltaY < 0 ? 1.12 : 1/1.12;
+  const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  canvasTransform.tx = mx - (mx - canvasTransform.tx) * factor;
-  canvasTransform.ty = my - (my - canvasTransform.ty) * factor;
-  canvasTransform.scale *= factor;
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  view.tx = mx - (mx - view.tx) * f;
+  view.ty = my - (my - view.ty) * f;
+  view.scale *= f;
   renderCanvas();
 }, { passive: false });
 
@@ -1965,67 +2018,95 @@ canvas.addEventListener('wheel', e => {
 // NCP SYNTAX HIGHLIGHT
 // ─────────────────────────────────────────────
 function renderNcpPreview(ncp) {
-  const el = document.getElementById('viewNcp');
-  const lines = ncp.split('\r\n');
-  el.innerHTML = lines.map(line => {
-    if (line.startsWith(';')) return `<span class="cmd-comment">${esc(line)}</span>`;
-    if (line.startsWith('IMF_') || line.startsWith('FASTVEL') || line.startsWith('VEL ') || line.startsWith('PROGEND')) return `<span class="cmd-header">${esc(line)}</span>`;
-    if (line.startsWith('FASTABS')) return `<span class="cmd-fast">${esc(line)}</span>`;
-    if (line.startsWith('MOVEABS')) return `<span class="cmd-move">${esc(line)}</span>`;
-    if (line.startsWith('CWABS') || line.startsWith('CCWABS')) return `<span class="cmd-arc">${esc(line)}</span>`;
-    if (line.startsWith('SETPORT') || line.startsWith('WAIT')) return `<span class="cmd-control">${esc(line)}</span>`;
-    return `<span>${esc(line)}</span>`;
-  }).join('\n');
-  document.getElementById('previewInfo').textContent = `${lines.length} linjer`;
+  const lines = ncp.replace(/\r\n$/, '').split('\r\n');
+  const cls = line =>
+    line.startsWith(';') ? 'cmd-comment' :
+    /^(IMF_|FASTVEL|VEL |PROGEND)/.test(line) ? 'cmd-header' :
+    line.startsWith('FASTABS') ? 'cmd-fast' :
+    line.startsWith('MOVEABS') ? 'cmd-move' :
+    /^C?CWABS/.test(line) ? 'cmd-arc' :
+    /^(SETPORT|WAIT)/.test(line) ? 'cmd-control' : '';
+  const MAX = 5000; // store nesting-filer: vis kun starten (downloaden er altid komplet)
+  let html = lines.slice(0, MAX).map(l => `<span class="${cls(l)}">${esc(l)}</span>`).join('\n');
+  if (lines.length > MAX) html += `\n<span class="cmd-comment">… ${lines.length - MAX} linjer mere — hele filen kommer med i download</span>`;
+  $('viewNcp').innerHTML = html;
+  $('previewInfo').textContent = `${lines.length} linjer`;
 }
-
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 // ─────────────────────────────────────────────
 // TAB SWITCH
 // ─────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.getElementById('tabGeom').classList.toggle('active', tab === 'geom');
-  document.getElementById('tabNcp').classList.toggle('active', tab === 'ncp');
-  document.getElementById('viewGeom').classList.toggle('hidden', tab !== 'geom');
-  document.getElementById('viewNcp').classList.toggle('hidden', tab !== 'ncp');
-  if (tab === 'geom') { fitView(); }
+  $('tabGeom').classList.toggle('active', tab === 'geom');
+  $('tabNcp').classList.toggle('active', tab === 'ncp');
+  $('viewGeom').classList.toggle('hidden', tab !== 'geom');
+  $('viewNcp').classList.toggle('hidden', tab !== 'ncp');
+  if (tab === 'geom') fitView();
 }
 
 // ─────────────────────────────────────────────
-// DOWNLOAD
+// DOWNLOAD (ISO-8859-1)
 // ─────────────────────────────────────────────
 function downloadNCP(fname) {
-  // Encode as ISO-8859-1
-  const bytes = [];
-  for (let i = 0; i < ncpOutput.length; i++) {
-    const code = ncpOutput.charCodeAt(i);
-    bytes.push(code & 0xff);
-  }
-  const blob = new Blob([new Uint8Array(bytes)], { type: 'application/octet-stream' });
+  const bytes = new Uint8Array(ncpOutput.length);
+  for (let i = 0; i < ncpOutput.length; i++) { const c = ncpOutput.charCodeAt(i); bytes[i] = c < 256 ? c : 63; }
+  const blob = new Blob([bytes], { type: 'application/octet-stream' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = fname;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(a.href);
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   log(`✓ Download: ${fname}`, 'ok');
 }
 
-// ─────────────────────────────────────────────
-// UTILS
-// ─────────────────────────────────────────────
 function todayDanish() {
   const d = new Date();
-  return [String(d.getDate()).padStart(2,'0'), String(d.getMonth()+1).padStart(2,'0'), d.getFullYear()].join('-');
+  return [String(d.getDate()).padStart(2, '0'), String(d.getMonth() + 1).padStart(2, '0'), d.getFullYear()].join('-');
 }
 
-// Init canvas size
-window.addEventListener('resize', () => { if (parsedEntities.length) fitView(); });
-const wrap = canvas.parentElement;
-canvas.width = wrap.clientWidth || 800;
-canvas.height = wrap.clientHeight || 600;
+// ─────────────────────────────────────────────
+// INDSTILLINGER: lyt efter ændringer, husk nesting-opsætning
+// ─────────────────────────────────────────────
+const NEST_FIELDS = ['nestOn', 'sheetW', 'sheetH', 'nestGap', 'nestMargin', 'nestCount', 'nestRot'];
+const STORE_KEY = 'induminati-dxf-nest-v1';
+function saveNestSettings() {
+  try {
+    const o = {};
+    NEST_FIELDS.forEach(id => o[id] = $(id).type === 'checkbox' ? $(id).checked : $(id).value);
+    localStorage.setItem(STORE_KEY, JSON.stringify(o));
+  } catch (e) { /* ingen lagring tilgængelig */ }
+}
+function loadNestSettings() {
+  try {
+    const o = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (!o) return;
+    NEST_FIELDS.forEach(id => { if (o[id] === undefined) return; if ($(id).type === 'checkbox') $(id).checked = !!o[id]; else $(id).value = o[id]; });
+  } catch (e) { /* ignorer */ }
+}
+function syncNestFields() { $('nestFields').style.display = $('nestOn').checked ? 'block' : 'none'; }
+
+loadNestSettings();
+syncNestFields();
+NEST_FIELDS.forEach(id => $(id).addEventListener(id === 'nestOn' || id === 'nestRot' ? 'change' : 'input', () => {
+  saveNestSettings();
+  syncNestFields();
+  rebuildPlan(id === 'nestOn');
+}));
+$('dxfUnit').addEventListener('change', () => { if (srcText != null) { resetNcp(); clearLog(); loadSource(false); } });
+$('chainTol').addEventListener('change', () => rebuildPart(false));
+['leadIn', 'cutOrder'].forEach(id => $(id).addEventListener(id === 'leadIn' ? 'input' : 'change', () => rebuildPlan(false)));
+['arcMode', 'vel', 'fastvel', 'pressure', 'startWait', 'material', 'outputName'].forEach(id =>
+  $(id).addEventListener('change', () => { if (ncpWanted && plan.length) generateNCP(true); }));
+
+window.addEventListener('resize', () => { if (currentTab === 'geom') fitView(); });
+resetNcp();
+resizeCanvas();
+renderCanvas();
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:8px 0">DXF → NCP Konverter &middot; v1.2 &middot; 07-07-2026</div>
+<div class="footer">DXF / SVG → NCP Konverter &middot; v2.0 &middot; 30-10-2026</div>
 </body>
 </html>
