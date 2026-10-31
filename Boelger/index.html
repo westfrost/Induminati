@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bølgeberegner — Induminati</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --dark:#0B4F79; --accent:#E8791E; --accent-hover:#C9640F; --sky:#1C7FBF;
+    --smoke:#F3F7FA; --light:#FFFFFF; --border:#D7E3EC; --text:#17324A; --muted:#5F7C90;
+    --accent-bg:#FCEADA; --sky-bg:#EAF4FB;
+    --danger:#D64545; --danger-bg:#FBEAEA; --danger-border:#F0C7C7;
+    --warn:#7A5A18; --warn-bg:#FFF8ED; --warn-border:#E0C8A0;
+    --green:#2E9E52; --green-bg:#E6F7EC; --green-border:#A8DFB8;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh;-webkit-text-size-adjust:100%}
+  header{background:var(--dark);padding:18px 28px;display:flex;align-items:center;gap:14px}
+  .logo-icon{width:34px;height:34px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .logo-icon svg{width:20px;height:20px}
+  header h1{font-size:16px;font-weight:600;color:#fff;flex:1}
+  header h1 span{font-size:12px;color:#B9D8EA;font-family:'DM Mono',monospace;margin-left:4px;font-weight:400}
+  .btn-home{color:#CFE3EE;text-decoration:none;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;white-space:nowrap;padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:5px;transition:color .15s,border-color .15s}
+  .btn-home:hover{color:#fff;border-color:var(--accent)}
+
+  main{max-width:900px;margin:0 auto;padding:22px 16px 48px;display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:18px}
+  .card h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .field label{font-size:12px;font-weight:600;line-height:1.3}
+  .field label em{font-style:normal;font-weight:400;color:var(--muted)}
+  .in{position:relative}
+  .in input,select{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;padding:10px 40px 10px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--smoke);color:var(--text);outline:none;width:100%;transition:border-color .15s,background .15s}
+  select{font-family:'Inter',sans-serif;font-size:15px;padding:11px 10px}
+  .in input:focus,select:focus{border-color:var(--accent);background:#fff}
+  .in input.bad{border-color:var(--danger);background:var(--danger-bg)}
+  .in .u{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);pointer-events:none}
+  .sub{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+  .sub .in input{font-size:15px;padding:8px 36px 8px 8px}
+
+  .result{text-align:center;padding:4px 0 14px}
+  .result .k{font-size:13px;color:var(--muted)}
+  .result .v{font-size:46px;font-weight:700;color:var(--dark);font-variant-numeric:tabular-nums;line-height:1.1}
+  .result .v small{font-size:22px;color:var(--muted);font-weight:600;margin-left:4px}
+  .result .why{font-size:13px;color:var(--muted);margin-top:4px}
+  .rows{border-top:1px solid var(--border)}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+  .row:last-child{border-bottom:none}
+  .row .k{color:var(--muted)}
+  .row .v{font-family:'DM Mono',monospace;font-weight:500;text-align:right}
+  .msg{font-size:13px;line-height:1.5;border-radius:6px;padding:10px 12px;border:1px solid;margin-top:12px}
+  .msg.ok{color:var(--green);background:var(--green-bg);border-color:var(--green-border)}
+  .msg.warn{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-border)}
+  .msg.err{color:var(--danger);background:var(--danger-bg);border-color:var(--danger-border)}
+  .empty{font-size:14px;color:var(--muted);text-align:center;padding:24px 6px}
+
+  .fig{width:100%;height:auto;display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
+  .legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+  .hint{font-size:12.5px;color:var(--muted);line-height:1.6}
+  .hint b{color:var(--text)}
+
+  .version-footer{text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px}
+
+  @media (max-width:640px){
+    header{padding:14px 16px;gap:10px}
+    header h1{font-size:15px}
+    header h1 span{display:block;margin-left:0;margin-top:2px}
+    main{padding:12px 10px 40px;gap:12px}
+    .card{padding:14px}
+    .grid,.sub{grid-template-columns:1fr 1fr}
+    .result .v{font-size:38px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-icon">
+    <svg viewBox="0 0 20 20" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1.5 15h2c0-7 5-7 5 0h3c0-7 5-7 5 0h2"/>
+    </svg>
+  </div>
+  <h1>Bølgeberegner <span>stregafstand på det hvide bånd</span></h1>
+  <a class="btn-home" href="../index.html">← Forside</a>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Mål fra tegningen</h2>
+    <div class="grid">
+      <div class="field"><label for="p">Deling <em>(top–top)</em></label><div class="in"><input type="text" inputmode="decimal" id="p" placeholder="fx 120"><span class="u">mm</span></div></div>
+      <div class="field"><label for="h">Højde <em>(til top af hvid)</em></label><div class="in"><input type="text" inputmode="decimal" id="h" placeholder="fx 50"><span class="u">mm</span></div></div>
+      <div class="field"><label for="f">Fladt stykke <em>(mellem bølger)</em></label><div class="in"><input type="text" inputmode="decimal" id="f" placeholder="fx 15"><span class="u">mm</span></div></div>
+      <div class="field"><label for="t">Tykkelse <em>(hvidt bånd)</em></label><div class="in"><input type="text" inputmode="decimal" id="t" placeholder="fx 2"><span class="u">mm</span></div></div>
+    </div>
+    <div class="sub">
+      <div class="field"><label for="shape">Bølgeform</label>
+        <select id="shape"><option value="ellipse">Bue (som tegningen)</option><option value="sine">Blød sinus</option></select></div>
+      <div class="field"><label for="n">Antal bølger <em>(valgfri)</em></label><div class="in"><input type="text" inputmode="numeric" id="n" placeholder="—"><span class="u">stk</span></div></div>
+      <div class="field"><label for="tool">Bredeste værktøj</label><div class="in"><input type="text" inputmode="decimal" id="tool"><span class="u">mm</span></div></div>
+      <div class="field"><label for="foot">Fod pr. ende <em>(ved stykker)</em></label><div class="in"><input type="text" inputmode="decimal" id="foot"><span class="u">mm</span></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Resultat</h2>
+    <div id="out"></div>
+  </section>
+
+  <section class="card">
+    <h2>Sådan regnes der</h2>
+    <div class="hint">
+      For hver bølge skal det hvide bånd være lige så langt som <b>buen</b> (målt midt i materialet) <b>plus det flade stykke</b>. Det er afstanden mellem stregerne.<br>
+      Buen har bundbredde = deling − fladt stykke og højde = højde − tykkelse (midt i materialet fra fod til top). Tykkelsen er derfor med i regnestykket.<br>
+      <b>Bue</b> regnes som en halv-ellipse (halvcirkel når højden er halvdelen af bundbredden), <b>blød sinus</b> som en bølge med afrundet top og jævn overgang til foden.<br>
+      Er det flade stykke <b>bredere end det bredeste værktøj</b>, kan det ikke svejses i ét hug, og bølgerne laves i <b>stykker</b>: ét stykke pr. bølge = bue + en fod i hver ende.
+    </div>
+  </section>
+
+  <div class="version-footer">Bølgeberegner &middot; v1.0 &middot; 31-10-2026</div>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = (v, d = 1) => v.toLocaleString('da-DK', {minimumFractionDigits:d, maximumFractionDigits:d});
+  const num = s => { const t = String(s ?? '').trim().replace(/\s/g, '').replace(',', '.'); return t === '' ? null : Number(t); };
+  const STORE = 'boelger.v1';
+  const IDS = ['p','h','f','t','shape','n','tool','foot'];
+  const DEF = {p:'', h:'', f:'', t:'2', shape:'ellipse', n:'', tool:'20', foot:'20'};
+  let st = {...DEF};
+  try { Object.assign(st, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch(e){}
+  IDS.forEach(id => { $(id).value = st[id]; $(id).addEventListener(id === 'shape' ? 'change' : 'input', () => { st[id] = $(id).value; try { localStorage.setItem(STORE, JSON.stringify(st)); } catch(e){} calc(); }); });
+
+  // Buelængde ved numerisk integration (Simpson)
+  function simpson(f, a, b, n = 2000){
+    const hh = (b - a) / n; let s = f(a) + f(b);
+    for (let i = 1; i < n; i++) s += f(a + i * hh) * (i % 2 ? 4 : 2);
+    return s * hh / 3;
+  }
+  // Bundbredde b (midt i materialet), stigning r (fod-midte til top-midte)
+  function arcLength(shape, b, r){
+    if (shape === 'sine') {
+      // y = r/2·(1 − cos(2πx/b)), 0..b
+      return simpson(x => Math.sqrt(1 + Math.pow(Math.PI * r / b * Math.sin(2 * Math.PI * x / b), 2)), 0, b);
+    }
+    // halv-ellipse med halvakser b/2 og r
+    const a = b / 2;
+    return simpson(th => Math.sqrt(a * a * Math.sin(th) ** 2 + r * r * Math.cos(th) ** 2), 0, Math.PI);
+  }
+  function curve(shape, b, r, x){   // højde over fod for 0..b
+    if (shape === 'sine') return r / 2 * (1 - Math.cos(2 * Math.PI * x / b));
+    const a = b / 2, u = (x - a) / a; return r * Math.sqrt(Math.max(0, 1 - u * u));
+  }
+
+  function calc(){
+    const P = num(st.p), H = num(st.h), F = num(st.f) ?? 0, T = num(st.t) ?? 0, N = num(st.n), tool = num(st.tool), foot = num(st.foot);
+    const bad = {p: P !== null && !(P > 0), h: H !== null && !(H > 0), f: num(st.f) !== null && !(F >= 0), t: num(st.t) !== null && !(T >= 0),
+                 n: N !== null && !(N > 0 && Number.isInteger(N)), tool: !(tool > 0), foot: !(foot >= 0)};
+    Object.entries(bad).forEach(([k, v]) => $(k).classList.toggle('bad', !!v));
+    const out = $('out');
+    if (P === null || H === null) { out.innerHTML = '<div class="empty">Indtast deling og højde.</div>'; return; }
+    if (Object.values(bad).some(Boolean)) { out.innerHTML = '<div class="msg err">Tjek de rødt markerede felter.</div>'; return; }
+    const bOut = P - F;              // buens bundbredde (udvendig)
+    const b = bOut - T;              // midt i materialet
+    const r = H - T;                 // fod-midte (T/2) til top-midte (H − T/2)
+    if (!(b > 0)) { out.innerHTML = '<div class="msg err">Det flade stykke + tykkelsen er større end delingen — der er ingen bue.</div>'; return; }
+    if (!(r > 0)) { out.innerHTML = '<div class="msg err">Højden skal være større end tykkelsen.</div>'; return; }
+    const A = arcLength(st.shape, b, r);
+    const flatC = P - b;             // fladt stykke midt i materialet (= fladt + tykkelse)
+    const S = A + flatC;             // stregafstand pr. bølge
+    const pieces = F > tool;
+    const pieceLen = A + 2 * foot;
+
+    let html = `<div class="result">
+      <div class="k">${pieces ? 'Længde pr. stykke' : 'Afstand mellem stregerne på det hvide bånd'}</div>
+      <div class="v">${fmt(pieces ? pieceLen : S)}<small>mm</small></div>
+      <div class="why">${pieces ? `bue ${fmt(A)} + 2 × fod ${fmt(foot, 0)}` : `bue ${fmt(A)} + fladt ${fmt(flatC)}`} — trækkes sammen til deling ${fmt(P, P % 1 ? 1 : 0)} mm</div>
+    </div>
+    <div class="rows">
+      <div class="row"><span class="k">Buens længde (midt i materialet)</span><span class="v">${fmt(A)} mm</span></div>
+      <div class="row"><span class="k">Buens bundbredde / højde (midt i materialet)</span><span class="v">${fmt(b)} / ${fmt(r)} mm</span></div>
+      ${pieces ? '' : `<div class="row"><span class="k">Fladt stykke på det hvide</span><span class="v">${fmt(flatC)} mm</span></div>`}
+      ${pieces ? '' : `<div class="row"><span class="k">Forhold hvidt : blåt</span><span class="v">${fmt(S / P, 2)} : 1</span></div>`}
+      ${N ? `<div class="row"><span class="k">${pieces ? `${N} stykker à ${fmt(pieceLen)} mm` : `Hvidt bånd til ${N} bølger`}</span><span class="v"><b>${fmt((pieces ? N * pieceLen : N * S) / 1000, 3)} m</b></span></div>` : ''}
+    </div>`;
+    html += pieces
+      ? `<div class="msg warn"><b>Laves i stykker:</b> det flade stykke (${fmt(F, F % 1 ? 1 : 0)} mm) er bredere end det bredeste værktøj (${fmt(tool, 0)} mm). Ét stykke pr. bølge: streg ved fod (${fmt(foot, 0)} mm) — bue ${fmt(A)} mm — fod (${fmt(foot, 0)} mm).</div>`
+      : `<div class="msg ok"><b>Ét langt stykke:</b> det flade stykke (${fmt(F, F % 1 ? 1 : 0)} mm) kan svejses med ${fmt(tool, 0)} mm værktøjet. Sæt en streg for hver ${fmt(S)} mm${N ? '' : ' (skriv antal bølger for samlet længde)'}.</div>`;
+    if (pieces && 2 * foot > flatC) html += `<div class="msg err">To fødder à ${fmt(foot, 0)} mm (${fmt(2 * foot, 0)} mm) er bredere end det flade stykke (${fmt(flatC)} mm) — nabostykkernes fødder vil overlappe. Gør foden kortere.</div>`;
+    html += figure(P, H, F, T, b, r, A, flatC, S, pieces, foot);
+    out.innerHTML = html;
+  }
+
+  // Skitse: profil (2 bølger) over det udfoldede hvide bånd med streger
+  function figure(P, H, F, T, b, r, A, flatC, S, pieces, foot){
+    const W = 600, pad = 14, periods = 2;
+    const totalW = periods * P;
+    const sc = (W - 2 * pad) / Math.max(totalW, pieces ? periods * (A + 2 * foot) : periods * S);
+    const baseY = pad + H * sc + 6;
+    let path = '';
+    for (let k = 0; k < periods; k++) {
+      const x0 = k * P;                       // start af fladt halvstykke
+      const a0 = x0 + flatC / 2;              // buens start (midt i materialet)
+      const y0 = baseY - T / 2 * sc;
+      // Ét langt stykke: hvidt bånd hele vejen; stykker: kun fod — bue — fod, med mellemrum
+      const fs = pieces ? Math.max(x0, a0 - foot) : x0, fe = pieces ? Math.min(x0 + P, a0 + b + foot) : x0 + P;
+      if (k === 0 || pieces) path += ` M${pad + fs * sc},${y0}`;
+      path += ` L${pad + a0 * sc},${y0}`;
+      for (let i = 0; i <= 60; i++) { const x = b * i / 60; path += ` L${pad + (a0 + x) * sc},${baseY - (T / 2 + curve(st.shape, b, r, x)) * sc}`; }
+      path += ` L${pad + fe * sc},${y0}`;
+    }
+    const stripY = baseY + 34;
+    const len = pieces ? periods * (A + 2 * foot) : periods * S;
+    let marks = '';
+    for (let k = 0; k <= periods; k++) {
+      if (pieces) {
+        if (k < periods) {
+          const s0 = k * (A + 2 * foot);
+          [s0, s0 + foot, s0 + foot + A, s0 + 2 * foot + A].forEach(x => marks += `<line x1="${pad + x * sc}" y1="${stripY - 8}" x2="${pad + x * sc}" y2="${stripY + 8}" stroke="#E8791E" stroke-width="2"/>`);
+        }
+      } else {
+        const x = k * S + flatC / 2;
+        if (x <= len) marks += `<line x1="${pad + x * sc}" y1="${stripY - 8}" x2="${pad + x * sc}" y2="${stripY + 8}" stroke="#E8791E" stroke-width="2"/>`;
+      }
+    }
+    const h = stripY + 34;
+    return `<svg class="fig" viewBox="0 0 ${W} ${h}" role="img" aria-label="Skitse af bølgeprofil og udfoldet hvidt bånd" style="margin-top:16px">
+      <rect x="${pad}" y="${baseY}" width="${totalW * sc}" height="6" fill="#1C7FBF" rx="1"/>
+      <path d="${path}" fill="none" stroke="#9FB3C2" stroke-width="${Math.max(2, T * sc)}" stroke-linejoin="round"/>
+      <rect x="${pad}" y="${stripY - 3}" width="${len * sc}" height="6" fill="#D7E3EC" rx="1"/>
+      ${marks}
+      <text x="${pad}" y="${h - 2}" font-family="Inter,sans-serif" font-size="15" fill="#5F7C90">${pieces ? 'Stykker: streger ved fod / bue / fod' : 'Udfoldet hvidt bånd: streg midt på hvert fladt stykke'}</text>
+    </svg>
+    <div class="legend"><span><i style="background:#1C7FBF"></i>Blåt bånd</span><span><i style="background:#9FB3C2"></i>Hvidt bånd (formet)</span><span><i style="background:#E8791E"></i>Streger</span></div>`;
+  }
+
+  calc();
+})();
+</script>
+</body>
+</html>
