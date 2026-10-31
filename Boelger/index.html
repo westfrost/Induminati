@@ -40,6 +40,12 @@
   .in input:focus,select:focus{border-color:var(--accent);background:#fff}
   .in input.bad{border-color:var(--danger);background:var(--danger-bg)}
   .in .u{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);pointer-events:none}
+  .grid .wide2{grid-column:span 2}
+  .seg{display:flex;border:1.5px solid var(--border);border-radius:6px;overflow:hidden;background:var(--smoke)}
+  .seg button{flex:1;font-family:inherit;font-size:14px;font-weight:600;padding:12px 8px;border:none;background:transparent;color:var(--muted);cursor:pointer}
+  .seg button.on{background:var(--accent);color:#fff}
+  [hidden]{display:none!important}
+  .result .why b{color:var(--text)}
   .sub{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
   .sub .in input{font-size:15px;padding:8px 36px 8px 8px}
 
@@ -74,6 +80,7 @@
     main{padding:12px 10px 40px;gap:12px}
     .card{padding:14px}
     .grid,.sub{grid-template-columns:1fr 1fr}
+    .result .v{font-size:34px}
     .result .v{font-size:38px}
   }
 </style>
@@ -91,19 +98,29 @@
 
 <main>
   <section class="card">
-    <h2>Mål fra tegningen</h2>
+    <h2>Båndet</h2>
     <div class="grid">
-      <div class="field"><label for="p">Deling <em>(top–top)</em></label><div class="in"><input type="text" inputmode="decimal" id="p" placeholder="fx 120"><span class="u">mm</span></div></div>
-      <div class="field"><label for="h">Højde <em>(til top af hvid)</em></label><div class="in"><input type="text" inputmode="decimal" id="h" placeholder="fx 50"><span class="u">mm</span></div></div>
-      <div class="field"><label for="f">Fladt stykke <em>(mellem bølger)</em></label><div class="in"><input type="text" inputmode="decimal" id="f" placeholder="fx 15"><span class="u">mm</span></div></div>
-      <div class="field"><label for="t">Tykkelse <em>(hvidt bånd)</em></label><div class="in"><input type="text" inputmode="decimal" id="t" placeholder="fx 2"><span class="u">mm</span></div></div>
+      <div class="field wide2"><label for="L">Båndlængde</label><div class="in"><input type="text" inputmode="decimal" id="L" placeholder="fx 5600"><span class="u">mm</span></div></div>
+      <div class="field wide2"><label>Angiv</label>
+        <div class="seg" role="group"><button type="button" data-mode="n">Antal bølger</button><button type="button" data-mode="p">Deling</button></div></div>
+      <div class="field wide2" id="f-n"><label for="n">Antal bølger</label><div class="in"><input type="text" inputmode="numeric" id="n" placeholder="fx 40"><span class="u">stk</span></div></div>
+      <div class="field wide2" id="f-p"><label for="p">Deling <em>(top–top)</em></label><div class="in"><input type="text" inputmode="decimal" id="p" placeholder="fx 140"><span class="u">mm</span></div></div>
     </div>
-    <div class="sub">
+  </section>
+
+  <section class="card">
+    <h2>Bølgen</h2>
+    <div class="grid">
+      <div class="field"><label for="h">Højde <em>(til top af hvid)</em></label><div class="in"><input type="text" inputmode="decimal" id="h" placeholder="fx 50"><span class="u">mm</span></div></div>
+      <div class="field"><label for="f">Fladt stykke <em>(tom = værktøj)</em></label><div class="in"><input type="text" inputmode="decimal" id="f" placeholder="—"><span class="u">mm</span></div></div>
+      <div class="field"><label for="t">Tykkelse <em>(hvidt bånd)</em></label><div class="in"><input type="text" inputmode="decimal" id="t" placeholder="fx 2"><span class="u">mm</span></div></div>
       <div class="field"><label for="shape">Bølgeform</label>
         <select id="shape"><option value="ellipse">Bue (som tegningen)</option><option value="sine">Blød sinus</option></select></div>
-      <div class="field"><label for="n">Antal bølger <em>(valgfri)</em></label><div class="in"><input type="text" inputmode="numeric" id="n" placeholder="—"><span class="u">stk</span></div></div>
-      <div class="field"><label for="tool">Bredeste værktøj</label><div class="in"><input type="text" inputmode="decimal" id="tool"><span class="u">mm</span></div></div>
-      <div class="field"><label for="foot">Fod pr. ende <em>(ved stykker)</em></label><div class="in"><input type="text" inputmode="decimal" id="foot"><span class="u">mm</span></div></div>
+    </div>
+    <div class="sub">
+      <div class="field"><label for="tool">Svejseværktøj</label>
+        <select id="tool"><option value="auto">Automatisk</option><option value="15">15 mm</option><option value="20">20 mm</option></select></div>
+      <div class="field"><label for="foot">Fod pr. ende <em>(ved stykker, tom = værktøj)</em></label><div class="in"><input type="text" inputmode="decimal" id="foot" placeholder="—"><span class="u">mm</span></div></div>
     </div>
   </section>
 
@@ -115,27 +132,36 @@
   <section class="card">
     <h2>Sådan regnes der</h2>
     <div class="hint">
-      For hver bølge skal det hvide bånd være lige så langt som <b>buen</b> (målt midt i materialet) <b>plus det flade stykke</b>. Det er afstanden mellem stregerne.<br>
-      Buen har bundbredde = deling − fladt stykke og højde = højde − tykkelse (midt i materialet fra fod til top). Tykkelsen er derfor med i regnestykket.<br>
-      <b>Bue</b> regnes som en halv-ellipse (halvcirkel når højden er halvdelen af bundbredden), <b>blød sinus</b> som en bølge med afrundet top og jævn overgang til foden.<br>
-      Er det flade stykke <b>bredere end det bredeste værktøj</b>, kan det ikke svejses i ét hug, og bølgerne laves i <b>stykker</b>: ét stykke pr. bølge = bue + en fod i hver ende.
+      <b>Deling:</b> angives antal bølger, er delingen = båndlængde ÷ antal. Angives delingen, er antal bølger = båndlængde ÷ deling (siden advarer, hvis det ikke går op).<br>
+      <b>Værktøj:</b> værktøjerne er 15 og 20 mm. Det smalleste (15) bruges, medmindre det flade stykke passer bedre til 20 mm (dvs. ligger tættest på 20). Er der intet fladt stykke på tegningen, bruges værktøjets bredde (15 mm).<br>
+      <b>Streger:</b> for hver bølge skal det hvide bånd være lige så langt som <b>buen</b> (midt i materialet) <b>plus det flade stykke</b>. Buen har bundbredde = deling − fladt − tykkelse og højde = højde − tykkelse, så tykkelsen er med. <b>Bue</b> regnes som en halv-ellipse (halvcirkel når højden er halvdelen af bundbredden), <b>blød sinus</b> som en bølge med afrundet top.<br>
+      <b>Stykker:</b> er det flade stykke bredere end det bredeste værktøj (20 mm), kan det ikke svejses i ét hug, og hver bølge laves af sit eget stykke = bue + en fod i hver ende.
     </div>
   </section>
 
-  <div class="version-footer">Bølgeberegner &middot; v1.0 &middot; 31-10-2026</div>
+  <div class="version-footer">Bølgeberegner &middot; v1.1 &middot; 31-10-2026</div>
 </main>
 
 <script>
 (function(){
   const $ = id => document.getElementById(id);
   const fmt = (v, d = 1) => v.toLocaleString('da-DK', {minimumFractionDigits:d, maximumFractionDigits:d});
+  const fmtA = v => fmt(v, Math.abs(v - Math.round(v)) < 0.05 ? 0 : 1);   // hele tal uden decimal
   const num = s => { const t = String(s ?? '').trim().replace(/\s/g, '').replace(',', '.'); return t === '' ? null : Number(t); };
-  const STORE = 'boelger.v1';
-  const IDS = ['p','h','f','t','shape','n','tool','foot'];
-  const DEF = {p:'', h:'', f:'', t:'2', shape:'ellipse', n:'', tool:'20', foot:'20'};
-  let st = {...DEF};
+  const TOOLS = [15, 20];
+  const STORE = 'boelger.v2';
+  const IDS = ['L','n','p','h','f','t','shape','tool','foot'];
+  let st = {mode:'n', L:'', n:'', p:'', h:'', f:'', t:'2', shape:'ellipse', tool:'auto', foot:''};
   try { Object.assign(st, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch(e){}
-  IDS.forEach(id => { $(id).value = st[id]; $(id).addEventListener(id === 'shape' ? 'change' : 'input', () => { st[id] = $(id).value; try { localStorage.setItem(STORE, JSON.stringify(st)); } catch(e){} calc(); }); });
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(st)); } catch(e){} };
+  IDS.forEach(id => { $(id).value = st[id]; $(id).addEventListener(['shape','tool'].includes(id) ? 'change' : 'input', () => { st[id] = $(id).value; save(); calc(); }); });
+  function setMode(m){
+    st.mode = m; save();
+    document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+    $('f-n').hidden = m !== 'n'; $('f-p').hidden = m !== 'p';
+    calc();
+  }
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { setMode(b.dataset.mode); $(b.dataset.mode).focus(); }));
 
   // Buelængde ved numerisk integration (Simpson)
   function simpson(f, a, b, n = 2000){
@@ -143,56 +169,76 @@
     for (let i = 1; i < n; i++) s += f(a + i * hh) * (i % 2 ? 4 : 2);
     return s * hh / 3;
   }
-  // Bundbredde b (midt i materialet), stigning r (fod-midte til top-midte)
   function arcLength(shape, b, r){
-    if (shape === 'sine') {
-      // y = r/2·(1 − cos(2πx/b)), 0..b
-      return simpson(x => Math.sqrt(1 + Math.pow(Math.PI * r / b * Math.sin(2 * Math.PI * x / b), 2)), 0, b);
-    }
-    // halv-ellipse med halvakser b/2 og r
-    const a = b / 2;
+    if (shape === 'sine') return simpson(x => Math.sqrt(1 + Math.pow(Math.PI * r / b * Math.sin(2 * Math.PI * x / b), 2)), 0, b);
+    const a = b / 2;   // halv-ellipse med halvakser b/2 og r
     return simpson(th => Math.sqrt(a * a * Math.sin(th) ** 2 + r * r * Math.cos(th) ** 2), 0, Math.PI);
   }
-  function curve(shape, b, r, x){   // højde over fod for 0..b
+  function curve(shape, b, r, x){
     if (shape === 'sine') return r / 2 * (1 - Math.cos(2 * Math.PI * x / b));
     const a = b / 2, u = (x - a) / a; return r * Math.sqrt(Math.max(0, 1 - u * u));
   }
+  // Smalleste værktøj, medmindre det flade stykke ligger tættere på et bredere
+  function pickTool(F){
+    if (st.tool !== 'auto') return Number(st.tool);
+    if (F === null || F > Math.max(...TOOLS)) return TOOLS[0];   // ingen fladt mål, eller stykker → smalleste
+    return TOOLS.reduce((best, w) => Math.abs(w - F) < Math.abs(best - F) ? w : best, TOOLS[0]);
+  }
 
   function calc(){
-    const P = num(st.p), H = num(st.h), F = num(st.f) ?? 0, T = num(st.t) ?? 0, N = num(st.n), tool = num(st.tool), foot = num(st.foot);
-    const bad = {p: P !== null && !(P > 0), h: H !== null && !(H > 0), f: num(st.f) !== null && !(F >= 0), t: num(st.t) !== null && !(T >= 0),
-                 n: N !== null && !(N > 0 && Number.isInteger(N)), tool: !(tool > 0), foot: !(foot >= 0)};
+    const L = num(st.L), Nin = num(st.n), Pin = num(st.p), H = num(st.h), Fin = num(st.f), T = num(st.t) ?? 0, footIn = num(st.foot);
+    const bad = {L: L !== null && !(L > 0), n: Nin !== null && !(Nin > 0 && Number.isInteger(Nin)), p: Pin !== null && !(Pin > 0),
+                 h: H !== null && !(H > 0), f: Fin !== null && !(Fin >= 0), t: num(st.t) !== null && !(T >= 0), foot: footIn !== null && !(footIn >= 0)};
     Object.entries(bad).forEach(([k, v]) => $(k).classList.toggle('bad', !!v));
     const out = $('out');
-    if (P === null || H === null) { out.innerHTML = '<div class="empty">Indtast deling og højde.</div>'; return; }
+    const need = st.mode === 'n' ? Nin : Pin;
+    if (L === null || need === null || H === null) {
+      out.innerHTML = `<div class="empty">Indtast båndlængde, ${st.mode === 'n' ? 'antal bølger' : 'deling'} og højde.</div>`; return;
+    }
     if (Object.values(bad).some(Boolean)) { out.innerHTML = '<div class="msg err">Tjek de rødt markerede felter.</div>'; return; }
-    const bOut = P - F;              // buens bundbredde (udvendig)
-    const b = bOut - T;              // midt i materialet
-    const r = H - T;                 // fod-midte (T/2) til top-midte (H − T/2)
+
+    // Deling og antal bølger
+    let N, P, rest = 0;
+    if (st.mode === 'n') { N = Nin; P = L / N; }
+    else { P = Pin; N = Math.floor(L / P + 1e-9); rest = L - N * P; }
+    if (N < 1) { out.innerHTML = '<div class="msg err">Delingen er større end båndlængden.</div>'; return; }
+
+    const tool = pickTool(Fin);
+    const F = Fin ?? tool;
+    const foot = footIn ?? tool;
+    const pieces = F > Math.max(...TOOLS);
+    const b = P - F - T, r = H - T;
     if (!(b > 0)) { out.innerHTML = '<div class="msg err">Det flade stykke + tykkelsen er større end delingen — der er ingen bue.</div>'; return; }
     if (!(r > 0)) { out.innerHTML = '<div class="msg err">Højden skal være større end tykkelsen.</div>'; return; }
     const A = arcLength(st.shape, b, r);
-    const flatC = P - b;             // fladt stykke midt i materialet (= fladt + tykkelse)
-    const S = A + flatC;             // stregafstand pr. bølge
-    const pieces = F > tool;
+    const flatC = P - b;             // fladt stykke på det hvide (midt i materialet)
+    const S = A + flatC;             // stregafstand
     const pieceLen = A + 2 * foot;
+    const total = pieces ? N * pieceLen : N * S;
 
-    let html = `<div class="result">
-      <div class="k">${pieces ? 'Længde pr. stykke' : 'Afstand mellem stregerne på det hvide bånd'}</div>
-      <div class="v">${fmt(pieces ? pieceLen : S)}<small>mm</small></div>
-      <div class="why">${pieces ? `bue ${fmt(A)} + 2 × fod ${fmt(foot, 0)}` : `bue ${fmt(A)} + fladt ${fmt(flatC)}`} — trækkes sammen til deling ${fmt(P, P % 1 ? 1 : 0)} mm</div>
-    </div>
-    <div class="rows">
+    let html = pieces
+      ? `<div class="result"><div class="k">Du skal bruge</div>
+          <div class="v">${N} stk. <small>à</small> ${fmt(pieceLen)}<small>mm</small></div>
+          <div class="why">I alt ${fmt(total / 1000, 2)} m hvidt bånd · streger: ${fmtA(foot)} / ${fmt(A)} / ${fmtA(foot)} mm</div></div>`
+      : `<div class="result"><div class="k">Du skal bruge ét stykke hvidt bånd på</div>
+          <div class="v">${fmt(total, 0)}<small>mm</small></div>
+          <div class="why">Streg for hver <b>${fmt(S)} mm</b> · ${N} bølger</div></div>`;
+    html += `<div class="rows">
+      <div class="row"><span class="k">Antal bølger × deling</span><span class="v">${N} × ${fmt(P, P % 1 ? 1 : 0)} mm</span></div>
+      <div class="row"><span class="k">Svejseværktøj${st.tool === 'auto' ? ' (automatisk)' : ''}</span><span class="v">${tool} mm</span></div>
+      <div class="row"><span class="k">Fladt stykke${Fin === null ? ' (= værktøj)' : ''}</span><span class="v">${fmtA(F)} mm</span></div>
       <div class="row"><span class="k">Buens længde (midt i materialet)</span><span class="v">${fmt(A)} mm</span></div>
-      <div class="row"><span class="k">Buens bundbredde / højde (midt i materialet)</span><span class="v">${fmt(b)} / ${fmt(r)} mm</span></div>
-      ${pieces ? '' : `<div class="row"><span class="k">Fladt stykke på det hvide</span><span class="v">${fmt(flatC)} mm</span></div>`}
-      ${pieces ? '' : `<div class="row"><span class="k">Forhold hvidt : blåt</span><span class="v">${fmt(S / P, 2)} : 1</span></div>`}
-      ${N ? `<div class="row"><span class="k">${pieces ? `${N} stykker à ${fmt(pieceLen)} mm` : `Hvidt bånd til ${N} bølger`}</span><span class="v"><b>${fmt((pieces ? N * pieceLen : N * S) / 1000, 3)} m</b></span></div>` : ''}
+      ${pieces ? `<div class="row"><span class="k">Stykke = fod + bue + fod</span><span class="v">${fmtA(foot)} + ${fmt(A)} + ${fmtA(foot)} mm</span></div>`
+               : `<div class="row"><span class="k">Stregafstand = bue + fladt</span><span class="v">${fmt(A)} + ${fmt(flatC)} mm</span></div>`}
     </div>`;
-    html += pieces
-      ? `<div class="msg warn"><b>Laves i stykker:</b> det flade stykke (${fmt(F, F % 1 ? 1 : 0)} mm) er bredere end det bredeste værktøj (${fmt(tool, 0)} mm). Ét stykke pr. bølge: streg ved fod (${fmt(foot, 0)} mm) — bue ${fmt(A)} mm — fod (${fmt(foot, 0)} mm).</div>`
-      : `<div class="msg ok"><b>Ét langt stykke:</b> det flade stykke (${fmt(F, F % 1 ? 1 : 0)} mm) kan svejses med ${fmt(tool, 0)} mm værktøjet. Sæt en streg for hver ${fmt(S)} mm${N ? '' : ' (skriv antal bølger for samlet længde)'}.</div>`;
-    if (pieces && 2 * foot > flatC) html += `<div class="msg err">To fødder à ${fmt(foot, 0)} mm (${fmt(2 * foot, 0)} mm) er bredere end det flade stykke (${fmt(flatC)} mm) — nabostykkernes fødder vil overlappe. Gør foden kortere.</div>`;
+    if (rest > 0.5) {
+      const n1 = N, n2 = N + 1;
+      html += `<div class="msg warn"><b>Delingen går ikke op:</b> ${N} × ${fmtA(P)} = ${fmtA(N * P)} mm — der er ${fmtA(rest)} mm tilovers på båndet. Med ${n1} bølger bliver delingen ${fmt(L / n1)} mm, med ${n2} bølger ${fmt(L / n2)} mm.</div>`;
+    }
+    if (pieces) {
+      html += `<div class="msg warn"><b>Laves i stykker:</b> det flade stykke (${fmtA(F)} mm) er bredere end det bredeste værktøj (${Math.max(...TOOLS)} mm).</div>`;
+      if (2 * foot > flatC) html += `<div class="msg err">To fødder à ${fmtA(foot)} mm er bredere end det flade stykke (${fmt(flatC)} mm) — nabostykkerne vil overlappe. Gør foden kortere.</div>`;
+    }
     html += figure(P, H, F, T, b, r, A, flatC, S, pieces, foot);
     out.innerHTML = html;
   }
@@ -205,10 +251,7 @@
     const baseY = pad + H * sc + 6;
     let path = '';
     for (let k = 0; k < periods; k++) {
-      const x0 = k * P;                       // start af fladt halvstykke
-      const a0 = x0 + flatC / 2;              // buens start (midt i materialet)
-      const y0 = baseY - T / 2 * sc;
-      // Ét langt stykke: hvidt bånd hele vejen; stykker: kun fod — bue — fod, med mellemrum
+      const x0 = k * P, a0 = x0 + flatC / 2, y0 = baseY - T / 2 * sc;
       const fs = pieces ? Math.max(x0, a0 - foot) : x0, fe = pieces ? Math.min(x0 + P, a0 + b + foot) : x0 + P;
       if (k === 0 || pieces) path += ` M${pad + fs * sc},${y0}`;
       path += ` L${pad + a0 * sc},${y0}`;
@@ -218,16 +261,10 @@
     const stripY = baseY + 34;
     const len = pieces ? periods * (A + 2 * foot) : periods * S;
     let marks = '';
+    const mark = x => marks += `<line x1="${pad + x * sc}" y1="${stripY - 8}" x2="${pad + x * sc}" y2="${stripY + 8}" stroke="#E8791E" stroke-width="2"/>`;
     for (let k = 0; k <= periods; k++) {
-      if (pieces) {
-        if (k < periods) {
-          const s0 = k * (A + 2 * foot);
-          [s0, s0 + foot, s0 + foot + A, s0 + 2 * foot + A].forEach(x => marks += `<line x1="${pad + x * sc}" y1="${stripY - 8}" x2="${pad + x * sc}" y2="${stripY + 8}" stroke="#E8791E" stroke-width="2"/>`);
-        }
-      } else {
-        const x = k * S + flatC / 2;
-        if (x <= len) marks += `<line x1="${pad + x * sc}" y1="${stripY - 8}" x2="${pad + x * sc}" y2="${stripY + 8}" stroke="#E8791E" stroke-width="2"/>`;
-      }
+      if (pieces) { if (k < periods) { const s0 = k * (A + 2 * foot); [s0, s0 + foot, s0 + foot + A, s0 + 2 * foot + A].forEach(mark); } }
+      else { const x = k * S + flatC / 2; if (x <= len) mark(x); }
     }
     const h = stripY + 34;
     return `<svg class="fig" viewBox="0 0 ${W} ${h}" role="img" aria-label="Skitse af bølgeprofil og udfoldet hvidt bånd" style="margin-top:16px">
@@ -240,7 +277,7 @@
     <div class="legend"><span><i style="background:#1C7FBF"></i>Blåt bånd</span><span><i style="background:#9FB3C2"></i>Hvidt bånd (formet)</span><span><i style="background:#E8791E"></i>Streger</span></div>`;
   }
 
-  calc();
+  setMode(st.mode === 'p' ? 'p' : 'n');
 })();
 </script>
 </body>
