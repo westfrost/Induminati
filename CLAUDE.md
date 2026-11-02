@@ -10,11 +10,10 @@ Statisk site, ingen build-step. Hvert værktøj er én selvstændig `index.html`
 - `Samlevejledninger/CLAUDE.md` — Samlevejledninger (database-side)
 - `Baanddb/CLAUDE.md` — Bånd & Medbringer DB (database-side, Samlevejledningers "søster")
 - `Ordrer/CLAUDE.md` — Ordreliste-værktøj
-- `Opskæring/CLAUDE.md` — Opskæringsberegner
+- `Opskæring/CLAUDE.md` — Opskæringsberegner, **inkl. fanen "Strimler — Volta Spike"** (strimmelberegneren, flyttet hertil 02-11-2026 — alle ændringer af strimmelberegneren laves i Opskæring-sessionen; `Strimler/index.html` er kun en omdirigering)
 - `DXF/CLAUDE.md` — DXF → NCP Konverter
 - `Kapacitet/CLAUDE.md` — Kapacitetsoverblik (Test/WIP)
 - `Rullelaengde/CLAUDE.md` — Rullelængde (Test/WIP)
-- `Strimler/CLAUDE.md` — Strimmelberegner (Test/WIP, Volta Spike-strimler pr. ordre)
 - `Boelger/CLAUDE.md` — Bølgeberegner (Test/WIP, stregafstand for bølge-/buebånd)
 
 **Arkiverede værktøjer** (ikke på hjemmesiden, men bevaret i repo'et under `_arkiv/` — se "Arkiv" nedenfor):

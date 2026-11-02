@@ -308,6 +308,82 @@
     .toggle input{width:22px;height:22px}
     .seg label,.seg button{padding:11px 16px}
   }
+
+  /* ===== Fane: Strimler (Volta Spike) — tidligere selvstændigt værktøj Strimler/, flyttet hertil 02-11-2026 ===== */
+  .tabs{max-width:900px;margin:18px auto 0;padding:0 18px;display:flex;gap:6px}
+  .tabs button{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;padding:11px 18px;border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;background:#E7EEF3;color:var(--muted);cursor:pointer}
+  .tabs button.on{background:var(--light);color:var(--steel);box-shadow:inset 0 3px 0 var(--rust)}
+  .tabs + main{padding-top:18px}
+  main[hidden]{display:none!important}
+  #sb-tab{--dark:#0B4F79;--accent:#E8791E;--accent-hover:#C9640F;--accent-bg:#FCEADA;--sky-bg:#EAF4FB}
+  #sb-tab, #sb-tab *{box-sizing:border-box}
+  #sb-tab .card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:18px}
+  #sb-tab .card h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  #sb-tab .btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:6px;padding:10px 16px;cursor:pointer;border:1.5px solid var(--border);background:var(--light);color:var(--text);transition:border-color .15s,background .15s,color .15s;white-space:nowrap}
+  #sb-tab .btn:hover{border-color:var(--accent)}
+  #sb-tab .btn.small{font-size:12px;padding:6px 10px;font-weight:500}
+  #sb-tab .btn.danger{color:var(--danger);border-color:var(--danger-border)}
+  #sb-tab .btn.danger:hover{background:var(--danger-bg)}
+  #sb-tab .btn.add{width:100%;border-style:dashed;color:var(--accent);border-color:var(--accent)}
+  #sb-tab .btn.add:hover{background:var(--accent-bg)}
+  #sb-tab input[type=text]{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;padding:10px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--smoke);color:var(--text);outline:none;width:100%;transition:border-color .15s,background .15s;text-align:center}
+  #sb-tab input[type=text]:focus{border-color:var(--accent);background:#fff}
+  #sb-tab input[type=text].bad{border-color:var(--danger);background:var(--danger-bg)}
+  #sb-tab .lines{display:flex;flex-direction:column;gap:12px}
+  #sb-tab .line{border:1.5px solid var(--border);border-radius:8px;padding:12px}
+  #sb-tab .line-in{display:grid;grid-template-columns:1fr auto 1fr 90px 36px;gap:8px;align-items:end}
+  #sb-tab .line-in .x{font-size:18px;color:var(--muted);padding-bottom:12px}
+  #sb-tab .lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;text-align:center}
+  #sb-tab .del{width:36px;height:46px;border:1.5px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);font-size:20px;cursor:pointer}
+  #sb-tab .del:hover{color:var(--danger);border-color:var(--danger-border);background:var(--danger-bg)}
+  #sb-tab .line-out{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline}
+  #sb-tab .big{font-size:20px;font-weight:700;color:var(--dark)}
+  #sb-tab .big b{font-family:'DM Mono',monospace;color:var(--accent)}
+  #sb-tab .detail{font-size:12.5px;color:var(--muted);line-height:1.5;flex-basis:100%}
+  #sb-tab .detail b{color:var(--text);font-weight:600}
+  #sb-tab .sb-err{font-size:12.5px;color:var(--danger)}
+  #sb-roll-err:empty{display:none}
+  #sb-tab .sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  #sb-tab .stat{background:var(--smoke);border-radius:8px;padding:12px;text-align:center}
+  #sb-tab .stat .v{font-family:'DM Mono',monospace;font-size:26px;font-weight:600;color:var(--dark)}
+  #sb-tab .stat .v.accent{color:var(--accent)}
+  #sb-tab .stat .k{font-size:12px;color:var(--muted);margin-top:2px}
+  #sb-tab details.settings summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--sky)}
+  #sb-tab .set-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
+  #sb-tab .set-grid .sb-field{display:flex;flex-direction:column;gap:4px}
+  #sb-tab .set-grid label{font-size:11.5px;font-weight:600;line-height:1.3}
+  #sb-tab .set-grid input{font-size:15px;padding:8px}
+  #sb-tab .sb-hint{font-size:12px;color:var(--muted);line-height:1.55;margin-top:10px}
+  #sb-tab .order{margin-bottom:12px}
+  #sb-tab .order label{display:block;font-size:12px;font-weight:600;margin-bottom:4px}
+  #sb-tab .order label em{font-style:normal;font-weight:400;color:var(--muted)}
+  #sb-tab .order input{text-align:left;font-size:16px}
+  #sb-tab .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  #sb-tab .btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+  #sb-tab .btn:disabled{opacity:.4;cursor:not-allowed}
+  #sb-tab .print-btn{width:100%;margin-top:14px}
+  @media (max-width:640px){
+    #sb-tab .card{padding:14px}
+    #sb-tab .line-in{grid-template-columns:1fr auto 1fr 64px 36px;gap:6px}
+    #sb-tab input[type=text]{font-size:16px;padding:10px 4px}
+    #sb-tab .sum-grid{grid-template-columns:1fr 1fr 1fr}
+    #sb-tab .stat .v{font-size:20px}
+    #sb-tab .set-grid{grid-template-columns:1fr 1fr}
+  }
+  /* Skæreseddel for strimler: vises kun når body har .sb-printing */
+  #sb-print{display:none}
+  @media print{
+    body.sb-printing > *:not(#sb-print){display:none!important}
+    body.sb-printing #sb-print{display:block;font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12pt}
+    #sb-print .p-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:10px;font-size:14pt}
+    #sb-print .p-order{margin-bottom:10px}
+    #sb-print table{width:100%;border-collapse:collapse}
+    #sb-print th{text-align:left;font-size:10pt;border-bottom:1px solid #000;padding:6px 6px 4px}
+    #sb-print td{padding:9px 6px;border-bottom:1px solid #999}
+    #sb-print td.box{font-size:16pt;text-align:center;width:30px}
+    #sb-print .p-sum{margin-top:12px;font-size:12pt}
+  }
+  @media (max-width:640px){ .tabs{padding:0 10px;margin-top:12px} .tabs button{flex:1;padding:10px 8px;font-size:13px} }
 </style>
 </head>
 <body>
@@ -323,7 +399,11 @@
   <h1>Opskæringsberegner <span>Induminati</span></h1>
   <a class="btn-home" href="../index.html">← Forside</a>
 </header>
-<main>
+<nav class="tabs" role="tablist" aria-label="Værktøj">
+  <button type="button" role="tab" data-tab="opsk" class="on">Opskæring</button>
+  <button type="button" role="tab" data-tab="strimler">Strimler — Volta Spike</button>
+</nav>
+<main id="opsk-tab">
   <div class="card">
     <h2>Moderruller</h2>
     <div class="lager-upload">
@@ -436,6 +516,46 @@
     <div class="history-list" id="history-list"></div>
   </div>
 </main>
+
+<main id="sb-tab" hidden>
+
+  <section class="card">
+    <h2>Færdige bånd <button class="btn small danger" type="button" id="sb-clear">Ryd</button></h2>
+    <div class="order"><label for="sb-order">Ordrenr. / kunde <em>(valgfri — kommer med på sedlen)</em></label><input type="text" id="sb-order" autocomplete="off" placeholder="—"></div>
+    <div class="lines" id="sb-lines"></div>
+    <button class="btn add" type="button" id="sb-add" style="margin-top:12px">+ Tilføj båndstørrelse</button>
+  </section>
+
+  <section class="card">
+    <h2>Samlet for ordren</h2>
+    <div class="sum-grid">
+      <div class="stat"><div class="v accent" id="sb-t-strips">0</div><div class="k">strimler</div></div>
+      <div class="stat"><div class="v" id="sb-t-meter">0</div><div class="k">meter strimmel</div></div>
+      <div class="stat"><div class="v" id="sb-t-rolls">0</div><div class="k">ruller à <span id="sb-t-rollm">60</span> m</div></div>
+    </div>
+    <div class="sb-err" id="sb-roll-err" style="margin-top:10px"></div>
+    <button class="btn primary print-btn" type="button" id="sb-print-btn" disabled>Print skæreseddel</button>
+  </section>
+
+  <section class="card">
+    <details class="settings">
+      <summary>Forudsætninger</summary>
+      <div class="set-grid">
+        <div class="sb-field"><label for="sb-s-w">Strimmelbredde (mm)</label><input type="text" inputmode="decimal" id="sb-s-w"></div>
+        <div class="sb-field"><label for="sb-s-roll">Rullelængde (m)</label><input type="text" inputmode="decimal" id="sb-s-roll"></div>
+        <div class="sb-field"><label for="sb-s-max">Svejsebom maks. længde (mm)</label><input type="text" inputmode="decimal" id="sb-s-max"></div>
+        <div class="sb-field"><label for="sb-s-add">Tillæg på længden (mm)</label><input type="text" inputmode="decimal" id="sb-s-add"></div>
+        <div class="sb-field"><label for="sb-s-rest">Ekstra strimmel ved rest ≥ (mm)</label><input type="text" inputmode="decimal" id="sb-s-rest"></div>
+      </div>
+      <div class="sb-hint">
+        <b>Bredde:</b> <i>(bredde ÷ strimmelbredde, rundet ned) + 1</i> — og <b>én ekstra</b>, hvis resten efter hele strimler er mindst grænsen (50 mm). Fx 400 → <b>5</b>, 420 → 5, 340 → 4, 350 → 5, 370 → <b>5</b>, 570 → <b>7</b>.<br>
+        <b>Længde:</b> er båndet længere end svejsebommen, deles det i lige store sektioner (fx 1800 → 2 × 900). Hver strimmel = sektion + tillæg (fx 2 × 950).<br>
+        <b>Ruller:</b> strimlerne fordeles på ruller med længste strimler først. Skæretab mellem strimlerne er ikke medregnet.
+      </div>
+    </details>
+  </section>
+</main>
+<div id="sb-print" aria-hidden="true"></div>
 
 <div class="step-overlay" id="step-mode" hidden role="dialog" aria-modal="true" aria-label="Skæretilstand">
   <div class="st-top"><h3>Skæretilstand</h3><span class="st-count"></span><button class="st-close" type="button" title="Luk (Esc)" aria-label="Luk">×</button></div>
@@ -1737,7 +1857,7 @@ updateFoldSummaries();
 // ============================================================
 document.getElementById('btn-calc').addEventListener('click', calculate);
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'radio') { e.preventDefault(); calculate(); }
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'radio' && !e.target.closest('#sb-tab')) { e.preventDefault(); calculate(); }
 });
 
 function showError(list) {
@@ -2941,7 +3061,173 @@ window.addEventListener('resize', () => {
     if (_step) renderStep();
   }, 120);
 });
+
+// ============================================================
+// Faner: Opskæring / Strimler (Volta Spike)
+// ============================================================
+(function(){
+  const TAB_KEY = 'opsk_fane';
+  const tabs = document.querySelectorAll('.tabs button');
+  function show(t, remember = true){
+    tabs.forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+    document.getElementById('opsk-tab').hidden = t !== 'opsk';
+    document.getElementById('sb-tab').hidden = t !== 'strimler';
+    if (remember) { try { localStorage.setItem(TAB_KEY, t); } catch(e){} history.replaceState(null, '', t === 'strimler' ? '#strimler' : location.pathname + location.search); }
+    if (t === 'opsk' && typeof _lastPlan !== 'undefined' && _lastPlan) _lastPlan.plan.rolls.forEach((_, ri) => drawRoll(ri));
+  }
+  tabs.forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
+  let start = 'opsk';
+  try { start = localStorage.getItem(TAB_KEY) || 'opsk'; } catch(e){}
+  if (location.hash === '#strimler') start = 'strimler';
+  show(start === 'strimler' ? 'strimler' : 'opsk', false);
+})();
+
+// ============================================================
+// Strimler (Volta Spike) — strimler pr. ordre (tidl. Strimler/index.html v1.3)
+// ============================================================
+(function(){
+  const $ = id => document.getElementById('sb-' + id);
+  const root = $('tab');
+  const fmt = (v, dec = 0) => v.toLocaleString('da-DK', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  const num = s => { const t = String(s ?? '').trim().replace(/\s/g, '').replace(',', '.'); return t === '' ? null : Number(t); };
+  const STORE = 'strimler.v1';
+
+  const DEF = {w:100, roll:60, max:1700, add:50, rest:50};
+  let state = {settings:{...DEF}, lines:[{w:'', l:'', q:'1'}], order:''};
+  try { const s = JSON.parse(localStorage.getItem(STORE) || 'null'); if (s) state = {settings:{...DEF, ...s.settings}, lines: s.lines?.length ? s.lines : state.lines, order: s.order || ''}; } catch(e){}
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e){} };
+
+  // ---------- Beregning for én båndstørrelse ----------
+  function calc(W, L, Q){
+    const S = state.settings;
+    const sw = num(S.w), max = num(S.max), add = num(S.add), restMin = num(S.rest);
+    if (!(sw > 0 && max > 0 && add >= 0 && restMin >= 0)) return {err:'Tjek forudsætningerne nederst.'};
+    // Bredde: én strimmel mere end der går op (400 → 5) — plus én ekstra hvis resten ≥ grænsen (370 → 5, 570 → 7)
+    const whole = Math.floor(W / sw + 1e-9);
+    const rest = W - whole * sw;
+    const n = whole + 1 + (rest >= restMin - 1e-9 && rest > 1e-9 ? 1 : 0);
+    // Længde: lige store sektioner der hver kan være i svejsebommen
+    const k = Math.ceil(L / max - 1e-9);
+    const sec = L / k;
+    const piece = Math.ceil(sec + add);   // hele mm
+    const perBelt = n * k;
+    return {n, k, sec, piece, perBelt, total: perBelt * Q, meters: perBelt * Q * piece / 1000};
+  }
+
+  // ---------- Linjer ----------
+  function renderLines(){
+    $('lines').innerHTML = state.lines.map((ln, i) => `
+      <div class="line" data-i="${i}">
+        <div class="line-in">
+          <div><div class="lbl">Bredde mm</div><input type="text" inputmode="numeric" data-f="w" value="${ln.w}" placeholder="400"></div>
+          <div class="x">×</div>
+          <div><div class="lbl">Længde mm</div><input type="text" inputmode="numeric" data-f="l" value="${ln.l}" placeholder="1700"></div>
+          <div><div class="lbl">Antal</div><input type="text" inputmode="numeric" data-f="q" value="${ln.q}" placeholder="1"></div>
+          <button class="del" type="button" data-del="${i}" title="Fjern" ${state.lines.length < 2 ? 'style="visibility:hidden"' : ''}>×</button>
+        </div>
+        <div class="line-out" id="sb-out-${i}"></div>
+      </div>`).join('');
+    update();
+  }
+
+  function update(){
+    const pieces = [];   // alle strimler: {len, label}
+    const slip = [];     // linjer til skæresedlen
+    let tStrips = 0, tMm = 0;
+    state.lines.forEach((ln, i) => {
+      const W = num(ln.w), L = num(ln.l), Q = num(ln.q);
+      const box = $('out-' + i); if (!box) return;
+      const el = f => root.querySelector(`.line[data-i="${i}"] input[data-f="${f}"]`);
+      el('w').classList.toggle('bad', W !== null && !(W > 0));
+      el('l').classList.toggle('bad', L !== null && !(L > 0));
+      el('q').classList.toggle('bad', Q !== null && !(Q > 0 && Number.isInteger(Q)));
+      if (!(W > 0 && L > 0 && Q > 0 && Number.isInteger(Q))) { box.innerHTML = W === null && L === null ? '' : '<span class="sb-err">Udfyld bredde, længde og antal.</span>'; return; }
+      const r = calc(W, L, Q);
+      if (r.err) { box.innerHTML = `<span class="sb-err">${r.err}</span>`; return; }
+      const S = state.settings;
+      box.innerHTML = `
+        <div class="big"><b>${fmt(r.total)}</b> ${r.total === 1 ? 'strimmel' : 'strimler'} à <b>${fmt(r.piece)}</b> mm</div>
+        <div class="detail">Pr. bånd: <b>${r.n}</b> i bredden${r.k > 1 ? ` × <b>${r.k}</b> sektioner i længden (${fmt(L)} > ${fmt(num(S.max))} → ${r.k} × ${fmt(r.sec, r.sec % 1 ? 1 : 0)} + ${fmt(num(S.add))})` : ` (${fmt(L)} + ${fmt(num(S.add))})`} = <b>${r.perBelt}</b> ${r.perBelt === 1 ? 'strimmel' : 'strimler'}.
+          I alt ${fmt(r.meters, 2)} m.</div>`;
+      tStrips += r.total; tMm += r.total * r.piece;
+      slip.push({W, L, Q, ...r});
+      for (let j = 0; j < r.total; j++) pieces.push({len: r.piece, label: `${fmt(W)}×${fmt(L)}`});
+    });
+    $('t-strips').textContent = fmt(tStrips);
+    $('t-meter').textContent = fmt(tMm / 1000, 1);
+    $('t-rollm').textContent = fmt(num(state.settings.roll) || 0);
+    const rolls = renderRolls(pieces);
+    renderSlip(slip, tStrips, tMm, rolls);
+  }
+
+  // ---------- Skæreseddel (vises kun ved print) ----------
+  function renderSlip(slip, tStrips, tMm, rolls){
+    $('print-btn').disabled = !slip.length;
+    const d = new Date(), pad = n => String(n).padStart(2, '0');
+    const S = state.settings, esc = v => String(v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    $('print').innerHTML = `
+      <div class="p-head"><b>SKÆRESEDDEL — Volta Spike ${fmt(num(S.w) || 0)} mm</b><span>${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}</span></div>
+      ${state.order.trim() ? `<div class="p-order">Ordre: <b>${esc(state.order.trim())}</b></div>` : ''}
+      <table>
+        <thead><tr><th>Bånd</th><th>Antal</th><th>Strimler pr. bånd</th><th>Skær</th><th></th></tr></thead>
+        <tbody>${slip.map(r => `<tr>
+          <td>${fmt(r.W)} × ${fmt(r.L)}</td><td>${fmt(r.Q)}</td>
+          <td>${r.n}${r.k > 1 ? ` × ${r.k}` : ''} × ${fmt(r.piece)} mm</td>
+          <td><b>${fmt(r.total)} stk à ${fmt(r.piece)} mm</b></td><td class="box">☐</td></tr>`).join('')}</tbody>
+      </table>
+      <div class="p-sum">I alt: <b>${fmt(tStrips)} strimler</b> · ${fmt(tMm / 1000, 1)} m · ${rolls ? fmt(rolls) : '—'} ${rolls === 1 ? 'rulle' : 'ruller'} à ${fmt(num(S.roll) || 0)} m</div>`;
+  }
+
+  // ---------- Antal ruller (strimler fordeles first-fit, længste først) ----------
+  function renderRolls(pieces){
+    const rollMm = (num(state.settings.roll) || 0) * 1000;
+    if (!pieces.length || !(rollMm > 0)) { $('t-rolls').textContent = '0'; $('roll-err').textContent = ''; return 0; }
+    if (pieces.some(p => p.len > rollMm)) { $('t-rolls').textContent = '—'; $('roll-err').textContent = 'En strimmel er længere end en hel rulle.'; return null; }
+    const rolls = [];
+    [...pieces].sort((a, b) => b.len - a.len).forEach(p => {
+      let r = rolls.find(r => r.used + p.len <= rollMm);
+      if (!r) { r = {used: 0}; rolls.push(r); }
+      r.used += p.len;
+    });
+    $('t-rolls').textContent = fmt(rolls.length);
+    $('roll-err').textContent = '';
+    return rolls.length;
+  }
+
+  // ---------- Hændelser ----------
+  $('lines').addEventListener('input', e => {
+    const f = e.target.dataset.f; if (!f) return;
+    state.lines[+e.target.closest('.line').dataset.i][f] = e.target.value; save(); update();
+  });
+  $('lines').addEventListener('click', e => {
+    const b = e.target.closest('[data-del]'); if (!b) return;
+    state.lines.splice(+b.dataset.del, 1); save(); renderLines();
+  });
+  $('add').addEventListener('click', () => {
+    state.lines.push({w:'', l:'', q:'1'}); save(); renderLines();
+    root.querySelector(`.line[data-i="${state.lines.length - 1}"] input[data-f="w"]`).focus();
+  });
+  $('clear').addEventListener('click', () => {
+    if (!confirm('Ryd alle båndstørrelser?')) return;
+    state.lines = [{w:'', l:'', q:'1'}]; save(); renderLines();
+  });
+  $('order').value = state.order;
+  $('order').addEventListener('input', () => { state.order = $('order').value; save(); update(); });
+  $('print-btn').addEventListener('click', () => {
+    // Kun skæresedlen udskrives — resten af siden skjules via body.sb-printing
+    document.body.classList.add('sb-printing');
+    window.print();
+    setTimeout(() => document.body.classList.remove('sb-printing'), 500);
+  });
+  const setMap = {'s-w':'w','s-roll':'roll','s-max':'max','s-add':'add','s-rest':'rest'};
+  Object.entries(setMap).forEach(([id, k]) => {
+    $(id).value = state.settings[k];
+    $(id).addEventListener('input', () => { state.settings[k] = $(id).value; save(); update(); });
+  });
+
+  renderLines();
+})();
 </script>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v4.0 &middot; 24-09-2026</div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px">Opskæringsberegner &middot; v4.1 &middot; 02-11-2026</div>
 </body>
 </html>

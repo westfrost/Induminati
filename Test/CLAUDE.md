@@ -4,10 +4,10 @@
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**Fil:** `/home/user/Induminati/Test/index.html` (~92 linjer). **Version:** v1.9 · 02-11-2026.
+**Fil:** `/home/user/Induminati/Test/index.html` (~92 linjer). **Version:** v1.10 · 02-11-2026.
 
 **Formål:** Samme mønster som forsiden, men for work-in-progress-værktøjer der endnu ikke er klar til drift. Rent statisk HTML+CSS, ingen JS. Hvert kort har en ekstra `.app-badge` med teksten "TEST" (orange-toned, `#A3540E`/`#FCEADA`). Header-logoet linker tilbage til `../index.html`. Footer har en "Tilbage til forsiden"-link.
 
-**Nuværende kort:** Kapacitetsoverblik (`../Kapacitet/`), Rullelængde (`../Rullelaengde/`, tilføjet v1.3), Strimmelberegner (`../Strimler/`, tilføjet v1.7), Bølgeberegner (`../Boelger/`, tilføjet v1.8). **Arkiveret v1.9 (02-11-2026, brugerønske):** Variantoprydning, Saml ark og BC-varekladde — kortene er fjernet og mapperne flyttet til `../_arkiv/` (se rod-`CLAUDE.md`).
+**Nuværende kort:** Kapacitetsoverblik (`../Kapacitet/`), Rullelængde (`../Rullelaengde/`, tilføjet v1.3), Bølgeberegner (`../Boelger/`, tilføjet v1.8). **Arkiveret v1.9 (02-11-2026, brugerønske):** Variantoprydning, Saml ark og BC-varekladde — kortene er fjernet og mapperne flyttet til `../_arkiv/` (se rod-`CLAUDE.md`). **Flyttet v1.10 (02-11-2026):** Strimmelberegner (tilføjet v1.7) er nu en fane i Opskæringsberegneren (`../Opskæring/#strimler`, live på forsiden) — kortet er fjernet herfra; `../Strimler/index.html` er kun en omdirigering.
 
 **Vedligehold:** Samme som index.html — når et værktøj er klar, flyt dets kort herfra til `index.html` (og fjern `TEST`-badgen), opdatér `README.md`, og versionsbump begge sider i samme ændring.

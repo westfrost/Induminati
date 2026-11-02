@@ -4,7 +4,7 @@
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**File:** `/home/user/Induminati/Opskæring/index.html` (single self-contained file, ~2950 lines: inline `<style>` + inline `<script>`, plus `xlsx.full.min.js` (SheetJS 0.18.5, CDN) for reading the optional stock-list upload — otherwise no external deps besides Google Fonts). Current version: **v4.0 · 24-09-2026** (footer at the very bottom of the file).
+**File:** `/home/user/Induminati/Opskæring/index.html` (single self-contained file, ~3250 lines, **two tabs: Opskæring + Strimler (Volta Spike), see §8**: inline `<style>` + inline `<script>`, plus `xlsx.full.min.js` (SheetJS 0.18.5, CDN) for reading the optional stock-list upload — otherwise no external deps besides Google Fonts). Current version: **v4.1 · 02-11-2026** (footer at the very bottom of the file).
 
 **Also:** `Opskæring/motortest.js` — a dependency-free Node test bench for the cutting engine (see §3b "Testing"). Run `node Opskæring/motortest.js [antal] [hurtig|normal|grundig]` after *any* change to the engine; it must report 0 invalid plans and 0 plans worse than the baseline.
 
@@ -188,4 +188,31 @@ A full-screen overlay (`#step-mode`) for a tablet/screen at the cutting table: o
 
 ## 7. Version
 
-**v4.0 · 24-09-2026** (footer: `Opskæringsberegner · v4.0 · 24-09-2026`). v4.0 = optimizer (§3b), Min. restbredde, and the full graphics/UI overhaul (§2, §5, §5a, §5b).
+**v4.1 · 02-11-2026** (footer: `Opskæringsberegner · v4.1 · 02-11-2026`) — v4.1 = fanen "Strimler — Volta Spike" (§8), flyttet ind fra det selvstændige værktøj `Strimler/` (Strimmelberegner v1.3); opskæringsmotoren er uændret (motortest grøn). Tidligere: **v4.0 · 24-09-2026**. v4.0 = optimizer (§3b), Min. restbredde, and the full graphics/UI overhaul (§2, §5, §5a, §5b).
+
+
+## 8. Fane: Strimler — Volta Spike (tidligere selvstændigt værktøj `Strimler/`, flyttet hertil 02-11-2026)
+
+> **Brugerens beslutning 02-11-2026:** Strimmelberegneren er nu en fane i Opskæringsberegneren, og **alle fremtidige ændringer af strimmelberegneren foregår i Opskæring-sessionen** (denne fil). Den gamle adresse `Strimler/index.html` er kun en omdirigering til `../Opskæring/index.html#strimler` (gamle bogmærker virker), og `Strimler/CLAUDE.md` er slettet — dokumentationen står her. Strimmel-delen havde sin egen version (v1.3 · 02-11-2026) før flytningen; fremover bumpes kun Opskæringsberegnerens version.
+
+**Integration i `index.html`:**
+- **Fanebjælke** `<nav class="tabs">` lige under `<header>` med knapperne `data-tab="opsk"` / `data-tab="strimler"`. Opskæringsindholdet ligger i `<main id="opsk-tab">`, strimmel-fanen i `<main id="sb-tab" hidden>` (CSS `main[hidden]{display:none!important}` er nødvendig, fordi `main{display:flex}` ellers overtrumfer `hidden`). Aktiv fane huskes i `localStorage['opsk_fane']`; URL-hash `#strimler` åbner strimmel-fanen direkte (og sættes/fjernes ved faneskift via `history.replaceState`). Skiftes tilbage til Opskæring, gentegnes lærrederne (`drawRoll`) hvis der er en plan, da de kan være tegnet mens fanen var skjult.
+- **Isolation:** alle strimmel-ID'er har præfiks `sb-` (`$ = id => document.getElementById('sb-' + id)`, rækkernes `sb-out-N`), alt strimmel-CSS er scoped under `#sb-tab`, og strimlens egne klasser `err/field/hint` er omdøbt til `sb-err/sb-field/sb-hint` (Opskæring har globale `.field`/`.hint`-regler, også i `@media (pointer:coarse)`). Strimlens farvevariabler (`--dark`, `--accent`, `--accent-hover`, `--accent-bg`) defineres på `#sb-tab`, da Opskæring bruger `--steel`/`--rust`. Strimmel-JS'en er sit eget IIFE nederst i scriptet og bruger `root.querySelector` (root = `#sb-tab`).
+- **Enter-tasten:** Opskæringens globale keydown (Enter i et input → `calculate()`) springer felter i `#sb-tab` over — ellers ville Enter i et strimmelfelt starte en opskæringsberegning.
+- **Print af skæresedlen:** `#sb-print` ligger direkte i `<body>`. "Print skæreseddel" sætter `body.sb-printing`, kalder `window.print()` og fjerner klassen igen; `@media print` skjuler med `body.sb-printing > *:not(#sb-print)` alt andet. Opskæringens egen arbejdsseddel bruger stadig et separat vindue (`window.open`) og påvirkes ikke.
+- **Data:** strimlerne gemmer stadig i `localStorage['strimler.v1']` (samme nøgle som det gamle værktøj — brugernes linjer/indstillinger overlevede flytningen, samme origin).
+
+**Strimmelberegnerens regler og funktion** (uændret fra `Strimler/CLAUDE.md` v1.3):
+
+**Formål:** Beregn hvor mange strimler råbånd der skal bruges til en ordre. Råbåndet (Volta Spike) kommer i ruller à 100 mm × 60 m; strimlerne svejses sidevejs sammen til færdige bånd. Ingen eksterne scripts.
+
+**Regler (fra brugeren 28-10-2026):**
+- **Bredde (v1.3):** `n = floor(W / strimmelbredde) + 1`, **+1 ekstra hvis resten `W − floor(W/sw)·sw` er ≥ grænsen (default 50 mm, feltet "Ekstra strimmel ved rest ≥")**. Brugerens regler: 400 → 5 (28-10-2026); 370 → 5 og 570 → 7, fordi 4/6 er for lidt, grænse 50 mm (02-11-2026). Dvs. 340 → 4, 349 → 4, 350 → 5, 420 → 5, 500 → 6, 100 → 2. **Ingen svejsetab-beregning** — v1.0 havde et konfigurerbart "svejsetab pr. samling" og viste "bredde efter svejsning"; fjernet i v1.1 efter brugerønske. Genindfør det ikke.
+- **Længde:** strimmel = færdig længde + **50 mm** (til at skære rent). Svejsebommen kan maks. **1700 mm**; er båndet længere, deles det i `k = ceil(L / 1700)` lige store sektioner, strimmel = `L/k + 50` (fx 1800 → 2 × 950). Grænsen gælder den færdige længde (1700 → én strimmel à 1750). Strimmellængden rundes op til hele mm.
+- Pr. bånd: `n × k` strimler; pr. linje × antal bånd.
+
+**Ruller:** kun **antal ruller** vises (i "Samlet for ordren"), beregnet ved at fordele alle strimler first-fit-decreasing på ruller à 60 m (skæretab ikke medregnet). v1.0–v1.1 viste også en skæreplan pr. rulle (bjælke, brugt/rest, hvilke strimler) — **fjernet i v1.2 efter brugerønske**; genindfør den ikke.
+
+**Skæreseddel (v1.3):** knappen "Print skæreseddel" kalder `window.print()`; `@media print` skjuler header/main og viser kun `#print` (sort/hvid, Arial): overskrift "SKÆRESEDDEL — Volta Spike 100 mm" + dato, valgfrit "Ordre:" (feltet "Ordrenr. / kunde", gemmes i `state.order`), tabel pr. linje (Bånd, Antal, Strimler pr. bånd `n [× k] × længde`, **Skær "N stk à L mm"**, afkrydsningsboks ☐) og "I alt: strimler · meter · ruller". `#print` er skjult på skærm.
+
+**UI:** flere linjer (bredde × længde × antal), resultat pr. linje + samlet (strimler, meter, ruller). Forudsætninger (strimmelbredde, rullelængde, svejsebom-maks., længdetillæg, rest-grænse) kan rettes. Linjer, ordrefelt og forudsætninger gemmes i `localStorage` `strimler.v1`.
