@@ -1,10 +1,12 @@
 # Varekladde/index.html — BC-varekladde
 
+> **ARKIVERET 02-11-2026** (brugerønske): fjernet fra Test-oversigten og flyttet til `_arkiv/` — udgives ikke på induminati.dk. Se "Arkiv" i rod-`CLAUDE.md` for hvordan det genoplives.
+
 > Del af en opdelt CLAUDE.md — se `../CLAUDE.md` for fælles konventioner
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**Fil:** `/home/user/Induminati/Varekladde/index.html`. **Version:** v1.2 · 06-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
+**Fil:** `/home/user/Induminati/_arkiv/Varekladde/index.html`. **Version:** v1.2 · 06-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
 
 **Formål:** Sidste led i variant-oprydningen (`../Varianter/` → evt. `../Samlark/` → her). Samler **alle** optællingslister ("PU Døde Varer <varenr>.xlsx", på tværs af varenr) til **én** varekladde der kan sættes direkte ind i Business Central som nedregulering. Ingen persistens af filer (kun i hukommelsen); kladde-felterne huskes i `localStorage` `varekladde.v1` (undtagen dato).
 

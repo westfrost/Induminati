@@ -14,11 +14,13 @@ Statisk site, ingen build-step. Hvert værktøj er én selvstændig `index.html`
 - `DXF/CLAUDE.md` — DXF → NCP Konverter
 - `Kapacitet/CLAUDE.md` — Kapacitetsoverblik (Test/WIP)
 - `Rullelaengde/CLAUDE.md` — Rullelængde (Test/WIP)
-- `Varianter/CLAUDE.md` — Variantoprydning (Test/WIP)
-- `Samlark/CLAUDE.md` — Saml ark (Test/WIP, fletter Variantoprydnings eksporter)
-- `Varekladde/CLAUDE.md` — BC-varekladde (Test/WIP, optællinger → nedregulering i BC)
 - `Strimler/CLAUDE.md` — Strimmelberegner (Test/WIP, Volta Spike-strimler pr. ordre)
 - `Boelger/CLAUDE.md` — Bølgeberegner (Test/WIP, stregafstand for bølge-/buebånd)
+
+**Arkiverede værktøjer** (ikke på hjemmesiden, men bevaret i repo'et under `_arkiv/` — se "Arkiv" nedenfor):
+- `_arkiv/Varianter/CLAUDE.md` — Variantoprydning
+- `_arkiv/Samlark/CLAUDE.md` — Saml ark
+- `_arkiv/Varekladde/CLAUDE.md` — BC-varekladde
 
 `index.html` (forsiden) er så lille og rent statisk, at dens noter blot står nedenfor i denne fil i stedet for i en separat `index.html/`-mappe (det er trods alt en fil, ikke en mappe med et værktøj i).
 
@@ -34,7 +36,7 @@ Efter enhver ændring der er committet og pushet til feature-branchen: merge og 
 
 ## Arkitektur og konventioner (læs dette først)
 
-**Statisk site, ingen build-step.** Hvert værktøj er én selvstændig `<mappe>/index.html`-fil med indlejret `<style>` og `<script>` — ingen delte JS/CSS-filer, ingen npm/bundler, ingen backend. GitHub Pages serverer repo'et direkte fra `main` med custom domain `induminati.dk` (`CNAME`-fil i repo-roden). Nogle sider trækker et par eksterne CDN-scripts ind (Google Fonts alle steder; `xlsx.full.min.js` i `Ordrer/`, `Kapacitet/`, `Varianter/`, `Samlark/` og `Varekladde/` til at læse `.xlsx`-uploads; `exceljs.min.js` i `Ordrer/`, `Varianter/`, `Samlark/` og `Varekladde/` til at skrive formaterede `.xlsx`-outputs) — ellers er alt selvstændigt.
+**Statisk site, ingen build-step.** Hvert værktøj er én selvstændig `<mappe>/index.html`-fil med indlejret `<style>` og `<script>` — ingen delte JS/CSS-filer, ingen npm/bundler, ingen backend. GitHub Pages serverer repo'et direkte fra `main` med custom domain `induminati.dk` (`CNAME`-fil i repo-roden). Nogle sider trækker et par eksterne CDN-scripts ind (Google Fonts alle steder; `xlsx.full.min.js` i `Ordrer/` og `Kapacitet/` til at læse `.xlsx`-uploads; `exceljs.min.js` i `Ordrer/` til at skrive formaterede `.xlsx`-outputs) — ellers er alt selvstændigt.
 
 **Struktur:**
 ```
@@ -44,8 +46,11 @@ Efter enhver ændring der er committet og pushet til feature-branchen: merge og 
 /<Værktøj>/CLAUDE.md     → Teknisk reference for netop dette værktøj — se ovenfor
 /<Værktøj>/database.json → Kun for Baanddb og Samlevejledninger — se "Database-sider" nedenfor
 /<Værktøj>/gh-auth.json  → Kun for Baanddb og Samlevejledninger — krypteret delt GitHub-token
+/_arkiv/<Værktøj>/       → Arkiverede værktøjer — udgives IKKE (Jekyll ignorerer _-mapper)
 ```
-Når et test-værktøj er klar til drift, flyttes dets kort fra `Test/index.html` til `index.html` (og fjern evt. `TEST`-badge). Se `README.md` for den aktuelle liste over live vs. test-værktøjer — hold den opdateret når noget flyttes.
+Når et test-værktøj er klar til drift, flyttes dets kort fra `Test/index.html` til `index.html` (og fjern evt. `TEST`-badge).
+
+**Arkiv (`_arkiv/`).** Værktøjer der ikke længere skal være på hjemmesiden, men gemmes, flyttes til `_arkiv/<Værktøj>/` (med deres `CLAUDE.md`) og deres kort fjernes fra `index.html`/`Test/index.html`. GitHub Pages bygger med Jekyll (der er **ingen** `.nojekyll` i repo-roden), og Jekyll udgiver ikke mapper hvis navn starter med `_` — så `_arkiv/` er **ikke** tilgængelig på induminati.dk. **Tilføj derfor aldrig en `.nojekyll`-fil** uden at flytte arkivet et andet sted hen (ellers bliver det offentligt igen). Et arkiveret værktøj genoplives ved at flytte mappen tilbage til roden og genindsætte kortet. Arkiveret 02-11-2026: Variantoprydning, Saml ark, BC-varekladde (deres interne relative links, fx `../index.html`, peger forkert inde i `_arkiv/` — ligegyldigt da de ikke udgives; ret dem hvis de genoplives). Se `README.md` for den aktuelle liste over live vs. test-værktøjer — hold den opdateret når noget flyttes.
 
 **Farveskema.** Alle sider deler samme lyse blå/orange palette:
 

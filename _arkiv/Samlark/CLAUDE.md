@@ -1,10 +1,12 @@
 # Samlark/index.html — Saml ark
 
+> **ARKIVERET 02-11-2026** (brugerønske): fjernet fra Test-oversigten og flyttet til `_arkiv/` — udgives ikke på induminati.dk. Se "Arkiv" i rod-`CLAUDE.md` for hvordan det genoplives.
+
 > Del af en opdelt CLAUDE.md — se `../CLAUDE.md` for fælles konventioner
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**Fil:** `/home/user/Induminati/Samlark/index.html`. **Version:** v1.0 · 01-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
+**Fil:** `/home/user/Induminati/_arkiv/Samlark/index.html`. **Version:** v1.0 · 01-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
 
 **Formål:** Efterbehandling til `../Varianter/` (Variantoprydning). Når flere personer/runder har talt varianter op, findes der flere "PU Døde Varer <varenr>.xlsx"-ark med samme varenr. Dette værktøj fletter dem til **én fil pr. varenr**. Lavet som separat værktøj (brugerens valg/accept) så Variantoprydning forbliver et rent tælleværktøj. Ingen persistens — alt ligger i hukommelsen, indtil siden lukkes.
 

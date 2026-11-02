@@ -1,10 +1,12 @@
 # Varianter/index.html — Variantoprydning
 
+> **ARKIVERET 02-11-2026** (brugerønske): fjernet fra Test-oversigten og flyttet til `_arkiv/` — udgives ikke på induminati.dk. Se "Arkiv" i rod-`CLAUDE.md` for hvordan det genoplives.
+
 > Del af en opdelt CLAUDE.md — se `../CLAUDE.md` for fælles konventioner
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**Fil:** `/home/user/Induminati/Varianter/index.html`. **Version:** v1.7 · 02-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
+**Fil:** `/home/user/Induminati/_arkiv/Varianter/index.html`. **Version:** v1.7 · 02-10-2026. **Status:** Test/WIP (linket fra `Test/index.html`).
 
 **Formål:** Oprydning i varianter (afskårne båndstykker) på lageret. Brugeren går rundt med telefonen, søger varianten frem på mål (fx `140x2040`), skriver hvor mange stk der smides ud, og eksporterer til sidst et Excel-ark i det format, der bruges videre (se "Eksport"). Mobilvenlig: **eksport-bjælke ("X af Y varianter", stk · m² + "Eksportér .xlsx") klæber øverst og er altid synlig**; **bjælken bliver grøn (`.exportbar.done`, "✓ X af Y varianter") når alle varianter i de importerede BC-udtræk har fået et antal** (brugerønske v1.6 — alle varianter på listen er "døde varer", så målet er at nå igennem dem alle; manuelt tilføjede varianter tæller ikke med i Y) (brugerønske v1.2 — brugeren vil ikke scrolle listen igennem for at finde knappen; flyt den ikke ned under listen igen), søgefeltet klæber lige under den (`--bar-h` måles i JS). **"Ryd liste" står også i den faste bjælke** (rød ghost-knap, v1.3) og kræver altid en `confirm()` "ER DU SIKKER?" — den rydder **listen, manuelle varianter, varenr, det importerede BC-udtræk og Placeringsindhold** (brugerønske v1.3: klar til næste varenr), men **bevarer** placering (gl/ny), overskrift og enhed. Knappen er disabled når der intet er at rydde. Fjern aldrig bekræftelsen. store `−`/`+`-knapper, `inputmode="numeric"`, 16px+ font i felter (ingen iOS-zoom).
 
