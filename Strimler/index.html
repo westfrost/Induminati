@@ -62,13 +62,38 @@
   .stat .k{font-size:12px;color:var(--muted);margin-top:2px}
 
   details.settings summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--sky)}
-  .set-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+  .set-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
   .set-grid .field{display:flex;flex-direction:column;gap:4px}
   .set-grid label{font-size:11.5px;font-weight:600;line-height:1.3}
   .set-grid input{font-size:15px;padding:8px}
   .hint{font-size:12px;color:var(--muted);line-height:1.55;margin-top:10px}
 
   .version-footer{text-align:center;font-size:10px;color:var(--muted);padding:14px 0 6px}
+
+  .order{margin-bottom:12px}
+  .order label{display:block;font-size:12px;font-weight:600;margin-bottom:4px}
+  .order label em{font-style:normal;font-weight:400;color:var(--muted)}
+  .order input{text-align:left;font-size:16px}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .print-btn{width:100%;margin-top:14px}
+
+  /* Skæreseddel: kun ved print, simpel sort/hvid */
+  #print{display:none}
+  @media print{
+    @page{margin:14mm}
+    body{background:#fff}
+    body > header, main{display:none!important}
+    #print{display:block;font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12pt}
+    #print .p-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:10px;font-size:14pt}
+    #print .p-order{margin-bottom:10px}
+    #print table{width:100%;border-collapse:collapse}
+    #print th{text-align:left;font-size:10pt;border-bottom:1px solid #000;padding:6px 6px 4px}
+    #print td{padding:9px 6px;border-bottom:1px solid #999}
+    #print td.box{font-size:16pt;text-align:center;width:30px}
+    #print .p-sum{margin-top:12px;font-size:12pt}
+  }
 
   @media (max-width:640px){
     header{padding:14px 16px;gap:10px}
@@ -99,6 +124,7 @@
 <main>
   <section class="card">
     <h2>Færdige bånd <button class="btn small danger" type="button" id="clear">Ryd</button></h2>
+    <div class="order"><label for="order">Ordrenr. / kunde <em>(valgfri — kommer med på sedlen)</em></label><input type="text" id="order" autocomplete="off" placeholder="—"></div>
     <div class="lines" id="lines"></div>
     <button class="btn add" type="button" id="add" style="margin-top:12px">+ Tilføj båndstørrelse</button>
   </section>
@@ -111,6 +137,7 @@
       <div class="stat"><div class="v" id="t-rolls">0</div><div class="k">ruller à <span id="t-rollm">60</span> m</div></div>
     </div>
     <div class="err" id="roll-err" style="margin-top:10px"></div>
+    <button class="btn primary print-btn" type="button" id="print-btn" disabled>Print skæreseddel</button>
   </section>
 
   <section class="card">
@@ -121,17 +148,20 @@
         <div class="field"><label for="s-roll">Rullelængde (m)</label><input type="text" inputmode="decimal" id="s-roll"></div>
         <div class="field"><label for="s-max">Svejsebom maks. længde (mm)</label><input type="text" inputmode="decimal" id="s-max"></div>
         <div class="field"><label for="s-add">Tillæg på længden (mm)</label><input type="text" inputmode="decimal" id="s-add"></div>
+        <div class="field"><label for="s-rest">Ekstra strimmel ved rest ≥ (mm)</label><input type="text" inputmode="decimal" id="s-rest"></div>
       </div>
       <div class="hint">
-        <b>Bredde:</b> altid én strimmel mere end der går op i bredden — <i>(bredde ÷ strimmelbredde, rundet ned) + 1</i>. Fx 400 mm → <b>5 strimler</b>, 350 mm → 4.<br>
+        <b>Bredde:</b> <i>(bredde ÷ strimmelbredde, rundet ned) + 1</i> — og <b>én ekstra</b>, hvis resten efter hele strimler er mindst grænsen (50 mm). Fx 400 → <b>5</b>, 420 → 5, 340 → 4, 350 → 5, 370 → <b>5</b>, 570 → <b>7</b>.<br>
         <b>Længde:</b> er båndet længere end svejsebommen, deles det i lige store sektioner (fx 1800 → 2 × 900). Hver strimmel = sektion + tillæg (fx 2 × 950).<br>
         <b>Ruller:</b> strimlerne fordeles på ruller med længste strimler først. Skæretab mellem strimlerne er ikke medregnet.
       </div>
     </details>
   </section>
 
-  <div class="version-footer">Strimmelberegner &middot; v1.2 &middot; 28-10-2026</div>
+  <div class="version-footer">Strimmelberegner &middot; v1.3 &middot; 02-11-2026</div>
 </main>
+
+<div id="print" aria-hidden="true"></div>
 
 <script>
 (function(){
@@ -140,18 +170,20 @@
   const num = s => { const t = String(s ?? '').trim().replace(/\s/g, '').replace(',', '.'); return t === '' ? null : Number(t); };
   const STORE = 'strimler.v1';
 
-  const DEF = {w:100, roll:60, max:1700, add:50};
-  let state = {settings:{...DEF}, lines:[{w:'', l:'', q:'1'}]};
-  try { const s = JSON.parse(localStorage.getItem(STORE) || 'null'); if (s) state = {settings:{...DEF, ...s.settings}, lines: s.lines?.length ? s.lines : state.lines}; } catch(e){}
+  const DEF = {w:100, roll:60, max:1700, add:50, rest:50};
+  let state = {settings:{...DEF}, lines:[{w:'', l:'', q:'1'}], order:''};
+  try { const s = JSON.parse(localStorage.getItem(STORE) || 'null'); if (s) state = {settings:{...DEF, ...s.settings}, lines: s.lines?.length ? s.lines : state.lines, order: s.order || ''}; } catch(e){}
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e){} };
 
   // ---------- Beregning for én båndstørrelse ----------
   function calc(W, L, Q){
     const S = state.settings;
-    const sw = num(S.w), max = num(S.max), add = num(S.add);
-    if (!(sw > 0 && max > 0 && add >= 0)) return {err:'Tjek forudsætningerne nederst.'};
-    // Bredde: altid én strimmel mere end der går op i bredden (400 → 5)
-    const n = Math.floor(W / sw + 1e-9) + 1;
+    const sw = num(S.w), max = num(S.max), add = num(S.add), restMin = num(S.rest);
+    if (!(sw > 0 && max > 0 && add >= 0 && restMin >= 0)) return {err:'Tjek forudsætningerne nederst.'};
+    // Bredde: én strimmel mere end der går op (400 → 5) — plus én ekstra hvis resten ≥ grænsen (370 → 5, 570 → 7)
+    const whole = Math.floor(W / sw + 1e-9);
+    const rest = W - whole * sw;
+    const n = whole + 1 + (rest >= restMin - 1e-9 && rest > 1e-9 ? 1 : 0);
     // Længde: lige store sektioner der hver kan være i svejsebommen
     const k = Math.ceil(L / max - 1e-9);
     const sec = L / k;
@@ -178,6 +210,7 @@
 
   function update(){
     const pieces = [];   // alle strimler: {len, label}
+    const slip = [];     // linjer til skæresedlen
     let tStrips = 0, tMm = 0;
     state.lines.forEach((ln, i) => {
       const W = num(ln.w), L = num(ln.l), Q = num(ln.q);
@@ -195,19 +228,39 @@
         <div class="detail">Pr. bånd: <b>${r.n}</b> i bredden${r.k > 1 ? ` × <b>${r.k}</b> sektioner i længden (${fmt(L)} > ${fmt(num(S.max))} → ${r.k} × ${fmt(r.sec, r.sec % 1 ? 1 : 0)} + ${fmt(num(S.add))})` : ` (${fmt(L)} + ${fmt(num(S.add))})`} = <b>${r.perBelt}</b> ${r.perBelt === 1 ? 'strimmel' : 'strimler'}.
           I alt ${fmt(r.meters, 2)} m.</div>`;
       tStrips += r.total; tMm += r.total * r.piece;
+      slip.push({W, L, Q, ...r});
       for (let j = 0; j < r.total; j++) pieces.push({len: r.piece, label: `${fmt(W)}×${fmt(L)}`});
     });
     $('t-strips').textContent = fmt(tStrips);
     $('t-meter').textContent = fmt(tMm / 1000, 1);
     $('t-rollm').textContent = fmt(num(state.settings.roll) || 0);
-    renderRolls(pieces);
+    const rolls = renderRolls(pieces);
+    renderSlip(slip, tStrips, tMm, rolls);
+  }
+
+  // ---------- Skæreseddel (vises kun ved print) ----------
+  function renderSlip(slip, tStrips, tMm, rolls){
+    $('print-btn').disabled = !slip.length;
+    const d = new Date(), pad = n => String(n).padStart(2, '0');
+    const S = state.settings, esc = v => String(v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    $('print').innerHTML = `
+      <div class="p-head"><b>SKÆRESEDDEL — Volta Spike ${fmt(num(S.w) || 0)} mm</b><span>${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}</span></div>
+      ${state.order.trim() ? `<div class="p-order">Ordre: <b>${esc(state.order.trim())}</b></div>` : ''}
+      <table>
+        <thead><tr><th>Bånd</th><th>Antal</th><th>Strimler pr. bånd</th><th>Skær</th><th></th></tr></thead>
+        <tbody>${slip.map(r => `<tr>
+          <td>${fmt(r.W)} × ${fmt(r.L)}</td><td>${fmt(r.Q)}</td>
+          <td>${r.n}${r.k > 1 ? ` × ${r.k}` : ''} × ${fmt(r.piece)} mm</td>
+          <td><b>${fmt(r.total)} stk à ${fmt(r.piece)} mm</b></td><td class="box">☐</td></tr>`).join('')}</tbody>
+      </table>
+      <div class="p-sum">I alt: <b>${fmt(tStrips)} strimler</b> · ${fmt(tMm / 1000, 1)} m · ${rolls ? fmt(rolls) : '—'} ${rolls === 1 ? 'rulle' : 'ruller'} à ${fmt(num(S.roll) || 0)} m</div>`;
   }
 
   // ---------- Antal ruller (strimler fordeles first-fit, længste først) ----------
   function renderRolls(pieces){
     const rollMm = (num(state.settings.roll) || 0) * 1000;
-    if (!pieces.length || !(rollMm > 0)) { $('t-rolls').textContent = '0'; $('roll-err').textContent = ''; return; }
-    if (pieces.some(p => p.len > rollMm)) { $('t-rolls').textContent = '—'; $('roll-err').textContent = 'En strimmel er længere end en hel rulle.'; return; }
+    if (!pieces.length || !(rollMm > 0)) { $('t-rolls').textContent = '0'; $('roll-err').textContent = ''; return 0; }
+    if (pieces.some(p => p.len > rollMm)) { $('t-rolls').textContent = '—'; $('roll-err').textContent = 'En strimmel er længere end en hel rulle.'; return null; }
     const rolls = [];
     [...pieces].sort((a, b) => b.len - a.len).forEach(p => {
       let r = rolls.find(r => r.used + p.len <= rollMm);
@@ -216,6 +269,7 @@
     });
     $('t-rolls').textContent = fmt(rolls.length);
     $('roll-err').textContent = '';
+    return rolls.length;
   }
 
   // ---------- Hændelser ----------
@@ -235,7 +289,10 @@
     if (!confirm('Ryd alle båndstørrelser?')) return;
     state.lines = [{w:'', l:'', q:'1'}]; save(); renderLines();
   });
-  const setMap = {'s-w':'w','s-roll':'roll','s-max':'max','s-add':'add'};
+  $('order').value = state.order;
+  $('order').addEventListener('input', () => { state.order = $('order').value; save(); update(); });
+  $('print-btn').addEventListener('click', () => window.print());
+  const setMap = {'s-w':'w','s-roll':'roll','s-max':'max','s-add':'add','s-rest':'rest'};
   Object.entries(setMap).forEach(([id, k]) => {
     $(id).value = state.settings[k];
     $(id).addEventListener('input', () => { state.settings[k] = $(id).value; save(); update(); });
