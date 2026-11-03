@@ -1537,5 +1537,23 @@
     "cylinder": "",
     "pres": "",
     "bemaerkning": "Medbringer nedskæres til 40 mm"
+  },
+  {
+    "id": 101,
+    "maskine": "Store HF",
+    "baandtype": "Volta FEMB3",
+    "baandbredde": 0,
+    "medbringertype": "T20 Voltablå",
+    "laengde": 250,
+    "antal": 1,
+    "kontakt": "Y1",
+    "current": "0.40",
+    "welding": "45",
+    "prewelding": "",
+    "cool": "100",
+    "squeeze": "2.5",
+    "cylinder": "",
+    "pres": "35",
+    "bemaerkning": ""
   }
 ]
