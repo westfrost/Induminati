@@ -1519,5 +1519,23 @@
     "cylinder": "",
     "pres": "",
     "bemaerkning": "Styreliste på bagsiden. Tyndt styk volta i bunden af styrelistespor"
+  },
+  {
+    "id": 100,
+    "maskine": "Lille HF",
+    "baandtype": "FEMB 2",
+    "baandbredde": 330,
+    "medbringertype": "T50 blå Volta",
+    "laengde": 260,
+    "antal": 1,
+    "kontakt": "2",
+    "current": "",
+    "welding": "0.6",
+    "prewelding": "7",
+    "cool": "1.0",
+    "squeeze": "",
+    "cylinder": "",
+    "pres": "",
+    "bemaerkning": "Medbringer nedskæres til 40 mm"
   }
 ]
