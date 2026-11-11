@@ -4,7 +4,7 @@
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**File:** `/home/user/Induminati/DXF/index.html` (single self-contained file, ~2200 lines). Danish-language UI. Version footer (bottom of file): **v2.1 · 11-11-2026**. v2.0 was a near-complete rewrite of the v1.x script (see §7 for what was wrong in v1.x — do not reintroduce those bugs). v2.1 added multiple parts (DXF/SVG/NCP files + manual shapes) with quantities, mixed-part nesting on the "grundbånd" (base belt = the sheet), and NCP files as input.
+**File:** `/home/user/Induminati/DXF/index.html` (single self-contained file, ~2200 lines). Danish-language UI. Version footer (bottom of file): **v2.2 · 11-11-2026**. v2.0 was a near-complete rewrite of the v1.x script (see §7 for what was wrong in v1.x — do not reintroduce those bugs). v2.1 added multiple parts (DXF/SVG/NCP files + manual shapes) with quantities, mixed-part nesting on the "grundbånd" (base belt = the sheet), and NCP files as input. v2.2: small parts are nested inside the holes of big parts and are always cut before that hole.
 
 ## 1. Purpose
 
@@ -51,7 +51,7 @@ Converts 2D CAD drawings (DXF or SVG) into `.ncp` programs for a waterjet cutter
 
 ## 5. Nesting ("04 — Nesting / Grundbånd")
 
-"Grundbånd" (base belt) is the user's word for the sheet. Inputs: grundbånd X/Y, spacing between parts, edge margin, rotation (`free` 0/90/180/270, `flip` 0/180 — keeps grain direction, `none`); quantities live per part in the parts list. Settings are remembered per browser in `localStorage` key `induminati-dxf-nest-v1` (wrapped in try/catch). Each file is **one part** (its top-level contours, holes filled — no parts inside other parts' holes). Debounced 200 ms (`scheduleNest`), result cached by `nestParamsKey()`. Entry point `nestAll(o)`:
+"Grundbånd" (base belt) is the user's word for the sheet. Inputs: grundbånd X/Y, spacing between parts, edge margin, rotation (`free` 0/90/180/270, `flip` 0/180 — keeps grain direction, `none`); quantities live per part in the parts list. Settings are remembered per browser in `localStorage` key `induminati-dxf-nest-v1` (wrapped in try/catch). Each file is **one part**. **Footprints are rasterized from *all* closed contours with even-odd fill (v2.2)** — holes are free space (with the spacing kept to the hole edge), so small parts can land inside big parts' holes; islands inside holes stay material. Debounced 200 ms (`scheduleNest`), result cached by `nestParamsKey()`. Entry point `nestAll(o)`:
 - **Exactly one part in the job list** → `nestCompute` (lattice, below) with `count = qty` (or 0 for fill).
 - **Several parts** → `nestMixed` (below).
 - Afterwards `usedLen` = furthest extent along the **longest** side (shown as "Brugt længde"), and `serpentine(…, alongX)` orders parts row by row along the length (columns when X is the long side).
@@ -70,6 +70,8 @@ Lattice algorithm (`nestCompute`) — raster no-fit + lattice search:
 
 With nesting, the outer-contour lead-in is capped at 80 % of the spacing so the pierce never lands in a neighbour (shown as a note).
 
+**Parts in holes (v2.2):** all overlap checks are hole-aware — `footsCloser`/`checkGaps` measure distance to every contour (incl. hole edges) and use `inMaterial` (even-odd point test) via `footsOverlap` instead of "inside the outline", so a part inside a hole is not a collision. `checkGaps` samples up to 200 placements spread over the list (nested parts come late). In `buildPlan` (nest case) every instance is tested against the holes of instances whose bbox contains it (grid lookup on the instance centre); the smallest containing hole becomes its host. Instances are grouped (host + everything in its holes, recursively) and each group is ordered as one contour list in which the nested part's top-level contours get `parent` = the host hole — so `orderContours` cuts the nested part (holes → outline) **before** the hole it sits in, then the hole, then the host outline. A hosting hole's lead-in is capped at 80 % of the spacing so the pierce never lands on the part inside it. Groups are cut in serpentine order of the host.
+
 ## 6. UI / output
 
 - Left panel: 01 parts (multi-file drop + parts list with qty / Fyld / ×), 02 settings (unit, arc mode, cut order, lead-in), 03 manual shape ("Brug emne & generer" loads the shape and generates immediately), 04 nesting, "Fundet geometri" (part size, contour counts outer/hole/open, source entity badges, **layer checkboxes** when >1 layer), "Maskine & avanceret" (`<details>`: VEL, FASTVEL, pressure, start WAIT, material, chain tolerance — defaults 50000/166000/3800/1000/"POM/Standard/5.000"), log, file name + generate/download.
@@ -87,7 +89,7 @@ With nesting, the outer-contour lead-in is capped at 80 % of the spacing so the 
 
 ## 8. Remaining limitations
 
-- Each file is one part (whole drawing = one part); no nesting of small parts inside other parts' holes; rotations only in 90° steps; mixed nesting is greedy (largest first), not an optimizer.
+- Each file is one part (whole drawing = one part); rotations only in 90° steps; a single-part lattice may run through its own big holes but never fills them with a different part (that only happens in mixed nesting / the fill hybrid); mixed nesting is greedy (largest first), not an optimizer.
 - No kerf compensation; no lead-out; start point of a closed contour is where the drawing starts it (circles: rightmost point).
 - Arc emission rounds center and endpoints independently to µm (radius mismatch ≤ ~1.5 µm).
 - `HATCH`, `TEXT`, `DIMENSION` etc. are not cut (by design — listed in the log). SVG `<use>` is not expanded.
