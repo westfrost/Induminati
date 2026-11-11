@@ -1,14 +1,23 @@
-# DXF/ — DXF / SVG → NCP Konverter
+# DXF/ — DXF / SVG / NCP → NCP Konverter
 
 > Del af en opdelt CLAUDE.md — se `../CLAUDE.md` for fælles konventioner
 > (farveskema, header-mønster, versionsfooter, git-workflow), som gælder
 > for alle værktøjer, denne fil inklusive.
 
-**File:** `/home/user/Induminati/DXF/index.html` (single self-contained file, ~1900 lines). Danish-language UI. Version footer (bottom of file): **v2.0 · 30-10-2026**. v2.0 was a near-complete rewrite of the v1.x script (see §7 for what was wrong in v1.x — do not reintroduce those bugs).
+**File:** `/home/user/Induminati/DXF/index.html` (single self-contained file, ~2200 lines). Danish-language UI. Version footer (bottom of file): **v2.1 · 11-11-2026**. v2.0 was a near-complete rewrite of the v1.x script (see §7 for what was wrong in v1.x — do not reintroduce those bugs). v2.1 added multiple parts (DXF/SVG/NCP files + manual shapes) with quantities, mixed-part nesting on the "grundbånd" (base belt = the sheet), and NCP files as input.
 
 ## 1. Purpose
 
 Converts 2D CAD drawings (DXF or SVG) into `.ncp` programs for a waterjet cutter ("IMF_PBL" controller dialect — `FASTABS`, `MOVEABS`, `CWABS`/`CCWABS`, `SETPORT`, `WAIT`, `PROGEND`). Pipeline: parse → chain into contours → classify outer/hole → lead-ins + cut order → (optional nesting on a sheet) → NCP text → ISO-8859-1 download. There is also a manual shape generator (rectangle with optional corner radius, circle, flange) that feeds the same pipeline, so manual shapes can be nested too.
+
+## 1b. Parts list (v2.1)
+
+- State is a list `parts` of `{id, name, kind:'dxf'|'svg'|'ncp'|'shape', text, unit, paths, stats, layers, disabled:Set, cs, qty, fill}` plus `activeId`. Files are added with `handleFiles` (multi-select / multi-drop; `.dxf`, `.svg`, `.ncp`), manual shapes with `generateShape` → `addPart`. The same file can be loaded twice, but normally you just raise `qty`.
+- Each part keeps its **own unit** (`p.unit`); `parsePart` temporarily sets `#dxfUnit` to it while parsing (parsers read the dropdown), so `$INSUNITS` on first load updates only that part. The dropdown shows/changes the **active** part's unit; disabled for NCP and manual shapes.
+- `buildPartContours(p)` = layer filter → `chainPaths` → `buildContours` → normalize to 0,0. `afterPartsChanged(fit)` syncs `partContours` (= active part), the list UI (`renderPartList`), "Fundet geometri" (active part, incl. its layer checkboxes) and calls `rebuildPlan`.
+- **Without nesting only the active part is cut** (a hint says so when there are several). With nesting, every part with `qty > 0` or `fill` goes on the grundbånd (`nestJobs()`). At most one part can be `fill` ("fyld resten").
+- Output file name defaults to the part name, or `grundbaand` when there are several parts, until the user types their own (`outputNameEdited`).
+- **NCP input** (`parseNCP`): reads `FASTABS/MOVEABS/CWABS/CCWABS`, cutting between `SETPORT A4=00000001` and `…00000000`. The first `MOVEABS` after a pierce is dropped when it is a lead-in (the rest closes on its end, or it is collinear with the next line on open paths), so lead-ins are regenerated for the new position. Coordinates are already µm. Round-trip (DXF → NCP → load NCP) reproduces identical contours.
 
 ## 2. Coordinate system & data model (read first)
 
@@ -40,11 +49,17 @@ Converts 2D CAD drawings (DXF or SVG) into `.ncp` programs for a waterjet cutter
 - **Lead-in** (`computeLead`): perpendicular to the start tangent, into the waste — outside for `outer`, inside the hole for `hole` (direction derived from the contour's signed area). Shortened ×0.6 up to 10 times until the point is on the correct side and ≥ ½·length from the contour; falls back to piercing on the contour. Open contours keep the v1 behaviour (backwards along the start tangent). The lead-in is cut as the first `MOVEABS` after the pierce.
 - **Cut order** (`orderContours`): a contour can only be cut after all contours inside it (`parent` links) are done → **holes before the outline they sit in, always**, in both modes. "Som tegnet" = drawing order subject to that rule; "Optimer" = nearest next lead-in from the current position.
 
-## 5. Nesting ("04 — Nesting / Plade")
+## 5. Nesting ("04 — Nesting / Grundbånd")
 
-Inputs: sheet X/Y, spacing between parts, edge margin, count (0 = fill), rotation (`free` 0/90/180/270, `flip` 0/180 — keeps grain direction, `none`). Settings are remembered per browser in `localStorage` key `induminati-dxf-nest-v1` (wrapped in try/catch). The whole drawing is treated as **one part** (top-level contours, holes filled). Debounced 200 ms (`scheduleNest`), result cached by `nestParamsKey()`.
+"Grundbånd" (base belt) is the user's word for the sheet. Inputs: grundbånd X/Y, spacing between parts, edge margin, rotation (`free` 0/90/180/270, `flip` 0/180 — keeps grain direction, `none`); quantities live per part in the parts list. Settings are remembered per browser in `localStorage` key `induminati-dxf-nest-v1` (wrapped in try/catch). Each file is **one part** (its top-level contours, holes filled — no parts inside other parts' holes). Debounced 200 ms (`scheduleNest`), result cached by `nestParamsKey()`. Entry point `nestAll(o)`:
+- **Exactly one part in the job list** → `nestCompute` (lattice, below) with `count = qty` (or 0 for fill).
+- **Several parts** → `nestMixed` (below).
+- Afterwards `usedLen` = furthest extent along the **longest** side (shown as "Brugt længde"), and `serpentine(…, alongX)` orders parts row by row along the length (columns when X is the long side).
+- Orientation keys are `"<partId>:<angle>"` everywhere (`nest.orient[key] = {cs, w, h, net, …}`, placements `{a: key, x, y}`), so `buildPlan` works the same for one or many parts. `nest.wanted = [{p, want (null = fill), got}]` drives the per-part result lines ("2 mangler plads").
 
-Algorithm (`nestCompute`) — raster no-fit + lattice search:
+`nestMixed` — greedy bottom-left on a raster: one cell size `r = max(√(W·H/1.6e7), smallestPart/120, 50 µm)`; the frame is transposed when X is the long side so "y" is always the length (only the raster point lists are swapped — geometry is never mirrored). Fixed-quantity parts go first, **largest bbox area first**, then the fill part until nothing fits (cap 20000). For every copy each allowed orientation is searched from its own `hint` row (exact, since occupancy only grows): per row `firstFree` subtracts forbidden x-intervals (sheet row intervals vs. the part's dilated row intervals, early exit when nothing is left); the orientation whose top edge is lowest (then leftmost) wins. Sheet occupancy is stored as merged interval lists per row. **Fill hybrid:** after the greedy pass, the fill part is also laid with the lattice (`nestCompute` with `o.reject`, top 10 lattices by density) skipping positions within spacing of the fixed parts (exact check `footsCloser`, 50 µm flattening + 100 µm safety); the better fill count wins (e.g. 448 vs 356 L-parts in testing).
+
+Lattice algorithm (`nestCompute`) — raster no-fit + lattice search:
 1. Cell size `r = max(maxDim/400, 25 µm)`. For each needed orientation, the rotated part's top-level outline is rasterized (`rasterFoot`: scanline fill + edge sampling, as per-row interval lists) and dilated by a disk of `k = ceil(spacing/(2r) + 1.5)` cells (conservative: the real gap ends up ~0.5–1 mm above the requested spacing for 100 mm parts).
 2. `nfp(A,B)` builds a collision bitmap over all relative offsets from interval overlaps (difference arrays per dy).
 3. Shapes: single orientations (0°, and 90° if free) plus **pairs** (0°+180°, 90°+270°) where B's offset minimizes the pair's bbox — this is what lets L/T/triangle parts interlock.
@@ -57,7 +72,7 @@ With nesting, the outer-contour lead-in is capped at 80 % of the spacing so the 
 
 ## 6. UI / output
 
-- Left panel: 01 file drop, 02 settings (unit, arc mode, cut order, lead-in), 03 manual shape ("Brug emne & generer" loads the shape and generates immediately), 04 nesting, "Fundet geometri" (part size, contour counts outer/hole/open, source entity badges, **layer checkboxes** when >1 layer), "Maskine & avanceret" (`<details>`: VEL, FASTVEL, pressure, start WAIT, material, chain tolerance — defaults 50000/166000/3800/1000/"POM/Standard/5.000"), log, file name + generate/download.
+- Left panel: 01 parts (multi-file drop + parts list with qty / Fyld / ×), 02 settings (unit, arc mode, cut order, lead-in), 03 manual shape ("Brug emne & generer" loads the shape and generates immediately), 04 nesting, "Fundet geometri" (part size, contour counts outer/hole/open, source entity badges, **layer checkboxes** when >1 layer), "Maskine & avanceret" (`<details>`: VEL, FASTVEL, pressure, start WAIT, material, chain tolerance — defaults 50000/166000/3800/1000/"POM/Standard/5.000"), log, file name + generate/download.
 - Canvas: Y-up, DPR-sharp, pointer pan, wheel zoom at cursor, +/− zoom about the center, fit. Draws sheet + margin (when nesting), contours by kind (outer `#0B4F79`, hole `#1C7FBF`, open `#9A6B00`), lead-ins orange, pierce dots green, dashed rapid moves, sequence numbers when ≤ 60 pierces.
 - `generateNCP(silent)`: header unchanged from v1 (`IMF_PBL_v1.0`, `;FILE`, `;MATR`, `;DRAWING`, `;DATE`, `;PRESSURE`, `FASTVEL`, `VEL`, `;Valgte dyser : TOOL:1`), then per pierce `;N{10+i}` → `FASTABS` lead-in → `WAIT 10` / `SETPORT A4=00000001` / `WAIT 10` / `WAIT {startWait}` → `MOVEABS` to contour start → moves/arcs → `WAIT 10` / `SETPORT A4=00000000` / `WAIT 10` / `WAIT 200`; `PROGEND`. Zero-length moves after rounding are skipped. Segmented arc mode splits **all** arcs (incl. former polyline bulges) into chords. Once generated, the NCP is regenerated silently whenever settings/geometry change (`ncpWanted`).
 - NCP preview highlights only the first 5000 lines (huge nesting files made the DOM take >10 s); the download is always complete. Download = CRLF, ISO-8859-1 (chars > 255 → `?`).
@@ -72,7 +87,7 @@ With nesting, the outer-contour lead-in is capped at 80 % of the spacing so the 
 
 ## 8. Remaining limitations
 
-- Nesting handles one part type per file (whole drawing = one part); no nesting of small parts inside other parts' holes; rotations only in 90° steps.
+- Each file is one part (whole drawing = one part); no nesting of small parts inside other parts' holes; rotations only in 90° steps; mixed nesting is greedy (largest first), not an optimizer.
 - No kerf compensation; no lead-out; start point of a closed contour is where the drawing starts it (circles: rightmost point).
 - Arc emission rounds center and endpoints independently to µm (radius mismatch ≤ ~1.5 µm).
 - `HATCH`, `TEXT`, `DIMENSION` etc. are not cut (by design — listed in the log). SVG `<use>` is not expanded.

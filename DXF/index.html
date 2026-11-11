@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DXF / SVG → NCP Konverter — Induminati</title>
+<title>DXF / SVG / NCP → NCP Konverter — Induminati</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 
@@ -80,7 +80,6 @@
   .drop-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
   .drop-text strong { color: var(--text); font-weight: 500; }
 
-  .file-loaded { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(46, 158, 82, 0.10); border: 1px solid rgba(46, 158, 82, 0.3); border-radius: 6px; font-family: var(--mono); font-size: 12px; color: var(--success); word-break: break-all; }
 
   label { display: block; font-size: 11px; font-weight: 500; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
 
@@ -122,6 +121,18 @@
   .stat-val { font-family: var(--mono); font-size: 17px; font-weight: 600; color: var(--accent); line-height: 1.1; margin-bottom: 3px; overflow-wrap: anywhere; }
   .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
+  .part-list { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+  .part-row { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); }
+  .part-row.active { border-color: var(--accent); background: var(--accent-pale); }
+  .part-name { flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer; font-family: var(--mono); font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 0; }
+  .part-size { color: var(--muted); font-size: 10.5px; margin-left: 6px; }
+  .part-row input.part-qty { width: 58px; margin: 0; padding: 5px 6px; font-size: 12px; text-align: right; background: var(--surface); }
+  .part-row input.part-qty:disabled { opacity: .4; }
+  .part-fill { display: flex; align-items: center; gap: 3px; margin: 0; font-size: 10px; cursor: pointer; }
+  .part-fill input { accent-color: var(--accent); }
+  .part-del { width: 24px; height: 24px; border: none; background: none; color: var(--muted); font-size: 16px; cursor: pointer; border-radius: 4px; flex-shrink: 0; }
+  .part-del:hover { color: var(--danger); background: rgba(214,69,69,.08); }
+  .link-btn { background: none; border: none; color: var(--link); font-size: 10.5px; cursor: pointer; padding: 0; margin-left: 4px; text-decoration: underline; }
   .nest-result { margin-top: 2px; font-size: 12px; line-height: 1.55; }
   .nest-result .warn { color: var(--warn); }
   .nest-result .err { color: var(--danger); }
@@ -202,7 +213,7 @@
       <rect x="3" y="9" width="14" height="2" fill="#0B4F79"/>
     </svg>
   </div>
-  <h1>DXF / SVG → NCP Vandskærer Konverter <span class="tag">IMF_PBL</span></h1>
+  <h1>DXF / SVG / NCP → NCP Vandskærer Konverter <span class="tag">IMF_PBL</span></h1>
   <a class="btn-home" href="../index.html">← Forside</a>
 </header>
 
@@ -212,26 +223,25 @@
 
     <!-- FILE UPLOAD -->
     <div class="section">
-      <div class="section-title">01 — DXF / SVG Fil</div>
+      <div class="section-title">01 — Emner (DXF / SVG / NCP)</div>
       <div class="drop-zone" id="dropZone">
-        <input type="file" id="fileInput" accept=".dxf,.svg">
+        <input type="file" id="fileInput" accept=".dxf,.svg,.ncp" multiple>
         <span class="drop-icon">⬡</span>
         <div class="drop-text">
-          <strong>Slip DXF eller SVG fil her</strong><br>
-          eller klik for at vælge
+          <strong>Slip en eller flere filer her</strong><br>
+          DXF, SVG eller NCP — eller klik for at vælge
         </div>
       </div>
-      <div id="fileLoaded" class="file-loaded hidden" style="margin-top:10px">
-        <span>✓</span>
-        <span id="fileName">—</span>
-      </div>
+      <div class="part-list" id="partList"></div>
+      <div class="hint" id="partHint" style="display:none;margin:8px 0 0">Klik på et emne for at se det. Antal og "Fyld" bruges ved nesting på grundbåndet (04). Samme fil kan bruges flere gange — sæt bare antallet op.
+        <button class="link-btn" id="btnClearParts">Fjern alle</button></div>
     </div>
 
     <!-- GEOMETRY SETTINGS -->
     <div class="section">
       <div class="section-title">02 — Indstillinger</div>
 
-      <label for="dxfUnit">Enhed i tegningen</label>
+      <label for="dxfUnit">Enhed i tegningen (valgt emne)</label>
       <select id="dxfUnit">
         <option value="mm">Millimeter (mm)</option>
         <option value="cm">Centimeter (cm)</option>
@@ -292,40 +302,36 @@
         <input type="number" id="flangeID" value="80" min="1" step="0.1">
       </div>
 
-      <button class="btn btn-primary" id="btnShapeGen" onclick="generateShape()">⚡ Brug emne &amp; generer</button>
+      <button class="btn btn-primary" id="btnShapeGen" onclick="generateShape()">⚡ Tilføj emne &amp; generer</button>
     </div>
 
     <!-- NESTING -->
     <div class="section">
-      <div class="section-title">04 — Nesting / Plade</div>
-      <label class="check"><input type="checkbox" id="nestOn"> Fyld en plade med emnet</label>
+      <div class="section-title">04 — Nesting / Grundbånd</div>
+      <label class="check"><input type="checkbox" id="nestOn"> Nest emnerne på grundbåndet</label>
       <div id="nestFields">
         <div class="row">
-          <div><label for="sheetW">Plade X (mm)</label><input type="number" id="sheetW" value="1000" min="1" step="1"></div>
-          <div><label for="sheetH">Plade Y (mm)</label><input type="number" id="sheetH" value="1000" min="1" step="1"></div>
+          <div><label for="sheetW">Grundbånd X (mm)</label><input type="number" id="sheetW" value="1000" min="1" step="1"></div>
+          <div><label for="sheetH">Grundbånd Y (mm)</label><input type="number" id="sheetH" value="1000" min="1" step="1"></div>
         </div>
         <div class="row">
           <div><label for="nestGap">Afstand (mm)</label><input type="number" id="nestGap" value="5" min="0" step="0.5"></div>
           <div><label for="nestMargin">Kantafstand (mm)</label><input type="number" id="nestMargin" value="10" min="0" step="0.5"></div>
         </div>
-        <div class="row">
-          <div><label for="nestCount">Antal (0 = fyld)</label><input type="number" id="nestCount" value="0" min="0" step="1"></div>
-          <div><label for="nestRot">Rotation</label>
-            <select id="nestRot">
-              <option value="free">0/90/180/270°</option>
-              <option value="flip">Kun 0/180°</option>
-              <option value="none">Ingen</option>
-            </select>
-          </div>
-        </div>
-        <div class="hint">Pladens nulpunkt (X0 Y0) er nederste venstre hjørne. "Kun 0/180°" bevarer fiberretningen.</div>
+        <label for="nestRot">Rotation</label>
+        <select id="nestRot">
+          <option value="free">0/90/180/270°</option>
+          <option value="flip">Kun 0/180° (bevar retning)</option>
+          <option value="none">Ingen</option>
+        </select>
+        <div class="hint">Antal pr. emne sættes i emnelisten (01). Grundbåndets nulpunkt (X0 Y0) er nederste venstre hjørne; emnerne lægges ud fra starten af den længste side, så resten af båndet bliver et sammenhængende stykke.</div>
         <div class="nest-result" id="nestResult"></div>
       </div>
     </div>
 
     <!-- ENTITY INFO -->
     <div class="section" id="entitySection" style="display:none">
-      <div class="section-title">Fundet geometri</div>
+      <div class="section-title" id="entityTitle">Fundet geometri</div>
       <div class="stats" id="statsGrid"></div>
       <div class="entity-list" id="entityBadges"></div>
       <div class="layer-list" id="layerList"></div>
@@ -404,13 +410,12 @@
 // STATE
 // Alle koordinater internt er i mikrometer (µm, NCP-enhed), Y op (som i CAD).
 // ─────────────────────────────────────────────
-let srcText = null;          // rå filtekst (så enhedsskift kan genindlæse)
-let srcIsSvg = false;
-let basePaths = [];          // parsede stier: {segs, closed, layer}
-let srcStats = {};           // antal kilde-entiteter pr. type
-let srcLayers = [];          // [{name, n}]
-const disabledLayers = new Set();
-let partContours = [];       // ét emnes konturer, normaliseret til 0,0
+// Emner: {id, name, kind:'dxf'|'svg'|'ncp'|'shape', text, unit, paths, stats, layers, disabled:Set, cs, qty, fill}
+let parts = [];
+let activeId = null;         // emnet der vises i "Fundet geometri" (og skæres alene uden nesting)
+let nextPartId = 1;
+let outputNameEdited = false;
+let partContours = [];       // det aktive emnes konturer, normaliseret til 0,0
 let nest = null;             // nesting-resultat
 let nestKey = '';
 let nestTimer = null;
@@ -597,44 +602,108 @@ dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-ove
 dropZone.addEventListener('drop', e => {
   e.preventDefault();
   dropZone.classList.remove('drag-over');
-  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
 });
-fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); fileInput.value = ''; });
+fileInput.addEventListener('change', e => { if (e.target.files.length) handleFiles(e.target.files); fileInput.value = ''; });
 
-function handleFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    clearLog();
-    srcText = e.target.result;
-    srcIsSvg = file.name.toLowerCase().endsWith('.svg');
-    currentBaseName = file.name.replace(/\.(dxf|svg)$/i, '');
-    $('outputName').value = currentBaseName;
-    $('fileName').textContent = file.name;
-    $('fileLoaded').classList.remove('hidden');
-    disabledLayers.clear();
-    resetNcp();
-    log(`Indlæser: ${file.name}`, 'accent');
-    loadSource(true);
-  };
-  reader.readAsText(file, 'utf-8');
+function handleFiles(list) {
+  const files = [...list].filter(f => /\.(dxf|svg|ncp)$/i.test(f.name));
+  if (!files.length) { log('⚠ Kun .dxf-, .svg- og .ncp-filer understøttes', 'warn'); return; }
+  clearLog();
+  resetNcp();
+  Promise.all(files.map(f => f.text().then(text => ({ f, text })))).then(res => {
+    let last = null;
+    res.forEach(({ f, text }) => {
+      const m = f.name.match(/^(.*)\.(dxf|svg|ncp)$/i);
+      const prt = addPart({ name: m[1], kind: m[2].toLowerCase(), text });
+      if (prt) last = prt;
+    });
+    if (last) activeId = last.id;
+    afterPartsChanged(true);
+  });
 }
 
-// Parser kildeteksten med den aktuelle enhed. firstLoad → må sætte enhed ud fra $INSUNITS.
-function loadSource(firstLoad) {
-  if (srcText == null) return;
-  try {
-    const res = srcIsSvg ? parseSVG(srcText) : parseDXF(srcText, firstLoad);
-    basePaths = res.paths;
-    srcStats = res.stats;
-    const lc = {};
-    basePaths.forEach(p => lc[p.layer] = (lc[p.layer] || 0) + 1);
-    srcLayers = Object.keys(lc).sort().map(name => ({ name, n: lc[name] }));
-    if (!basePaths.length) log('⚠ Ingen skærbar geometri fundet i filen', 'warn');
-    rebuildPart(true);
-  } catch (err) {
-    log(`✗ Parse fejl: ${err.message}`, 'err');
-    console.error(err);
+function activePart() { return parts.find(p => p.id === activeId) || null; }
+
+function addPart(spec) {
+  const p = { id: nextPartId++, name: spec.name, kind: spec.kind, text: spec.text ?? null, unit: $('dxfUnit').value,
+              paths: spec.paths || [], stats: spec.stats || {}, layers: [], disabled: new Set(), cs: [], qty: 1, fill: false };
+  log(`Indlæser: ${p.name}${p.kind === 'shape' ? '' : '.' + p.kind}`, 'accent');
+  if (!parsePart(p, true)) return null;
+  parts.push(p);
+  return p;
+}
+
+// Parser emnets tekst med emnets egen enhed. firstLoad → DXF må sætte enheden ud fra $INSUNITS.
+function parsePart(p, firstLoad) {
+  if (p.text != null) {
+    const prevUnit = $('dxfUnit').value;
+    $('dxfUnit').value = p.unit;
+    try {
+      const res = p.kind === 'svg' ? parseSVG(p.text) : p.kind === 'ncp' ? parseNCP(p.text) : parseDXF(p.text, firstLoad);
+      p.paths = res.paths;
+      p.stats = res.stats;
+      p.unit = $('dxfUnit').value;
+    } catch (err) {
+      log(`✗ ${p.name}: parse fejl: ${err.message}`, 'err');
+      console.error(err);
+      $('dxfUnit').value = prevUnit;
+      return false;
+    }
+    $('dxfUnit').value = prevUnit;
   }
+  const lc = {};
+  p.paths.forEach(q => lc[q.layer] = (lc[q.layer] || 0) + 1);
+  p.layers = Object.keys(lc).sort().map(name => ({ name, n: lc[name] }));
+  if (!p.paths.length) log(`⚠ ${p.name}: ingen skærbar geometri fundet`, 'warn');
+  buildPartContours(p, firstLoad);
+  return true;
+}
+
+// NCP → stier (koordinater er allerede µm). Indkøringen (første MOVEABS efter stik) fjernes,
+// så den kan laves på ny, når emnet placeres et nyt sted.
+function parseNCP(text) {
+  const paths = [];
+  let x = 0, y = 0, on = false, cur = null;
+  const dir = s => { const l = Math.hypot(s.x1 - s.x0, s.y1 - s.y0) || 1; return [(s.x1 - s.x0) / l, (s.y1 - s.y0) / l]; };
+  const finish = () => {
+    if (cur && cur.length) {
+      let segs = cur;
+      if (segs.length > 1 && segs[0].t === 'L') {
+        const s1 = segs[1], z = segs[segs.length - 1];
+        if (Math.hypot(z.x1 - s1.x0, z.y1 - s1.y0) < 3) segs = segs.slice(1);         // lukket kontur efter indkøring
+        else if (s1.t === 'L') {                                                         // åben: indkøring i forlængelse
+          const [a, b] = dir(segs[0]), [c, d] = dir(s1);
+          if (Math.abs(a * d - b * c) < 1e-3 && a * c + b * d > 0) segs = segs.slice(1);
+        }
+      }
+      const a = segs[0], z = segs[segs.length - 1];
+      const closed = (segs.length > 1 || a.t === 'A') && Math.hypot(z.x1 - a.x0, z.y1 - a.y0) < 3;
+      if (closed) segs[segs.length - 1] = { ...z, x1: a.x0, y1: a.y0 };
+      paths.push({ segs, closed, layer: '0' });
+    }
+    cur = null;
+  };
+  const val = (l, k) => { const m = l.match(new RegExp('\\b' + k + '(-?[\\d.]+)')); return m ? parseFloat(m[1]) : null; };
+  for (const raw of text.split(/\r\n|\r|\n/)) {
+    const l = raw.trim();
+    if (!l || l[0] === ';') continue;
+    if (/^SETPORT\s+A4=0*1$/.test(l)) { finish(); on = true; cur = []; }
+    else if (/^SETPORT\s+A4=0+$/.test(l)) { finish(); on = false; }
+    else if (/^(FASTABS|MOVEABS)\b/.test(l)) {
+      const nx = val(l, 'X') ?? x, ny = val(l, 'Y') ?? y;
+      if (on && l.startsWith('MOVEABS') && (nx !== x || ny !== y)) cur.push(Lseg(x, y, nx, ny));
+      x = nx; y = ny;
+    } else if (/^C?CWABS\b/.test(l)) {
+      const cx = val(l, 'I'), cy = val(l, 'J'), nx = val(l, 'X') ?? x, ny = val(l, 'Y') ?? y;
+      if (on && cx !== null && cy !== null) cur.push(Aseg(x, y, nx, ny, cx, cy, l.startsWith('CCW')));
+      x = nx; y = ny;
+    }
+  }
+  finish();
+  if (!paths.length) throw new Error('Ingen skærebevægelser (SETPORT A4=00000001 … 00000000) fundet');
+  log(`NCP: ${paths.length} skærekontur(er) læst — indkøringer fjernet og laves på ny`, 'info');
+  return { paths, stats: { NCP: paths.length } };
 }
 
 function getUnitUm() {
@@ -1269,36 +1338,86 @@ function transformContours(cs, m) {
 // ─────────────────────────────────────────────
 // PIPELINE: stier → emne → (nesting) → skæreplan
 // ─────────────────────────────────────────────
-function rebuildPart(fit) {
-  const paths = basePaths.filter(p => !disabledLayers.has(p.layer));
+function buildPartContours(p, verbose) {
+  const paths = p.paths.filter(q => !p.disabled.has(q.layer));
   const tol = Math.max(1, num('chainTol', 0.1) * 1000);
   let cs = buildContours(chainPaths(paths, tol));
   if (cs.length) {
     const bb = unionBB(cs);
     if (Math.abs(bb.minX) > 0.5 || Math.abs(bb.minY) > 0.5) {
       cs = transformContours(cs, mat.tr(-bb.minX, -bb.minY));
-      if (fit) log(`Nulpunkt flyttet: X${(-bb.minX / 1000).toFixed(3)} Y${(-bb.minY / 1000).toFixed(3)} mm → emnet starter i 0,0`, 'info');
+      if (verbose && p.kind !== 'shape') log(`Nulpunkt flyttet: X${(-bb.minX / 1000).toFixed(3)} Y${(-bb.minY / 1000).toFixed(3)} mm → emnet starter i 0,0`, 'info');
     }
   }
-  partContours = cs;
-  nestKey = '';
-  updateEntitySection(fit);
+  p.cs = cs;
   const nOpen = cs.filter(c => c.kind === 'open').length;
-  if (fit && cs.length) {
-    log(`✓ ${cs.length} kontur(er): ${cs.filter(c => c.kind === 'outer').length} ydre, ${cs.filter(c => c.kind === 'hole').length} huller, ${nOpen} åbne`, 'ok');
+  if (verbose && cs.length) {
+    log(`✓ ${p.name}: ${cs.length} kontur(er) — ${cs.filter(c => c.kind === 'outer').length} ydre, ${cs.filter(c => c.kind === 'hole').length} huller, ${nOpen} åbne`, 'ok');
     if (nOpen) log(`⚠ ${nOpen} åben(ne) kontur(er) — tjek for huller i tegningen eller hæv sammenkædningstolerancen`, 'warn');
   }
+}
+
+// Kaldes efter enhver ændring af emnelisten eller et emnes geometri
+function afterPartsChanged(fit) {
+  if (!activePart() && parts.length) activeId = parts[parts.length - 1].id;
+  const ap = activePart();
+  partContours = ap ? ap.cs : [];
+  if (ap) { $('dxfUnit').value = ap.unit; }
+  $('dxfUnit').disabled = !ap || ap.text == null || ap.kind === 'ncp';
+  if (!outputNameEdited) $('outputName').value = parts.length > 1 ? 'grundbaand' : (ap ? ap.name : '');
+  currentBaseName = $('outputName').value || 'output';
+  nestKey = '';
+  renderPartList();
+  updateEntitySection();
   rebuildPlan(fit);
 }
 
+function renderPartList() {
+  const el = $('partList');
+  el.innerHTML = '';
+  parts.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'part-row' + (p.id === activeId ? ' active' : '');
+    const bb = p.cs.length ? unionBB(p.cs) : null;
+    const name = document.createElement('button');
+    name.className = 'part-name';
+    name.title = 'Vis dette emne';
+    name.textContent = p.name + (p.kind === 'shape' ? '' : '.' + p.kind);
+    const size = document.createElement('span');
+    size.className = 'part-size';
+    size.textContent = bb ? `${((bb.maxX - bb.minX) / 1000).toFixed(0)}×${((bb.maxY - bb.minY) / 1000).toFixed(0)}` : '—';
+    name.appendChild(size);
+    name.addEventListener('click', () => { activeId = p.id; afterPartsChanged(true); });
+    const qty = document.createElement('input');
+    qty.type = 'number'; qty.min = '0'; qty.step = '1'; qty.value = p.qty; qty.className = 'part-qty';
+    qty.title = 'Antal på grundbåndet'; qty.disabled = p.fill;
+    qty.addEventListener('input', () => { p.qty = Math.max(0, Math.floor(parseFloat(qty.value) || 0)); rebuildPlan(false); });
+    const fill = document.createElement('label');
+    fill.className = 'part-fill';
+    fill.title = 'Fyld resten af grundbåndet med dette emne';
+    const fcb = document.createElement('input');
+    fcb.type = 'checkbox'; fcb.checked = p.fill;
+    fcb.addEventListener('change', () => { parts.forEach(q => q.fill = false); p.fill = fcb.checked; renderPartList(); rebuildPlan(false); });
+    fill.append(fcb, document.createTextNode('Fyld'));
+    const del = document.createElement('button');
+    del.className = 'part-del'; del.title = 'Fjern emne'; del.textContent = '×';
+    del.addEventListener('click', () => { parts = parts.filter(q => q !== p); if (activeId === p.id) activeId = null; if (!parts.length) resetNcp(); afterPartsChanged(true); });
+    row.append(name, qty, fill, del);
+    el.appendChild(row);
+  });
+  $('partHint').style.display = parts.length ? 'block' : 'none';
+}
+
 function rebuildPlan(fit) {
-  if ($('nestOn').checked && partContours.length) {
+  if ($('nestOn').checked && nestJobs().length) {
     const key = nestParamsKey();
     if (key !== nestKey) { scheduleNest(fit); return; }
   } else {
     nest = null;
     nestKey = '';
-    $('nestResult').innerHTML = $('nestOn').checked ? '<span class="info">Indlæs et emne først.</span>' : '';
+    $('nestResult').innerHTML = $('nestOn').checked
+      ? `<span class="info">${parts.length ? 'Sæt antal > 0 (eller "Fyld") på mindst ét emne.' : 'Indlæs et eller flere emner først.'}</span>`
+      : (parts.length > 1 ? '<span class="info">Uden nesting skæres kun det valgte emne. Slå nesting til for at lægge alle emnerne på grundbåndet.</span>' : '');
   }
   buildPlan();
   $('btnConvert').disabled = !plan.length;
@@ -1367,7 +1486,7 @@ function withLeads(cs, Lout, Lhole) {
 
 function buildPlan() {
   plan = [];
-  if (!partContours.length || (nest && !nest.placements.length)) return;
+  if (nest ? !nest.placements.length : !partContours.length) return;
   const L = Math.max(0, num('leadIn', 3)) * 1000;
   const mode = $('cutOrder').value;
   if (!nest) {
@@ -1400,12 +1519,12 @@ function nestParams() {
     H: Math.max(0, num('sheetH', 1000)) * 1000,
     spacing: Math.max(0, num('nestGap', 5)) * 1000,
     margin: Math.max(0, num('nestMargin', 10)) * 1000,
-    count: Math.max(0, Math.floor(num('nestCount', 0))),
     rot: $('nestRot').value
   };
 }
+function nestJobs() { return parts.filter(p => p.cs.some(c => c.depth === 0) && (p.fill || p.qty > 0)); }
 function nestParamsKey() {
-  return JSON.stringify(nestParams()) + '|' + partContours.length + '|' + basePaths.length + '|' + [...disabledLayers].join(',') + '|' + $('chainTol').value + '|' + $('dxfUnit').value;
+  return JSON.stringify(nestParams()) + '|' + parts.map(p => `${p.id}:${p.qty}:${p.fill}:${p.cs.length}`).join(',') + '|' + $('chainTol').value;
 }
 function scheduleNest(fit) {
   clearTimeout(nestTimer);
@@ -1413,7 +1532,7 @@ function scheduleNest(fit) {
   nestTimer = setTimeout(() => {
     const key = nestParamsKey();
     const t0 = performance.now();
-    try { nest = nestCompute(partContours, nestParams()); }
+    try { nest = nestAll(nestParams()); }
     catch (err) { nest = null; console.error(err); log(`✗ Nesting fejlede: ${err.message}`, 'err'); }
     nestKey = key;
     showNestResult(performance.now() - t0);
@@ -1421,21 +1540,52 @@ function scheduleNest(fit) {
   }, 200);
 }
 
+// Ét emne → gitter-mønster (tættest). Flere forskellige emner → bund-venstre-udlægning.
+function nestAll(o) {
+  const jobs = nestJobs();
+  if (!jobs.length) throw new Error('Ingen emner med antal > 0');
+  let res;
+  if (jobs.length === 1) {
+    const p = jobs[0];
+    res = nestCompute(p.cs, { ...o, count: p.fill ? 0 : p.qty }, p.id);
+    res.wanted = [{ p, want: p.fill ? null : p.qty, got: res.placements.length }];
+  } else {
+    res = nestMixed(jobs, o);
+  }
+  // Brugt længde langs den længste side
+  const alongX = o.W > o.H;
+  res.alongX = alongX;
+  res.usedLen = res.placements.reduce((m, q) => Math.max(m, alongX ? q.x + res.orient[q.a].w : q.y + res.orient[q.a].h), 0);
+  res.ordered = serpentine(res.placements, res.orient, alongX);
+  return res;
+}
+
 function showNestResult(ms) {
   const el = $('nestResult');
   if (!nest) { el.innerHTML = '<span class="err">Nesting kunne ikke beregnes.</span>'; return; }
-  if (!nest.placements.length) { el.innerHTML = '<span class="err">Emnet kan ikke være på pladen med den valgte kantafstand.</span>'; return; }
   const o = nest.params;
-  const util = nest.netArea > 0 ? (nest.placements.length * nest.netArea / (o.W * o.H) * 100) : 0;
+  if (!nest.placements.length) { el.innerHTML = '<span class="err">Emnerne kan ikke være på grundbåndet med den valgte kantafstand.</span>'; return; }
+  const net = nest.placements.reduce((s, q) => s + nest.orient[q.a].net, 0);
+  const util = net / (o.W * o.H) * 100;
+  const lenTot = (o.W > o.H ? o.W : o.H) / 1000;
   let h = `<div class="stats" style="margin-bottom:8px">
-    <div class="stat"><div class="stat-val">${nest.placements.length}</div><div class="stat-label">Emner på pladen</div></div>
-    <div class="stat"><div class="stat-val">${util.toFixed(1)} %</div><div class="stat-label">Udnyttelse</div></div></div>`;
-  h += `<div class="info" style="color:var(--muted)">Mønster: ${nest.desc} · ${Math.round(ms)} ms</div>`;
-  if (o.count && nest.capacity < o.count) h += `<div class="warn">⚠ Kun plads til ${nest.capacity} af ${o.count} emner.</div>`;
+    <div class="stat"><div class="stat-val">${nest.placements.length}</div><div class="stat-label">Emner i alt</div></div>
+    <div class="stat"><div class="stat-val">${util.toFixed(1)} %</div><div class="stat-label">Udnyttelse</div></div>
+    <div class="stat" style="grid-column:span 2"><div class="stat-val">${(nest.usedLen / 1000).toFixed(0)} / ${lenTot.toFixed(0)} mm</div><div class="stat-label">Brugt længde (langs ${nest.alongX ? 'X' : 'Y'})</div></div></div>`;
+  const rows = nest.wanted.map(w => {
+    const nm = esc(w.p.name);
+    if (w.want === null) return `<div>${nm}: <b>${w.got}</b> stk (fyld)</div>`;
+    if (w.got < w.want) return `<div class="warn">⚠ ${nm}: ${w.got} af ${w.want} — ${w.want - w.got} mangler plads</div>`;
+    return `<div>${nm}: ${w.got} af ${w.want} ✓</div>`;
+  });
+  h += rows.join('');
+  h += `<div style="color:var(--muted);margin-top:4px">Mønster: ${nest.desc} · ${Math.round(ms)} ms</div>`;
   if (num('leadIn', 3) * 1000 > nest.spacing * 0.8 + 1) h += `<div class="warn">Indkøring på ydre konturer begrænset til ${(nest.spacing * 0.8 / 1000).toFixed(1)} mm (80 % af afstanden), så den ikke rammer naboemnet.</div>`;
   if (nest.minGap !== null && nest.minGap < nest.spacing - 50) h += `<div class="err">⚠ Kontrol: mindste målte afstand ${(nest.minGap / 1000).toFixed(2)} mm er under den ønskede.</div>`;
   el.innerHTML = h;
-  log(`✓ Nesting: ${nest.placements.length} emner, udnyttelse ${util.toFixed(1)} % (${nest.desc})`, 'ok');
+  const miss = nest.wanted.filter(w => w.want !== null && w.got < w.want);
+  log(`✓ Nesting: ${nest.placements.length} emner, udnyttelse ${util.toFixed(1)} %, brugt længde ${(nest.usedLen / 1000).toFixed(0)} mm`, 'ok');
+  miss.forEach(w => log(`⚠ ${w.p.name}: kun plads til ${w.got} af ${w.want}`, 'warn'));
 }
 
 function mergeIv(a) {
@@ -1594,7 +1744,8 @@ function placementsArea(pl, orient) {
   return (x2 - x1) * (y2 - y1);
 }
 
-function nestCompute(cs, o) {
+function nestCompute(cs, o, pid) {
+  const K = a => pid + ':' + a;
   const top = cs.filter(c => c.depth === 0);
   if (!top.length) throw new Error('Ingen geometri');
   const bb = unionBB(top);
@@ -1613,32 +1764,34 @@ function nestCompute(cs, o) {
     const w = b.maxX - b.minX, h = b.maxY - b.minY;
     const foot = cr.filter(c => c.depth === 0).map(c => ({ pts: flattenSegs(c.segs, r / 4), closed: c.closed }));
     const ras = rasterFoot(foot, w, h, r, k);
-    orient[a] = { cs: cr, w, h, rows: ras.rows, W: ras.W, H: ras.H };
+    orient[K(a)] = { cs: cr, w, h, rows: ras.rows, W: ras.W, H: ras.H, net: netAreaOf(cs) };
   }
 
-  const shapes = rots.map(a => ({ shape: makeShape([{ a, ox: 0, oy: 0 }], orient), desc: `${a}°` }));
+  const shapes = rots.map(a => ({ shape: makeShape([{ a: K(a), ox: 0, oy: 0 }], orient), desc: `${a}°` }));
   for (const [a, b] of pairs) {
-    const A = orient[a], B = orient[b], coll = nfp(A, B);
+    const A = orient[K(a)], B = orient[K(b)], coll = nfp(A, B);
     let best = null, bestArea = Infinity;
     for (let dy = -B.H; dy <= A.H; dy++) for (let dx = -B.W; dx <= A.W; dx++) {
       if (coll(dx, dy)) continue;
       const area = (Math.max(A.W, dx + B.W) - Math.min(0, dx)) * (Math.max(A.H, dy + B.H) - Math.min(0, dy));
       if (area < bestArea) { bestArea = area; best = [dx, dy]; }
     }
-    if (best) shapes.push({ shape: makeShape([{ a, ox: 0, oy: 0 }, { a: b, ox: best[0], oy: best[1] }], orient), desc: `par ${a}°+${b}°` });
+    if (best) shapes.push({ shape: makeShape([{ a: K(a), ox: 0, oy: 0 }, { a: K(b), ox: best[0], oy: best[1] }], orient), desc: `par ${a}°+${b}°` });
   }
 
   const N = o.count;
-  const estMax = (o.W * o.H) / Math.max(1, orient[0].w * orient[0].h);
+  const estMax = (o.W * o.H) / Math.max(1, orient[K(0)].w * orient[K(0)].h);
   let best = null;
   for (const { shape, desc } of shapes) {
     const coll = nfp(shape, shape);
     for (const swap of [false, true]) {
       let cands = latticeCands(coll, shape.W, shape.H, swap);
-      if (estMax > 300) cands = cands.sort((p, q) => Math.abs(p.a[0] * p.b[1] - p.a[1] * p.b[0]) - Math.abs(q.a[0] * q.b[1] - q.a[1] * q.b[0])).slice(0, 6);
+      if (o.reject) cands = cands.sort((p, q) => Math.abs(p.a[0] * p.b[1] - p.a[1] * p.b[0]) - Math.abs(q.a[0] * q.b[1] - q.a[1] * q.b[0])).slice(0, 10);
+      else if (estMax > 300) cands = cands.sort((p, q) => Math.abs(p.a[0] * p.b[1] - p.a[1] * p.b[0]) - Math.abs(q.a[0] * q.b[1] - q.a[1] * q.b[0])).slice(0, 6);
       for (const lat of cands) {
-        const pl = placeLattice(shape, lat, orient, o, r, k);
+        let pl = placeLattice(shape, lat, orient, o, r, k);
         if (!pl) continue;
+        if (o.reject) pl = pl.filter(q => !o.reject(q, orient));
         const use = N ? pl.slice(0, N) : pl;
         const sc = { n: use.length, area: placementsArea(use, orient) };
         if (!best || sc.n > best.n || (sc.n === best.n && sc.area < best.area - 1)) {
@@ -1648,29 +1801,191 @@ function nestCompute(cs, o) {
     }
   }
 
-  const netArea = cs.filter(c => c.closed).reduce((s, c) => s + (c.depth % 2 ? -1 : 1) * Math.abs(c.area), 0);
   const placements = best ? best.pl : [];
   return {
     params: o, spacing: o.spacing, r, orient, placements,
-    ordered: serpentine(placements, orient),
     capacity: best ? best.capacity : 0,
     desc: best ? best.desc : '—',
-    netArea,
     minGap: placements.length > 1 ? checkGaps(placements, orient, o.spacing) : null
   };
 }
 
-// Skærerækkefølge for emnerne: række for række, skiftevis venstre→højre og højre→venstre
-function serpentine(pl, orient) {
-  const items = pl.map(p => ({ ...p, cy: p.y + orient[p.a].h / 2, cx: p.x + orient[p.a].w / 2 })).sort((a, b) => a.cy - b.cy);
+function netAreaOf(cs) { return cs.filter(c => c.closed).reduce((s, c) => s + (c.depth % 2 ? -1 : 1) * Math.abs(c.area), 0); }
+
+// Fratræk sorterede, flettede heltals-intervaller F fra A (begge flade lister [a0,b0,a1,b1,...])
+function subtractIv(A, F) {
+  const out = [];
+  let j = 0;
+  for (let i = 0; i < A.length; i += 2) {
+    let a = A[i];
+    const b = A[i + 1];
+    while (j < F.length && F[j + 1] < a) j += 2;
+    let jj = j;
+    while (a <= b) {
+      if (jj >= F.length || F[jj] > b) { out.push(a, b); break; }
+      if (F[jj] > a) out.push(a, F[jj] - 1);
+      a = Math.max(a, F[jj + 1] + 1);
+      jj += 2;
+    }
+  }
+  return out;
+}
+
+// Flere forskellige emner: største emner først, hver kopi lægges så tidligt som muligt langs
+// grundbåndets længde og så langt mod kanten som muligt (bund-venstre), evt. drejet. Til sidst
+// fyldes resten med "Fyld"-emnet. Rasteret i en ramme hvor y = længden (transponeres hvis X er længst).
+function nestMixed(jobs, o) {
+  const T = o.W > o.H;
+  const across = T ? o.H : o.W, len = T ? o.W : o.H;
+  const angles = o.rot === 'free' ? [0, 90, 180, 270] : o.rot === 'flip' ? [0, 180] : [0];
+  let minDim = Infinity;
+  jobs.forEach(p => { const b = unionBB(p.cs.filter(c => c.depth === 0)); minDim = Math.min(minDim, Math.max(b.maxX - b.minX, b.maxY - b.minY)); });
+  const r = Math.max(Math.sqrt(o.W * o.H / 1.6e7), minDim / 120, 50);
+  const k = Math.ceil(o.spacing / (2 * r) + 1.5);
+  const orient = {};
+  const types = jobs.map(p => {
+    const net = netAreaOf(p.cs);
+    const ors = [];
+    for (const a of angles) {
+      let cr = transformContours(p.cs, mat.rot90(a / 90));
+      const b = unionBB(cr.filter(c => c.depth === 0));
+      cr = transformContours(cr, mat.tr(-b.minX, -b.minY));
+      const w = b.maxX - b.minX, h = b.maxY - b.minY;
+      const key = p.id + ':' + a;
+      orient[key] = { cs: cr, w, h, net };
+      let foot = cr.filter(c => c.depth === 0).map(c => ({ pts: flattenSegs(c.segs, r / 4), closed: c.closed }));
+      const wF = T ? h : w, hF = T ? w : h;
+      if (T) foot = foot.map(f => ({ pts: f.pts.map(q => [q[1], q[0]]), closed: f.closed }));
+      const ras = rasterFoot(foot, wF, hF, r, k);
+      const xlo = Math.ceil(o.margin / r) - k, xhi = Math.floor((across - o.margin - wF) / r) - k;
+      const ylo = Math.ceil(o.margin / r) - k, yhi = Math.floor((len - o.margin - hF) / r) - k;
+      ors.push({ key, rows: ras.rows, H: ras.H, hF, xlo, xhi, ylo, yhi, hint: ylo, full: xhi < xlo || yhi < ylo });
+    }
+    const b0 = orient[p.id + ':0'];
+    return { p, ors, want: p.fill ? Infinity : p.qty, got: 0, area: b0.w * b0.h };
+  });
+  const order = types.filter(t => !t.p.fill).sort((a, b) => b.area - a.area).concat(types.filter(t => t.p.fill));
+
+  const OFF = k + 2;
+  const S = [];                          // optagede intervaller pr. række (i rammen)
+  const firstFree = (e, gy) => {
+    let allowed = [e.xlo, e.xhi];
+    for (let j = 0; j < e.H; j++) {
+      const pr = e.rows[j];
+      if (!pr.length) continue;
+      const sr = S[gy + j + OFF];
+      if (!sr || !sr.length) continue;
+      const forb = [];
+      for (let i = 0; i < pr.length; i += 2) for (let q = 0; q < sr.length; q += 2) {
+        const lo = sr[q] - pr[i + 1], hi = sr[q + 1] - pr[i];
+        if (hi >= allowed[0] && lo <= allowed[allowed.length - 1]) forb.push(lo, hi);
+      }
+      if (!forb.length) continue;
+      allowed = subtractIv(allowed, mergeIv(forb));
+      if (!allowed.length) return null;
+    }
+    return allowed[0];
+  };
+  const search = e => {
+    for (let gy = Math.max(e.ylo, e.hint); gy <= e.yhi; gy++) {
+      const gx = firstFree(e, gy);
+      if (gx !== null) { e.hint = gy; return { gx, gy }; }
+    }
+    e.full = true;
+    return null;
+  };
+
+  const placements = [];
+  let fixedPl = null;
+  for (const t of order) {
+    if (t.p.fill) fixedPl = placements.slice();
+    while (t.got < t.want && placements.length < 20000) {
+      let best = null;
+      for (const e of t.ors) {
+        if (e.full) continue;
+        const pos = search(e);
+        if (!pos) continue;
+        const top = (pos.gy + k) * r + e.hF, left = (pos.gx + k) * r;
+        if (!best || top < best.top - 1 || (Math.abs(top - best.top) <= 1 && left < best.left)) best = { e, pos, top, left };
+      }
+      if (!best) break;
+      const { e, pos } = best;
+      for (let j = 0; j < e.H; j++) {
+        const pr = e.rows[j];
+        if (!pr.length) continue;
+        const ri = pos.gy + j + OFF;
+        const row = S[ri] || (S[ri] = []);
+        for (let i = 0; i < pr.length; i++) row.push(pr[i] + pos.gx);
+        S[ri] = mergeIv(row);
+      }
+      const fx = (pos.gx + k) * r, fy = (pos.gy + k) * r;
+      placements.push({ a: e.key, x: T ? fy : fx, y: T ? fx : fy });
+      t.got++;
+    }
+  }
+  let result = {
+    params: o, spacing: o.spacing, r, orient, placements,
+    desc: `blandet, største først (bund-${T ? 'venstre → højre' : 'op'})`,
+    wanted: types.map(t => ({ p: t.p, want: t.p.fill ? null : t.want, got: t.got }))
+  };
+
+  // "Fyld"-emnet: prøv også det tætte gitter-mønster uden om de faste emner, og behold det bedste
+  const ft = types.find(t => t.p.fill);
+  if (ft && fixedPl) {
+    const FT = 50;                                         // fladgørings-tolerance (µm) i kontrollen
+    const footCache = {};
+    const footOf = (key, or) => footCache[key] || (footCache[key] = or[key].cs.filter(c => c.depth === 0).map(c => ({ pts: flattenSegs(c.segs, FT), closed: c.closed })));
+    const obst = fixedPl.map(q => ({ ...q, w: orient[q.a].w, h: orient[q.a].h, foot: footOf(q.a, orient) }));
+    const reject = (q, or) => {
+      const w = or[q.a].w, h = or[q.a].h;
+      for (const ob of obst) {
+        if (Math.max(ob.x - (q.x + w), q.x - (ob.x + ob.w), ob.y - (q.y + h), q.y - (ob.y + ob.h)) >= o.spacing + 2 * FT) continue;
+        if (footsCloser(footOf(q.a, or), q.x, q.y, ob.foot, ob.x, ob.y, o.spacing + 2 * FT)) return true;
+      }
+      return false;
+    };
+    const lat = nestCompute(ft.p.cs, { ...o, count: 0, reject }, ft.p.id);
+    if (lat.placements.length > ft.got) {
+      const all = fixedPl.concat(lat.placements);
+      const orient2 = { ...orient, ...lat.orient };
+      result = { ...result, orient: orient2, placements: all, desc: `blandet + fyld i mønster (${lat.desc})`,
+        wanted: types.map(t => ({ p: t.p, want: t.p.fill ? null : t.want, got: t.p.fill ? lat.placements.length : t.got })) };
+    }
+  }
+  result.minGap = result.placements.length > 1 ? checkGaps(result.placements, result.orient, o.spacing) : null;
+  return result;
+}
+
+// Er to omrids (forskudt til hhv. (ax,ay) og (bx,by)) tættere end d — eller ligger det ene inde i det andet?
+function footsCloser(FA, ax, ay, FB, bx, by, d) {
+  for (const fa of FA) for (const fb of FB) {
+    const A = fa.pts, B = fb.pts;
+    for (let i = 1; i < A.length; i++) {
+      const x1 = A[i-1][0] + ax, y1 = A[i-1][1] + ay, x2 = A[i][0] + ax, y2 = A[i][1] + ay;
+      for (let j = 1; j < B.length; j++) {
+        if (segSegDist(x1, y1, x2, y2, B[j-1][0] + bx, B[j-1][1] + by, B[j][0] + bx, B[j][1] + by) < d) return true;
+      }
+    }
+    if (fb.closed && pointInPoly(A[0][0] + ax - bx, A[0][1] + ay - by, B)) return true;
+    if (fa.closed && pointInPoly(B[0][0] + bx - ax, B[0][1] + by - ay, A)) return true;
+  }
+  return false;
+}
+
+// Skærerækkefølge for emnerne: række for række (eller kolonne for kolonne når længden er X), skiftevis frem og tilbage
+function serpentine(pl, orient, alongX) {
+  const items = pl.map(p => {
+    const w = orient[p.a].w, h = orient[p.a].h;
+    return alongX ? { p, main: p.x + w / 2, cross: p.y + h / 2, ext: w } : { p, main: p.y + h / 2, cross: p.x + w / 2, ext: h };
+  }).sort((a, b) => a.main - b.main);
   const rows = [];
-  items.forEach(p => {
+  items.forEach(it => {
     const row = rows[rows.length - 1];
-    if (row && Math.abs(p.cy - row.y) < orient[p.a].h / 2) row.items.push(p);
-    else rows.push({ y: p.cy, items: [p] });
+    if (row && Math.abs(it.main - row.main) < Math.min(it.ext, row.ext) / 2) row.items.push(it);
+    else rows.push({ main: it.main, ext: it.ext, items: [it] });
   });
   const out = [];
-  rows.forEach((row, i) => { row.items.sort((a, b) => i % 2 ? b.cx - a.cx : a.cx - b.cx); out.push(...row.items); });
+  rows.forEach((row, i) => { row.items.sort((a, b) => i % 2 ? b.cross - a.cross : a.cross - b.cross); out.push(...row.items.map(it => it.p)); });
   return out;
 }
 
@@ -1707,8 +2022,10 @@ function segSegDist(ax, ay, bx, by, cx, cy, dx, dy) {
 // ENTITY INFO PANEL
 // ─────────────────────────────────────────────
 function updateEntitySection() {
+  const ap = activePart();
   const cs = partContours;
-  if (!basePaths.length) { $('entitySection').style.display = 'none'; return; }
+  if (!ap) { $('entitySection').style.display = 'none'; return; }
+  $('entityTitle').textContent = `Fundet geometri — ${ap.name}`;
   const bb = cs.length ? unionBB(cs) : { minX: 0, minY: 0, maxX: 0, maxY: 0 };
   const cnt = k => cs.filter(c => c.kind === k).length;
   $('statsGrid').innerHTML = `
@@ -1716,24 +2033,24 @@ function updateEntitySection() {
     <div class="stat"><div class="stat-val">${cs.length}</div><div class="stat-label">Konturer</div></div>
     <div class="stat"><div class="stat-val">${cnt('outer')} / ${cnt('hole')}</div><div class="stat-label">Ydre / huller</div></div>
     <div class="stat"><div class="stat-val" style="color:${cnt('open') ? 'var(--warn)' : 'var(--success)'}">${cnt('open')}</div><div class="stat-label">Åbne konturer</div></div>`;
-  const typeMap = { LINE: 'line', ARC: 'arc', CIRCLE: 'circle', POLYLINE: 'poly', RECT: 'poly', PATH: 'poly', SPLINE: 'spline', ELLIPSE: 'spline', INSERT: 'arc' };
+  const typeMap = { NCP: 'poly', LINE: 'line', ARC: 'arc', CIRCLE: 'circle', POLYLINE: 'poly', RECT: 'poly', PATH: 'poly', SPLINE: 'spline', ELLIPSE: 'spline', INSERT: 'arc' };
   const nameMap = { INSERT: 'BLOK' };
-  $('entityBadges').innerHTML = Object.entries(srcStats).map(([t, n]) =>
+  $('entityBadges').innerHTML = Object.entries(ap.stats).map(([t, n]) =>
     `<span class="entity-badge badge-${typeMap[t] || 'line'}">${nameMap[t] || t} ×${n}</span>`).join('');
   const ll = $('layerList');
   ll.innerHTML = '';
-  if (srcLayers.length > 1) {
+  if (ap.layers.length > 1) {
     const h = document.createElement('label');
     h.textContent = 'Lag (fravælg fx mål/ramme)';
     h.style.marginBottom = '4px';
     ll.appendChild(h);
-    srcLayers.forEach(l => {
+    ap.layers.forEach(l => {
       const row = document.createElement('label');
       row.className = 'check';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
-      cb.checked = !disabledLayers.has(l.name);
-      cb.addEventListener('change', () => { cb.checked ? disabledLayers.delete(l.name) : disabledLayers.add(l.name); rebuildPart(false); });
+      cb.checked = !ap.disabled.has(l.name);
+      cb.addEventListener('change', () => { cb.checked ? ap.disabled.delete(l.name) : ap.disabled.add(l.name); buildPartContours(ap, false); afterPartsChanged(false); });
       const t = document.createElement('span'); t.textContent = l.name;
       const n = document.createElement('span'); n.className = 'n'; n.textContent = l.n;
       row.append(cb, t, n);
@@ -1809,7 +2126,7 @@ function generateNCP(silent) {
   if (!silent) {
     clearLog();
     log('Genererer NCP...', 'accent');
-    if (nest) log(`Nesting: ${nest.placements.length} emner på ${(nest.params.W / 1000)}×${(nest.params.H / 1000)} mm plade`, 'info');
+    if (nest) log(`Nesting: ${nest.placements.length} emner på ${(nest.params.W / 1000)}×${(nest.params.H / 1000)} mm grundbånd`, 'info');
     log(`✓ ${plan.length} stik/konturer, ${nMoves} MOVEABS, ${nArcs} buer`, 'ok');
     log(`Skærelængde ${(cutLen / 1000).toFixed(0)} mm · kørsel i luft ${(rapidLen / 1000).toFixed(0)} mm`, 'info');
     log(`✓ Fil: ${fname}`, 'ok');
@@ -1853,18 +2170,11 @@ function generateShape() {
     paths.push({ segs: circleSegs(c, c, um(OD / 2)), closed: true, layer: '0' });
     autoName = `flange_od${OD}_id${ID}`;
   }
-  srcText = null;
-  basePaths = paths;
-  srcStats = { [currentShapeTab === 'rect' ? 'POLYLINE' : 'CIRCLE']: paths.length };
-  srcLayers = [{ name: '0', n: paths.length }];
-  disabledLayers.clear();
-  currentBaseName = autoName;
-  $('outputName').value = autoName;
-  $('fileName').textContent = 'Manuelt emne: ' + autoName;
-  $('fileLoaded').classList.remove('hidden');
-  log(`Manuelt emne: ${autoName}`, 'accent');
+  const prt = addPart({ name: autoName, kind: 'shape', paths, stats: { [currentShapeTab === 'rect' ? 'POLYLINE' : 'CIRCLE']: paths.length } });
+  if (!prt) return;
+  activeId = prt.id;
   ncpWanted = true; ncpShowNext = true; // generér så snart planen (evt. nesting) er klar
-  rebuildPart(true);
+  afterPartsChanged(true);
 }
 
 // ─────────────────────────────────────────────
@@ -1983,10 +2293,10 @@ function renderCanvas() {
 
   // Info
   let info = 'Ingen data endnu';
-  if (partContours.length) {
-    const bb = unionBB(partContours);
+  if (partContours.length || nest) {
+    const bb = partContours.length ? unionBB(partContours) : { minX: 0, minY: 0, maxX: 0, maxY: 0 };
     info = `Emne: ${((bb.maxX - bb.minX) / 1000).toFixed(1)} × ${((bb.maxY - bb.minY) / 1000).toFixed(1)} mm  |  Konturer: ${partContours.length}`;
-    if (nest) info += `  |  Plade: ${nest.params.W / 1000} × ${nest.params.H / 1000} mm, ${nest.placements.length} emner`;
+    if (nest) info = `Grundbånd: ${nest.params.W / 1000} × ${nest.params.H / 1000} mm  |  ${nest.placements.length} emner (${nest.wanted.length} slags)`;
     info += `  |  Stik: ${plan.length}`;
   }
   $('coordOverlay').textContent = info;
@@ -2071,7 +2381,7 @@ function todayDanish() {
 // ─────────────────────────────────────────────
 // INDSTILLINGER: lyt efter ændringer, husk nesting-opsætning
 // ─────────────────────────────────────────────
-const NEST_FIELDS = ['nestOn', 'sheetW', 'sheetH', 'nestGap', 'nestMargin', 'nestCount', 'nestRot'];
+const NEST_FIELDS = ['nestOn', 'sheetW', 'sheetH', 'nestGap', 'nestMargin', 'nestRot'];
 const STORE_KEY = 'induminati-dxf-nest-v1';
 function saveNestSettings() {
   try {
@@ -2096,8 +2406,17 @@ NEST_FIELDS.forEach(id => $(id).addEventListener(id === 'nestOn' || id === 'nest
   syncNestFields();
   rebuildPlan(id === 'nestOn');
 }));
-$('dxfUnit').addEventListener('change', () => { if (srcText != null) { resetNcp(); clearLog(); loadSource(false); } });
-$('chainTol').addEventListener('change', () => rebuildPart(false));
+$('dxfUnit').addEventListener('change', () => {
+  const ap = activePart();
+  if (!ap || ap.text == null) return;
+  clearLog();
+  ap.unit = $('dxfUnit').value;
+  parsePart(ap, false);
+  afterPartsChanged(true);
+});
+$('chainTol').addEventListener('change', () => { parts.forEach(p => buildPartContours(p, false)); afterPartsChanged(false); });
+$('outputName').addEventListener('input', () => { outputNameEdited = $('outputName').value.trim() !== ''; currentBaseName = $('outputName').value || 'output'; });
+$('btnClearParts').addEventListener('click', () => { parts = []; activeId = null; clearLog(); resetNcp(); afterPartsChanged(true); });
 ['leadIn', 'cutOrder'].forEach(id => $(id).addEventListener(id === 'leadIn' ? 'input' : 'change', () => rebuildPlan(false)));
 ['arcMode', 'vel', 'fastvel', 'pressure', 'startWait', 'material', 'outputName'].forEach(id =>
   $(id).addEventListener('change', () => { if (ncpWanted && plan.length) generateNCP(true); }));
@@ -2107,6 +2426,6 @@ resetNcp();
 resizeCanvas();
 renderCanvas();
 </script>
-<div class="footer">DXF / SVG → NCP Konverter &middot; v2.0 &middot; 30-10-2026</div>
+<div class="footer">DXF / SVG / NCP → NCP Konverter &middot; v2.1 &middot; 11-11-2026</div>
 </body>
 </html>
