@@ -324,7 +324,7 @@
           <option value="flip">Kun 0/180° (bevar retning)</option>
           <option value="none">Ingen</option>
         </select>
-        <div class="hint">Antal pr. emne sættes i emnelisten (01). Grundbåndets nulpunkt (X0 Y0) er nederste venstre hjørne; emnerne lægges ud fra starten af den længste side, så resten af båndet bliver et sammenhængende stykke.</div>
+        <div class="hint">Antal pr. emne sættes i emnelisten (01). Grundbåndets nulpunkt (X0 Y0) er nederste venstre hjørne; emnerne lægges ud fra starten af den længste side, så resten af båndet bliver et sammenhængende stykke. Små emner lægges også ind i de store emners huller og skæres altid før hullet.</div>
         <div class="nest-result" id="nestResult"></div>
       </div>
     </div>
@@ -1498,13 +1498,63 @@ function buildPlan() {
   const Lout = Math.min(L, nest.spacing * 0.8);
   const leadCache = {};
   for (const a of Object.keys(nest.orient)) leadCache[a] = withLeads(nest.orient[a].cs, Lout, L);
-  let pos = { x: 0, y: 0 };
-  for (const p of nest.ordered) {
+  const inst = nest.ordered.map(p => {
     const cs = transformContours(leadCache[p.a], mat.tr(p.x, p.y));
-    orderContours(cs, mode, pos).forEach(i => plan.push({ c: cs[i], lead: cs[i].lead }));
+    return { cs, bb: unionBB(cs), host: -1, hole: -1 };
+  });
+
+  // Find emner der ligger inde i et andet emnes hul (gitter-opslag på emnets midtpunkt)
+  const cell = Math.max(1000, ...Object.values(nest.orient).map(o => Math.max(o.w, o.h)));
+  const grid = new Map();
+  inst.forEach((A, i) => {
+    if (!A.cs.some(c => c.kind === 'hole')) return;
+    for (let gx = Math.floor(A.bb.minX / cell); gx <= Math.floor(A.bb.maxX / cell); gx++)
+      for (let gy = Math.floor(A.bb.minY / cell); gy <= Math.floor(A.bb.maxY / cell); gy++) {
+        const key = gx + ',' + gy;
+        if (!grid.has(key)) grid.set(key, []);
+        grid.get(key).push(i);
+      }
+  });
+  const bbIn = (a, b) => a.minX >= b.minX && a.maxX <= b.maxX && a.minY >= b.minY && a.maxY <= b.maxY;
+  inst.forEach((B, bi) => {
+    const top = B.cs.find(c => c.depth === 0);
+    if (!top) return;
+    const pt = top.poly[0];
+    const cands = grid.get(Math.floor((B.bb.minX + B.bb.maxX) / 2 / cell) + ',' + Math.floor((B.bb.minY + B.bb.maxY) / 2 / cell)) || [];
+    let best = Infinity;
+    for (const ai of cands) {
+      if (ai === bi || !bbIn(B.bb, inst[ai].bb)) continue;
+      inst[ai].cs.forEach((H, hi) => {
+        if (H.kind !== 'hole' || Math.abs(H.area) >= best || !bbIn(B.bb, H.bb) || !pointInPoly(pt[0], pt[1], H.poly)) return;
+        best = Math.abs(H.area); B.host = ai; B.hole = hi;
+      });
+    }
+  });
+
+  // Grupper: et værtsemne + alle emner i dets huller (rekursivt). Grupper skæres i serpentin-rækkefølge.
+  const rootOf = i => { let r = i, guard = 0; while (inst[r].host >= 0 && guard++ < 50) r = inst[r].host; return r; };
+  const groups = new Map();
+  inst.forEach((_, i) => { const r = rootOf(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(i); });
+  let pos = { x: 0, y: 0 };
+  [...groups.keys()].sort((a, b) => a - b).forEach(r => {
+    const members = groups.get(r).sort((a, b) => (a === r ? -1 : b === r ? 1 : a - b));
+    const offset = new Map();
+    let all = [];
+    members.forEach(i => { offset.set(i, all.length); all = all.concat(inst[i].cs.map(c => ({ ...c }))); });
+    members.forEach(i => {
+      const off = offset.get(i), B = inst[i];
+      B.cs.forEach((c, k) => { if (c.parent >= 0) all[off + k].parent = c.parent + off; });
+      if (B.host >= 0) {
+        const hIdx = offset.get(B.host) + B.hole;
+        B.cs.forEach((c, k) => { if (c.depth === 0) all[off + k].parent = hIdx; }); // emnet skal være skåret før hullet
+        const H = all[hIdx];
+        H.lead = computeLead(H, Math.min(L, nest.spacing * 0.8));             // stik ikke ned i emnet i hullet
+      }
+    });
+    orderContours(all, mode, pos).forEach(i => plan.push({ c: all[i], lead: all[i].lead }));
     const last = plan[plan.length - 1].c.segs;
     pos = { x: last[last.length - 1].x1, y: last[last.length - 1].y1 };
-  }
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -1762,7 +1812,7 @@ function nestCompute(cs, o, pid) {
     const b = unionBB(cr.filter(c => c.depth === 0));
     cr = transformContours(cr, mat.tr(-b.minX, -b.minY));
     const w = b.maxX - b.minX, h = b.maxY - b.minY;
-    const foot = cr.filter(c => c.depth === 0).map(c => ({ pts: flattenSegs(c.segs, r / 4), closed: c.closed }));
+    const foot = cr.map(c => ({ pts: flattenSegs(c.segs, r / 4), closed: c.closed })); // alle konturer: huller er ledig plads
     const ras = rasterFoot(foot, w, h, r, k);
     orient[K(a)] = { cs: cr, w, h, rows: ras.rows, W: ras.W, H: ras.H, net: netAreaOf(cs) };
   }
@@ -1853,7 +1903,7 @@ function nestMixed(jobs, o) {
       const w = b.maxX - b.minX, h = b.maxY - b.minY;
       const key = p.id + ':' + a;
       orient[key] = { cs: cr, w, h, net };
-      let foot = cr.filter(c => c.depth === 0).map(c => ({ pts: flattenSegs(c.segs, r / 4), closed: c.closed }));
+      let foot = cr.map(c => ({ pts: flattenSegs(c.segs, r / 4), closed: c.closed })); // huller er ledig plads
       const wF = T ? h : w, hF = T ? w : h;
       if (T) foot = foot.map(f => ({ pts: f.pts.map(q => [q[1], q[0]]), closed: f.closed }));
       const ras = rasterFoot(foot, wF, hF, r, k);
@@ -1934,7 +1984,7 @@ function nestMixed(jobs, o) {
   if (ft && fixedPl) {
     const FT = 50;                                         // fladgørings-tolerance (µm) i kontrollen
     const footCache = {};
-    const footOf = (key, or) => footCache[key] || (footCache[key] = or[key].cs.filter(c => c.depth === 0).map(c => ({ pts: flattenSegs(c.segs, FT), closed: c.closed })));
+    const footOf = (key, or) => footCache[key] || (footCache[key] = or[key].cs.map(c => ({ pts: flattenSegs(c.segs, FT), closed: c.closed })));
     const obst = fixedPl.map(q => ({ ...q, w: orient[q.a].w, h: orient[q.a].h, foot: footOf(q.a, orient) }));
     const reject = (q, or) => {
       const w = or[q.a].w, h = or[q.a].h;
@@ -1956,7 +2006,15 @@ function nestMixed(jobs, o) {
   return result;
 }
 
-// Er to omrids (forskudt til hhv. (ax,ay) og (bx,by)) tættere end d — eller ligger det ene inde i det andet?
+// Ligger punktet i emnets materiale? (lige/ulige antal omsluttende konturer — punkter i et hul er ikke materiale)
+function inMaterial(x, y, F) { let n = 0; for (const f of F) if (f.closed && pointInPoly(x, y, f.pts)) n++; return n % 2 === 1; }
+// Ligger ét emne (med sine punkter) i det andets materiale?
+function footsOverlap(FA, ax, ay, FB, bx, by) {
+  for (const fa of FA) if (fa.pts.length && inMaterial(fa.pts[0][0] + ax - bx, fa.pts[0][1] + ay - by, FB)) return true;
+  for (const fb of FB) if (fb.pts.length && inMaterial(fb.pts[0][0] + bx - ax, fb.pts[0][1] + by - ay, FA)) return true;
+  return false;
+}
+// Er to emner (forskudt til hhv. (ax,ay) og (bx,by)) tættere end d — eller overlapper de? Et emne inde i et hul er OK.
 function footsCloser(FA, ax, ay, FB, bx, by, d) {
   for (const fa of FA) for (const fb of FB) {
     const A = fa.pts, B = fb.pts;
@@ -1966,10 +2024,8 @@ function footsCloser(FA, ax, ay, FB, bx, by, d) {
         if (segSegDist(x1, y1, x2, y2, B[j-1][0] + bx, B[j-1][1] + by, B[j][0] + bx, B[j][1] + by) < d) return true;
       }
     }
-    if (fb.closed && pointInPoly(A[0][0] + ax - bx, A[0][1] + ay - by, B)) return true;
-    if (fa.closed && pointInPoly(B[0][0] + bx - ax, B[0][1] + by - ay, A)) return true;
   }
-  return false;
+  return footsOverlap(FA, ax, ay, FB, bx, by);
 }
 
 // Skærerækkefølge for emnerne: række for række (eller kolonne for kolonne når længden er X), skiftevis frem og tilbage
@@ -1989,11 +2045,12 @@ function serpentine(pl, orient, alongX) {
   return out;
 }
 
-// Efterkontrol: mindste afstand mellem nabo-emners ydre konturer (rigtig geometri)
+// Efterkontrol: mindste afstand mellem nabo-emners konturer (rigtig geometri, inkl. hulkanter)
 function checkGaps(pl, orient, spacing) {
   const foot = {};
-  for (const a of Object.keys(orient)) foot[a] = orient[a].cs.filter(c => c.depth === 0).map(c => ({ pts: flattenSegs(c.segs, 20), closed: c.closed }));
-  const sample = pl.slice(0, 40);
+  for (const a of Object.keys(orient)) foot[a] = orient[a].cs.map(c => ({ pts: flattenSegs(c.segs, 20), closed: c.closed }));
+  const step = Math.max(1, Math.ceil(pl.length / 200));
+  const sample = pl.filter((_, i) => i % step === 0);
   let minD = Infinity;
   for (const p of sample) for (const q of pl) {
     if (p === q) continue;
@@ -2006,8 +2063,8 @@ function checkGaps(pl, orient, spacing) {
         const d = segSegDist(A[i-1][0] + p.x, A[i-1][1] + p.y, A[i][0] + p.x, A[i][1] + p.y, B[j-1][0] + q.x, B[j-1][1] + q.y, B[j][0] + q.x, B[j][1] + q.y);
         if (d < minD) minD = d;
       }
-      if (fb.closed && pointInPoly(A[0][0] + p.x - q.x, A[0][1] + p.y - q.y, B)) minD = 0;
     }
+    if (footsOverlap(foot[p.a], p.x, p.y, foot[q.a], q.x, q.y)) minD = 0;
   }
   return minD === Infinity ? null : minD;
 }
@@ -2426,6 +2483,6 @@ resetNcp();
 resizeCanvas();
 renderCanvas();
 </script>
-<div class="footer">DXF / SVG / NCP → NCP Konverter &middot; v2.1 &middot; 11-11-2026</div>
+<div class="footer">DXF / SVG / NCP → NCP Konverter &middot; v2.2 &middot; 11-11-2026</div>
 </body>
 </html>
